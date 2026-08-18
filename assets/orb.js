@@ -65,6 +65,7 @@
   'vec2 n_yz=mix(n_z.xy,n_z.zw,fxyz.y);return 2.2*mix(n_yz.x,n_yz.y,fxyz.x);}\n' +
   'float sdSphere(vec3 p,float r){return length(p)-r;}\n' +
   'float smin(float a,float b,float k){float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}\n' +
+  'float hexD(vec2 p){p=abs(p);return max(dot(p,vec2(0.5,0.866025)),p.x);}\n' +
   'float sdf(vec3 p){' +
   '  vec3 c1=vec3(uMouse1*uResolution.zw*1.2,0.0);' +
   '  vec3 c2=vec3(uMouse2*uResolution.zw*1.2,0.0);' +
@@ -125,6 +126,15 @@
   '    vec3 background=mix(screenB(refracted*0.55,windowTex*0.75),img.rgb,uImageOpacity*img.a);' +
   '    vec3 extraFres=max(vec3((t-2.135)*30.0),vec3(0.0));' +
   '    finalColor.rgb=screenB(mixed+extraFres,background);finalColor.a=1.0;' +
+  '    float hc=clamp(uResolution.x/64.0,9.0,34.0);' +
+  '    vec2 hp=(vUv-vec2(0.5))*uResolution.zw*hc;' +
+  '    hp+=0.24*vec2(sin(hp.y*0.85+uTime*0.7),sin(hp.x*0.85-uTime*0.6));' +
+  '    vec2 hr2=vec2(1.0,1.732051);' +
+  '    vec2 ha=mod(hp,hr2)-hr2*0.5;' +
+  '    vec2 hb=mod(hp-hr2*0.5,hr2)-hr2*0.5;' +
+  '    vec2 hgv=(dot(ha,ha)<dot(hb,hb))?ha:hb;' +
+  '    float hedge=smoothstep(0.435,0.5,hexD(hgv));' +
+  '    finalColor.rgb*=1.0-hedge*0.20*clamp(1.0-fres,0.35,1.0);' +
   '  } else { finalColor.a=0.0; }' +
   '  if(t>tMax&&t<(tMax+uGlow)){finalColor.rgb=vec3(1.0);finalColor.a=mapTo(t,tMax,tMax+uGlow,1.0,0.0);}' +
   '  gl_FragColor=finalColor;gl_FragColor.a*=uOpacity;}';
@@ -138,10 +148,10 @@
   var TRC  = 'rgba(56,112,164,';          /* copper, unlit */
   var LIT  = 'rgba(112,222,255,';         /* copper, charged */
   var ACC = {
-    cpu: '92,225,255',  gpu: '158,128,255', ram: '140,190,255',
-    scu: '96,232,210',  scc: '110,225,255', brg: '255,122,168',
-    mcc: '236,204,138', xtal: '224,234,244', rom: '92,225,255',
-    choke: '255,192,112', phy: '92,225,255'
+    cpu: '92,225,255',  gpu: '158,128,255', ram: '148,196,255',
+    scu: '96,232,210',  scc: '118,235,180', brg: '255,122,168',
+    mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
+    choke: '255,192,112', phy: '255,168,120'
   };
   function acc(c){ return 'rgba(' + (ACC[c.kind] || '92,225,255') + ','; }
 
@@ -161,6 +171,12 @@
   }
 
   function drop(g, x, y, w, h, r){
+    g.save();
+    g.shadowColor = 'rgba(0,0,0,0.38)';
+    g.shadowBlur = 24; g.shadowOffsetY = 7;
+    g.fillStyle = 'rgba(4,7,12,0.85)';
+    rr(g, x, y, w, h, r); g.fill();
+    g.restore();
     g.save();
     g.shadowColor = 'rgba(0,0,0,0.6)';
     g.shadowBlur = 9; g.shadowOffsetY = 3;
@@ -228,6 +244,23 @@
     }
   }
 
+  /* breakout stubs — the fan of traces every real QFP wears */
+  function breakout(g, x, y, w, h, pitch, len){
+    g.strokeStyle = 'rgba(56,112,164,0.28)';
+    g.lineWidth = 0.8;
+    var p, o = len + 1;
+    g.beginPath();
+    for (p = x + pitch; p < x + w - pitch * 0.6; p += pitch){
+      g.moveTo(p + pitch * 0.21, y - o); g.lineTo(p + pitch * 0.21, y - o - len * 2.2);
+      g.moveTo(p + pitch * 0.21, y + h + o); g.lineTo(p + pitch * 0.21, y + h + o + len * 2.2);
+    }
+    for (p = y + pitch; p < y + h - pitch * 0.6; p += pitch){
+      g.moveTo(x - o, p + pitch * 0.21); g.lineTo(x - o - len * 2.2, p + pitch * 0.21);
+      g.moveTo(x + w + o, p + pitch * 0.21); g.lineTo(x + w + o + len * 2.2, p + pitch * 0.21);
+    }
+    g.stroke();
+  }
+
   function pkg(g, x, y, w, h, e, r, seed, accStr){
     if (e > 0.03){
       g.save();
@@ -243,8 +276,13 @@
     grd.addColorStop(1, '#070d16');
     g.fillStyle = grd;
     rr(g, x, y, w, h, r || 3); g.fill();
-    g.fillStyle = 'rgba(190,220,245,0.07)';
+    /* the studio light lives top-left — every body agrees */
+    g.fillStyle = 'rgba(200,228,250,0.10)';
     g.fillRect(x + 2, y + 1, w - 4, 1);
+    g.fillRect(x + 1, y + 2, 1, h - 4);
+    g.fillStyle = 'rgba(0,0,0,0.22)';
+    g.fillRect(x + 2, y + h - 2, w - 4, 1);
+    g.fillRect(x + w - 2, y + 2, 1, h - 4);
     if (seed) speckle(g, x, y, w, h, seed);
     g.strokeStyle = 'rgba(150,190,220,' + (0.22 + 0.5 * e).toFixed(3) + ')';
     g.lineWidth = 1;
@@ -355,6 +393,7 @@
     var A = acc(c);
 
     if (c.kind === 'cpu'){
+      breakout(g, x, y, w, h, Math.max(4, u * 0.16), u * 0.14);
       drop(g, x, y, w, h, 4);
       qfpLeads(g, x, y, w, h, Math.max(4, u * 0.16), u * 0.14, pulse, A);
       pkg(g, x, y, w, h, pulse, 4, seed, A);
@@ -382,6 +421,7 @@
       etch(g, x + u * 0.55, y + h + u * 0.36, '2643-B', Math.max(4.5, u * 0.14), 0, 'left');
 
     } else if (c.kind === 'gpu'){
+      breakout(g, x, y, w, h, Math.max(4, u * 0.16), u * 0.12);
       drop(g, x, y, w, h, 4);
       qfpLeads(g, x, y, w, h, Math.max(4, u * 0.16), u * 0.12, pulse, A);
       pkg(g, x, y, w, h, pulse, 4, seed, A);
@@ -575,6 +615,7 @@
 
     } else if (c.kind === 'scc'){
       /* SCC — a Semble Compute Core: four SCUs, linked into one */
+      breakout(g, x, y, w, h, Math.max(3.5, u * 0.17), u * 0.11);
       drop(g, x, y, w, h, 3);
       qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.17), u * 0.11, pulse, A);
       pkg(g, x, y, w, h, pulse, 3, seed, A);
@@ -614,6 +655,7 @@
     } else if (c.kind === 'mcc'){
       /* MCC — the Motus Compute Core. Gold. It cannot be watered;
          it ignites only when thresholds are crossed elsewhere. */
+      breakout(g, x, y, w, h, Math.max(4, u * 0.17), u * 0.12);
       drop(g, x, y, w, h, 4);
       qfpLeads(g, x, y, w, h, Math.max(4, u * 0.17), u * 0.12, pulse, A);
       pkg(g, x, y, w, h, pulse, 4, seed, A);
@@ -887,9 +929,44 @@
         for (var gx = 10; gx < CW; gx += 22)
           g.fillRect(gx, gy, 1.2, 1.2);
       var vr = lcg(4242);
-      for (i = 0; i < 130; i++){
-        g.beginPath(); g.arc(vr() * CW, vr() * WH, 1, 0, 6.29);
-        g.fillStyle = 'rgba(90,150,200,0.14)'; g.fill();
+      for (i = 0; i < 300; i++){
+        g.beginPath(); g.arc(vr() * CW, vr() * WH, 0.7 + vr() * 0.8, 0, 6.29);
+        g.fillStyle = 'rgba(90,150,200,' + (0.08 + vr() * 0.1).toFixed(3) + ')'; g.fill();
+      }
+      /* background trace bundles — the highways between tiers */
+      var bnd = [[0.10, 0.28, 0.86, 0.30, 10], [0.14, 0.60, 0.60, 0.63, 8],
+                 [0.50, 0.06, 0.52, 0.94, 9], [0.88, 0.30, 0.70, 0.72, 7]];
+      bnd.forEach(function(bb, b3){
+        var ax2 = CW * bb[0], ay2 = WH * bb[1], bx3 = CW * bb[2], by3 = WH * bb[3];
+        for (var li = 0; li < bb[4]; li++){
+          var off = (li - bb[4] / 2) * 3.2;
+          var ddx = bx3 - ax2, ddy = by3 - ay2;
+          var mid = Math.min(Math.abs(ddx), Math.abs(ddy));
+          g.beginPath();
+          if (Math.abs(ddx) >= Math.abs(ddy)){
+            g.moveTo(ax2, ay2 + off);
+            g.lineTo(bx3 - Math.sign(ddx) * mid, ay2 + off);
+            g.lineTo(bx3 + off * 0.3, by3 + off);
+          } else {
+            g.moveTo(ax2 + off, ay2);
+            g.lineTo(ax2 + off, by3 - Math.sign(ddy) * mid);
+            g.lineTo(bx3 + off, by3 + off * 0.3);
+          }
+          g.strokeStyle = 'rgba(46,96,142,' + (0.10 + (li % 3) * 0.025).toFixed(3) + ')';
+          g.lineWidth = 0.9;
+          g.stroke();
+        }
+      });
+      /* flux ghosts — the residue of assembly */
+      var fr = lcg(9911);
+      for (i = 0; i < 8; i++){
+        var fx2 = fr() * CW, fy2 = fr() * WH, frr = u * (1.2 + fr() * 2.2);
+        var fgr = g.createRadialGradient(fx2, fy2, 1, fx2, fy2, frr);
+        var warm = fr() > 0.45;
+        fgr.addColorStop(0, warm ? 'rgba(140,105,50,0.035)' : 'rgba(70,110,160,0.03)');
+        fgr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = fgr;
+        g.beginPath(); g.arc(fx2, fy2, frr, 0, 6.29); g.fill();
       }
       nets.forEach(function(n){
         g.beginPath();
@@ -947,6 +1024,13 @@
       etch(g, rams[0].x, rams[0].y - u * 0.85, 'STEPS', Math.max(6, u * 0.2), 0);
       etch(g, sccs[1].x, sccs[0].y - u * 1.32, 'SEMBLE COMPUTE CORES', Math.max(5.5, u * 0.18), 0);
       comps.forEach(function(c){ drawComp(g, c, 0, 0); });
+      /* one light across the whole board — uniformity is what reads digital */
+      var lightG = g.createLinearGradient(0, 0, CW, WH);
+      lightG.addColorStop(0, 'rgba(190,225,255,0.05)');
+      lightG.addColorStop(0.45, 'rgba(120,170,220,0.012)');
+      lightG.addColorStop(1, 'rgba(0,0,10,0.12)');
+      g.fillStyle = lightG;
+      g.fillRect(0, 0, CW, WH);
       /* the grain — what makes a render a photograph */
       g.globalAlpha = 0.5;
       for (var gy2 = 0; gy2 < WH; gy2 += 256)
@@ -955,7 +1039,7 @@
       g.globalAlpha = 1;
     })();
 
-    function render(t, o, top){
+    function render(t, o, top, focus){
       top = top || 0;
       wctx.drawImage(base, 0, 0);
       if (o){
@@ -1002,6 +1086,20 @@
       var nCross = Object.keys(crossed).length;
       mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      /* the scanner's reticle — a slow hex ring around the studied one */
+      if (focus){
+        var fr2 = Math.max(focus.w, focus.h) * 0.74 + u * 0.4;
+        wctx.save();
+        wctx.setLineDash([7, 5]);
+        wctx.lineDashOffset = -t * 9;
+        wctx.strokeStyle = acc(focus) + '0.55)';
+        wctx.lineWidth = 1.2;
+        wctx.shadowColor = acc(focus) + '0.6)';
+        wctx.shadowBlur = 8;
+        hexPath(wctx, focus.x, focus.y, fr2);
+        wctx.stroke();
+        wctx.restore();
+      }
       var sum = 0;
       comps.forEach(function(c){
         if (c.noWater) return;
@@ -1026,8 +1124,11 @@
     var bctx = base.getContext('2d'), wctx = work.getContext('2d');
     var comps = [];
     var SYM = {trax: 'line', init: 'spark', me: 'ring', semble: 'ring', sesh: 'time'};
+    var SYMACC = {line: '168,138,255', spark: '255,216,150',
+                  ring: '102,228,255', time: '96,232,210'};
     order.forEach(function(tag, i){
-      comps.push({sym: SYM[tag] || 'spark', x: SW * (i + 0.5) / order.length,
+      var sy3 = SYM[tag] || 'spark';
+      comps.push({sym: sy3, acc: SYMACC[sy3], x: SW * (i + 0.5) / order.length,
                   y: SH * 0.5, e: 0, phase: i * 1.7});
     });
 
@@ -1051,7 +1152,7 @@
     function drawSym(g, c, t){
       var e = c.e, R = 44;
       var pulse = e > 0.02 ? e * (0.8 + 0.2 * Math.sin(t * 1.8 + c.phase)) : 0;
-      var glow = 'rgba(120,230,255,';
+      var glow = 'rgba(' + (c.acc || '120,230,255') + ',';
       var i;
 
       if (c.sym === 'line'){
@@ -1396,14 +1497,14 @@
       return Math.max(0, Math.min(1, (scrollY || 0) / mx2));
     }
     function worldTop(){ return sFrac * worldMax; }
-    function water(dt){
+    function water(dt, focus){
       var o = orbPx(), top = worldTop(), changed = false;
       for (var i = 0; i < board.comps.length; i++){
         var c = board.comps[i];
         if (c.noWater) continue;
         var d = Math.hypot(c.x * 2 - o.x, (c.y - top) * 2 - o.y);
         var e0 = c.e;
-        if (d < o.r * 1.05) c.e = Math.min(1, c.e + (1 - c.e) * 0.9 * dt);
+        if (d < o.r * 1.05) c.e = Math.min(1, c.e + (1 - c.e) * (c === focus ? 1.5 : 0.9) * dt);
         else c.e = Math.max(0, c.e - c.e * 0.28 * dt);
         if (Math.abs(c.e - e0) > 0.001) changed = true;
       }
@@ -1448,9 +1549,10 @@
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
       var top2 = worldTop();
       gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
-      if (water(dt) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
+      var focus2 = (!scrolling && now - lastMouseT > C.idleAfter) ? wLast : null;
+      if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
         var ob = orbPx();
-        board.render((now - t0) / 1000, {x: ob.x / 2, y: top2 + ob.y / 2, r: ob.r / 2}, top2);
+        board.render((now - t0) / 1000, {x: ob.x / 2, y: top2 + ob.y / 2, r: ob.r / 2}, top2, focus2);
         E.uploadWorld(board.work);
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
