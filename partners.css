@@ -1,0 +1,441 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEMBLE · PARTNERS — Neoneuro Glass, mobile first.
+
+   Same material language as the live commons (docs/MATERIAL.md), self-contained
+   so these pages stand alone. The law it obeys, stated once:
+
+   ⚠ Classic neumorphism is built on LOW CONTRAST. That is its signature and it
+   is exactly what makes it unreadable. Here the SURFACE takes the depth and the
+   INK does not move — every value below is a verified bright ink on a dark
+   ground, never a grey.
+
+   Mobile FIRST, literally: the base rules are the phone. Wider screens are the
+   progressive enhancement, not the other way round.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --void: #04060A; --deep: #070A10; --ground: #0B0F16;
+  --panel: #10151E; --panel2: #161C27;
+  --ink: #F5F7FB; --ink2: #DEE5EF; --label: #A6DDE6;
+  --accent-t: #7BE3EA; --signal-t: #CBBCFF; --gold-t: #F0D48C;
+  --cyan: #22D3EE; --azure: #60A5FA; --violet: #A78BFF; --ember: #E879C9; --gold: #E8C46B;
+  --zao: #FF6B4A;                       /* The ZAO's heat, against our cyan */
+  --r: 28px; --r-sm: 20px; --r-xs: 14px;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+
+  --nn-lite: rgba(190, 225, 240, .085);
+  --nn-dark: rgba(0, 2, 6, .62);
+  --nn-raise:
+    inset 0 1px 0 var(--nn-lite),
+    inset 1px 0 0 rgba(190,225,240,.05),
+    inset 0 -1px 0 var(--nn-dark),
+    0 1px 1px rgba(0,0,0,.45),
+    0 14px 34px -18px rgba(0,0,0,.9);
+  --nn-inset: inset 0 1px 2px rgba(0,0,0,.55), inset 0 -1px 0 var(--nn-lite);
+  --nn-sheen: linear-gradient(147deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,0) 42%);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--void); color: var(--ink);
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 17px; line-height: 1.6;
+  overflow-x: hidden;
+  /* the aurora: three blurred blobs, static. It reads as depth because of the
+     light model, not because anything moves — a second ambient animation would
+     cost battery to say what the gradients already say. */
+  background-image:
+    radial-gradient(60vw 60vw at 12% -8%, rgba(34,211,238,.13), transparent 62%),
+    radial-gradient(55vw 55vw at 92% 6%, rgba(255,107,74,.11), transparent 60%),
+    radial-gradient(70vw 70vw at 50% 108%, rgba(167,139,255,.10), transparent 64%);
+  background-attachment: fixed;
+}
+img { max-width: 100%; display: block; }
+a { color: var(--accent-t); }
+
+.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 18px; }
+
+/* ── the raised surface ── */
+.glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(22,28,39,.82), rgba(16,21,30,.78));
+  border: 1px solid rgba(123,227,234,.15);
+  border-radius: var(--r-sm);
+  box-shadow: var(--nn-raise);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  padding: 22px;
+  overflow: hidden;
+}
+.glass::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--nn-sheen); pointer-events: none;
+}
+.glass::after {
+  content: ''; position: absolute; left: 12%; right: 12%; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(123,227,234,.5), transparent);
+  pointer-events: none;
+}
+.glass > * { position: relative; z-index: 1; }
+/* ⚠ ONE blur layer. Nested backdrop-filter is what turns a phone into a
+   hand-warmer — each one re-samples everything beneath it. */
+.glass .glass, .glass .card2 { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.card2 {
+  position: relative; border-radius: var(--r-xs); padding: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  border: 1px solid rgba(255,255,255,.09);
+  box-shadow: var(--nn-raise);
+}
+
+/* ── type ── */
+.kicker {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em;
+  color: var(--label); text-transform: uppercase;
+}
+h1 { font-size: clamp(2.3rem, 11vw, 4.6rem); font-weight: 800; line-height: 1.03; letter-spacing: -.02em; }
+h2 { font-size: clamp(1.7rem, 7.5vw, 2.9rem); font-weight: 800; line-height: 1.1; letter-spacing: -.01em; }
+h3 { font-size: clamp(1.15rem, 4.6vw, 1.45rem); font-weight: 700; line-height: 1.25; }
+p  { color: var(--ink2); }
+p strong, li strong { color: var(--ink); font-weight: 700; }
+.lead { font-size: clamp(1.02rem, 4.2vw, 1.22rem); line-height: 1.66; }
+
+section { padding: 58px 0; }
+section > .wrap > .kicker { margin-bottom: 10px; }
+section > .wrap > h2 { margin-bottom: 16px; }
+section > .wrap > .lead { margin-bottom: 26px; max-width: 62ch; }
+
+/* ── hero ── */
+.hero { padding: 74px 0 40px; text-align: center; }
+.hero .marks {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  flex-wrap: wrap; margin-bottom: 20px;
+}
+.mark {
+  font-family: 'Sora'; font-weight: 800; font-size: clamp(1.25rem, 6vw, 2rem);
+  padding: 12px 22px; border-radius: var(--r-xs);
+  box-shadow: var(--nn-raise); border: 1px solid rgba(255,255,255,.1);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+}
+.mark.s { color: var(--accent-t); text-shadow: 0 0 30px rgba(34,211,238,.5); }
+.mark.z { color: var(--zao); text-shadow: 0 0 30px rgba(255,107,74,.5); }
+.mark-x { font-size: 1.5rem; color: var(--ink2); font-weight: 400; }
+.hero h1 { margin-bottom: 14px; }
+.hero .lead { margin: 0 auto 26px; max-width: 46ch; }
+.badge {
+  display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+  letter-spacing: .16em; padding: 8px 16px; border-radius: 999px;
+  color: var(--gold-t); border: 1px solid rgba(232,196,107,.42);
+  background: rgba(232,196,107,.08);
+  box-shadow: 0 0 34px -12px rgba(232,196,107,.85);
+  margin-bottom: 22px;
+}
+
+/* ── buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 9px; justify-content: center;
+  padding: 15px 26px; border-radius: var(--r-xs); cursor: pointer;
+  font-family: 'Sora'; font-weight: 700; font-size: 15.5px; text-decoration: none;
+  color: var(--ink); border: 1px solid rgba(255,255,255,.13);
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+  box-shadow: var(--nn-raise);
+  transition: transform .2s var(--ease), box-shadow .28s var(--ease), border-color .28s var(--ease);
+}
+.btn:hover { transform: translateY(-2px); border-color: rgba(123,227,234,.45); }
+.btn:active { transform: translateY(1px); box-shadow: var(--nn-inset); }
+.btn:focus-visible { outline: 2px solid var(--accent-t); outline-offset: 3px; }
+.btn.prime {
+  color: var(--void); border-color: transparent;
+  background: linear-gradient(135deg, var(--cyan), var(--azure));
+  box-shadow: 0 0 40px -10px rgba(34,211,238,.9), var(--nn-raise);
+}
+.btn.zao {
+  color: var(--void); border-color: transparent;
+  background: linear-gradient(135deg, #FF8A5B, var(--zao));
+  box-shadow: 0 0 40px -10px rgba(255,107,74,.9), var(--nn-raise);
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* ── grids: mobile first = one column, always ── */
+.grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+/* ── the numbers ── */
+.stat b {
+  display: block; font-size: clamp(1.75rem, 9vw, 2.5rem); font-weight: 800;
+  line-height: 1.05; color: var(--gold-t); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 26px rgba(232,196,107,.35);
+}
+.stat .k { display: block; margin-bottom: 6px; }
+.stat i { font-style: normal; display: block; margin-top: 7px; font-size: 14px; color: var(--ink2); line-height: 1.5; }
+
+/* ── the loop diagram ── */
+.loop { display: grid; grid-template-columns: 1fr; gap: 12px; counter-reset: step; }
+.loop li { list-style: none; position: relative; }
+.loop .n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 11px; margin-bottom: 12px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600;
+  color: var(--void); background: linear-gradient(145deg, var(--cyan), var(--azure));
+  box-shadow: 0 0 24px -6px var(--cyan);
+}
+.loop li.z .n { background: linear-gradient(145deg, #FF8A5B, var(--zao)); box-shadow: 0 0 24px -6px var(--zao); }
+.loop h3 { margin-bottom: 7px; }
+.loop p { font-size: 14.5px; }
+
+/* ── people ── */
+.person { text-align: center; }
+.avatar {
+  width: 104px; height: 104px; margin: 0 auto 14px; border-radius: 28px;
+  overflow: hidden; position: relative;
+  box-shadow: var(--nn-raise), 0 0 40px -14px var(--cyan);
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(145deg, rgba(34,211,238,.22), rgba(167,139,255,.18));
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* the fallback monogram sits UNDER the photo, so a missing file degrades to a
+   designed initial rather than a broken-image icon */
+.avatar .mono {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Sora'; font-weight: 800; font-size: 2.1rem; color: var(--ink);
+  z-index: 0;
+}
+.avatar img { position: relative; z-index: 1; }
+.person.z .avatar { box-shadow: var(--nn-raise), 0 0 40px -14px var(--zao); }
+.person h3 { margin-bottom: 4px; }
+.person .role {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .1em;
+  color: var(--accent-t); display: block; margin-bottom: 11px;
+}
+.person.z .role { color: var(--zao); }
+.person p { font-size: 14.5px; text-align: left; }
+.person .tag {
+  display: inline-flex; margin-top: 11px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14); color: var(--ink2); text-decoration: none;
+}
+.person .tag:hover { border-color: rgba(123,227,234,.5); color: var(--accent-t); }
+/* a row of source links under a person — centred like the card, tags own no
+   top margin because the row carries it */
+.tags { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.tags .tag { margin-top: 0; }
+
+/* ── quote ── */
+.quote {
+  border-left: 3px solid var(--zao); padding: 4px 0 4px 18px; margin: 22px 0;
+  font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.55; color: var(--ink);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE MARK SYSTEM
+
+   ⚠ These pages were mixing two visual languages: emoji (✊ 🛡 ✅ 🔨 ⚡) sitting
+   directly beside geometric glyphs (◎ ⟳ ◈ ✦ ⬡). Emoji are colour bitmaps the
+   reader's OS picks — different art on Android, Windows, iOS and Slack — while
+   the geometry is monochrome line work in our palette. Side by side they read
+   as two different products stapled together.
+
+   Every mark is now one inline SVG sprite: a single stroke weight, a single
+   corner treatment, and `currentColor` so each mark takes the hue of the thing
+   it means. No font can fail to carry it and no platform can restyle it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.mk { width: 22px; height: 22px; flex: 0 0 auto; display: block; }
+.mk-lg { width: 27px; height: 27px; }
+.mk-sm { width: 14px; height: 14px; }
+/* a tag holding a mark is a row, not a line of text — otherwise the SVG sits
+   on the text baseline and hangs below it */
+.tag { display: inline-flex; align-items: center; gap: 7px; }
+/* a mark and its heading are one unit — the mark sits ON the baseline row
+   rather than inside the heading text, so it never inherits the heading's
+   clamp() and never resizes with it */
+.bring-head { display: flex; align-items: center; gap: 12px; }
+.m-cyan   { color: var(--cyan); }
+.m-violet { color: var(--violet); }
+.m-gold   { color: var(--gold); }
+.m-zao    { color: var(--zao); }
+.m-azure  { color: var(--azure); }
+
+/* ── honest status ── */
+.status li {
+  list-style: none; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,.07);
+  font-size: 15px; color: var(--ink2); display: grid; grid-template-columns: 26px 1fr; gap: 12px;
+  align-items: start;
+}
+.status li:last-child { border-bottom: 0; }
+.status .m { display: flex; padding-top: 2px; line-height: 1.4; }
+.status b { color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LEDGER STRIP — the page checking itself.
+
+   This page tells you every claim on it is falsifiable with curl. So it curls
+   itself, in front of you, and prints what comes back.
+
+   ⚠ THE NUMBERS ARE AN ENHANCEMENT, NEVER THE CONTENT. The markup ships an
+   em-dash in every slot, and if the fetch fails the dash is exactly what stays
+   on screen — no spinner, no zero, no stale cache. A number nobody can check
+   is worth less than no number at all, and on a partnership page it is worse
+   than that: it is a claim.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.proof-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 18px 0 16px; }
+.pf {
+  text-align: center; padding: 16px 10px; border-radius: var(--r-xs);
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  border: 1px solid rgba(255,255,255,.09); box-shadow: var(--nn-raise);
+}
+.pf b {
+  display: block; font-size: clamp(1.35rem, 6.6vw, 1.95rem); font-weight: 800; line-height: 1.05;
+  color: var(--accent-t); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 26px rgba(34,211,238,.35);
+}
+/* the honest one. A partnership page publishing "$0.00 moved" is the whole
+   posture of this project in four characters — so it gets the gold, not a
+   muted treatment that hides it. */
+.pf.zero b { color: var(--gold-t); text-shadow: 0 0 26px rgba(232,196,107,.32); }
+.pf i { font-style: normal; display: block; margin-top: 7px; font-size: 12.5px; color: var(--ink2); line-height: 1.45; }
+.proof-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.pf-dot {
+  width: 8px; height: 8px; border-radius: 999px; background: var(--zao); flex: 0 0 auto;
+  box-shadow: 0 0 14px var(--zao);
+}
+.proof-note { font-size: 14px; }
+.proof code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent-t); }
+@media (min-width: 720px) { .proof-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── THE PULSE — compute over time, one line. Ships as an empty box that
+   collapses to nothing; only real ledger history gives it height. ── */
+.pulse { margin: 2px 0 14px; }
+.pulse:empty { display: none; }
+.pulse svg { width: 100%; height: 56px; display: block; }
+.pulse-line {
+  fill: none; stroke: var(--cyan); stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.pulse-glow {
+  fill: none; stroke: rgba(34,211,238,.28); stroke-width: 7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.pulse-cap {
+  display: block; margin-top: 6px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: .14em; color: var(--label); text-transform: uppercase;
+}
+
+/* ── THE WAVEWARZ MARK ── */
+.ww-logo { width: min(300px, 62vw); margin: 0 0 6px; filter: drop-shadow(0 0 28px rgba(96,165,250,.35)); }
+
+/* ── THE SPLIT — one bar, five stakes. The labels live in the key below it;
+   the two big segments carry their number inline because they have room. ── */
+.split { margin-top: 16px; }
+.split-bar {
+  display: flex; height: 40px; border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.13); box-shadow: var(--nn-inset);
+}
+.split-bar span { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.split-bar b {
+  font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 700;
+  color: #06131A;                          /* dark ink on the bright fills — measured, not grey */
+}
+.sp-a { background: linear-gradient(180deg, #35E0F2, #17B8CE); }
+.sp-b { background: linear-gradient(180deg, #8FB7FF, #5E8FE8); }
+.sp-c { background: linear-gradient(180deg, #F2D387, #DDB55B); }
+.sp-d { background: linear-gradient(180deg, #C4B1FF, #9F86F0); }
+.sp-e { background: linear-gradient(180deg, #FF9B78, #F0714B); }
+.split-key { list-style: none; display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 11px; }
+.split-key li { display: flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--ink2); }
+.split-key b { color: var(--ink); margin-left: 2px; }
+.split-key i { width: 11px; height: 11px; border-radius: 4px; flex: 0 0 auto; }
+
+/* ── partner card (index page) ── */
+.pcard { display: block; text-decoration: none; color: inherit; transition: transform .24s var(--ease), border-color .24s var(--ease); }
+.pcard:hover { transform: translateY(-3px); border-color: rgba(255,107,74,.45); }
+.pcard .ptop { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+.plogo {
+  width: 54px; height: 54px; border-radius: 16px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Sora'; font-weight: 800; font-size: 1.3rem; color: var(--void);
+  background: linear-gradient(135deg, #FF8A5B, var(--zao));
+  box-shadow: 0 0 30px -10px var(--zao);
+  overflow: hidden;
+}
+.plogo img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
+/* the real wordmark is gold art — it sits on the dark panel, not on the orange
+   gradient it would fight with. The gradient returns with the letter if the
+   image is ever missing. */
+.plogo:has(img) { background: radial-gradient(120% 120% at 30% 20%, #1A2030, var(--deep)); border: 1px solid rgba(232,196,107,.35); }
+.plogo:has(img) .pl-letter { display: none; }
+
+/* the partnership-card wordmark */
+.pc-zlogo {
+  height: clamp(2.2rem, 10vw, 3.7rem); width: auto; display: block;
+  filter: drop-shadow(0 0 20px rgba(232,196,107,.55));
+}
+.pc-z:has(.pc-zlogo) .pc-ztext { display: none; }
+.ptier {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em;
+  padding: 5px 11px; border-radius: 999px; color: var(--gold-t);
+  border: 1px solid rgba(232,196,107,.4); background: rgba(232,196,107,.07);
+}
+.pslot { text-align: center; padding: 34px 20px; border-style: dashed; }
+.pslot .k { display: block; margin-bottom: 10px; }
+
+/* ── footer ── */
+footer { padding: 46px 0 60px; text-align: center; }
+footer p { font-size: 14.5px; margin-bottom: 8px; }
+.mantra { color: var(--accent-t); font-weight: 700; }
+
+/* ── nav ── */
+.nav {
+  position: sticky; top: 0; z-index: 20; padding: 12px 0;
+  background: rgba(4,6,10,.82);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nav a { text-decoration: none; font-weight: 700; font-size: 14.5px; color: var(--ink); }
+.nav .links { display: flex; gap: 14px; }
+.nav .links a { color: var(--ink2); font-weight: 600; font-size: 14px; }
+.nav .links a:hover { color: var(--accent-t); }
+
+/* ═══ WIDER SCREENS — progressive enhancement, never the baseline ═══ */
+@media (min-width: 720px) {
+  body { font-size: 18px; }
+  .wrap { padding: 0 28px; }
+  section { padding: 82px 0; }
+  .hero { padding: 104px 0 60px; }
+  .glass { padding: 30px; }
+  .grid.two { grid-template-columns: repeat(2, 1fr); }
+  .grid.three { grid-template-columns: repeat(3, 1fr); }
+  .grid.four { grid-template-columns: repeat(2, 1fr); }
+  .loop { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .grid.four { grid-template-columns: repeat(4, 1fr); }
+  .loop { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  /* the thread between steps — drawn in the GAPS by the container, never on the
+     cards themselves, because `right:-14px` on a child overflows its own box */
+  .loop { position: relative; }
+  .loop::before, .loop::after {
+    content: ''; position: absolute; top: 50%; height: 2px; width: 14px;
+    background: linear-gradient(90deg, rgba(34,211,238,.55), transparent);
+  }
+  .loop::before { left: calc((100% - 42px) / 4); }
+  .loop::after  { left: calc((100% - 42px) / 4 * 2 + 14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .btn, .pcard { transition: none; }
+  .btn:hover, .pcard:hover { transform: none; }
+}
+
+/* ── long unbreakable strings must not push a phone sideways ──
+   Measured at 375px: the status list ran 311px into a 294px box because
+   "github.com/InitiumBuilders/SEMBLE" has no break opportunity. URLs, code
+   spans and program IDs are exactly the content that does this, and they are
+   exactly the content this project is full of. */
+.status div, .status a, .glass p, .glass li, .person p, .card2 p { overflow-wrap: anywhere; }
+code { overflow-wrap: anywhere; word-break: break-word; }
+.status li { min-width: 0; }
+.status li > div { min-width: 0; }

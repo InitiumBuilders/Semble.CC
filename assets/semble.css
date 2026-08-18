@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════
+   SEMBLE — the design system
+   The mark is the law: deep body, bright rim, one point of light
+   where the two curves meet. Everything here obeys that.
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --void:#05070e;
+  --void-2:#080b16;
+  --glass:rgba(148,180,235,.05);
+  --glass-2:rgba(148,180,235,.085);
+  --edge:rgba(150,180,240,.145);
+  --edge-hi:rgba(160,195,255,.34);
+  --ink:#eef3fb;
+  --ink-2:#c6d3e8;
+  --signal:#5ce1ff;      /* the rim */
+  --signal-2:#00a8d8;    /* the body */
+  --signal-3:#0080b8;    /* the depth */
+  --gold:#ffcf8a;        /* the one point of light */
+  --good:#7ae6b8;
+  --r-pill:999px; --r-ctl:16px; --r-pane:24px; --r-hero:32px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --spring:cubic-bezier(.34,1.4,.64,1);
+  --nav-h:64px;
+}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--ink);
+  font:500 18px/1.68 Inter,system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit}
+/* Every bare <button> must start from nothing. Without this the UA paints
+   rgb(240,240,240) + a 2px black border + sharp corners — invisible in review
+   on a light control, glaring on a dark one. Components opt IN to a skin. */
+button{border:0;background:none;cursor:pointer;-webkit-appearance:none;appearance:none;
+  text-align:inherit;padding:0}
+::selection{background:rgba(92,225,255,.26)}
+
+.atmos{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(58% 40% at 18% 4%, rgba(0,168,216,.20), transparent 68%),
+    radial-gradient(46% 36% at 88% 22%, rgba(92,225,255,.10), transparent 70%),
+    radial-gradient(62% 46% at 50% 104%, rgba(255,207,138,.055), transparent 72%),
+    linear-gradient(180deg,var(--void) 0%, var(--void-2) 52%, var(--void) 100%)}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>")}
+
+.wrap{width:100%;max-width:1060px;margin:0 auto;padding:0 22px}
+.wrap--narrow{max-width:790px}
+/* .wrap sets `padding:0 22px` (a shorthand), so vertical rhythm must out-specify
+   it — hence .wrap in these selectors. Longhands only, never the shorthand. */
+section,section.wrap{padding-top:76px;padding-bottom:76px}
+@media(min-width:768px){section,section.wrap{padding-top:112px;padding-bottom:112px}}
+
+/* ── THE MARK ── */
+.mk{width:30px;height:30px;flex:0 0 auto;
+  filter:drop-shadow(0 0 10px rgba(0,168,216,.55))}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:80;background:rgba(5,7,14,.84);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+  border-bottom:1px solid var(--edge)}
+.nav__in{max-width:1060px;margin:0 auto;padding:0 18px;height:var(--nav-h);
+  display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px;flex:0 0 auto}
+.brand b{font:800 1.16rem/1 Sora,sans-serif;letter-spacing:-.02em}
+.nav__links{margin-left:auto;display:flex;gap:2px;align-items:center;
+  overflow-x:auto;scrollbar-width:none}
+.nav__links::-webkit-scrollbar{display:none}
+.nav__links a{font:600 14px/1 Inter,sans-serif;color:var(--ink-2);
+  padding:0 12px;min-height:44px;display:inline-flex;align-items:center;
+  border-radius:var(--r-pill);white-space:nowrap;transition:color .3s var(--ease)}
+.nav__links a:hover{color:var(--ink)}
+.nav__links a.on{color:var(--signal)}
+/* below 460 the wordmark stands down so all four links fit without clipping */
+@media(max-width:460px){
+  .brand b{display:none}
+  .nav__in{gap:6px}
+  /* five links must clear 375px AFTER the webfonts land, not before */
+  .nav__links{gap:1px}
+  .nav__links a{padding:0 9px}
+}
+
+/* ── TYPE ── */
+.kick{font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--signal);margin:0 0 16px}
+h1,h2,h3,h4{font-family:Sora,sans-serif;font-weight:800;letter-spacing:-.022em;
+  line-height:1.06;margin:0}
+h1{font-size:clamp(2.6rem,11vw,5rem)}
+h2{font-size:clamp(1.95rem,7.2vw,3.1rem);margin-bottom:18px}
+h3{font-size:clamp(1.34rem,4.4vw,1.66rem);font-weight:700;margin-bottom:10px}
+h4{font-size:1.12rem;font-weight:700;margin-bottom:7px}
+p{margin:0 0 17px;color:var(--ink-2);max-width:64ch}
+p.lede{font-size:clamp(1.08rem,4.1vw,1.32rem);color:var(--ink);line-height:1.58}
+b,strong{color:var(--ink);font-weight:600}
+.sig{color:var(--signal)} .au{color:var(--gold)} .gd{color:var(--good)}
+.mono{font-family:"IBM Plex Mono",monospace}
+
+/* ── SURFACES ── */
+.pane{background:var(--glass);border:1px solid var(--edge);
+  border-radius:var(--r-pane);padding:26px 22px;position:relative;overflow:hidden}
+.pane::before{content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,var(--edge-hi),transparent)}
+@media(min-width:768px){.pane{padding:32px 30px}}
+.cap{font:500 14.5px/1.62 Inter,sans-serif;color:var(--ink-2);margin:14px 0 0}
+
+/* ── BUTTONS ── */
+.btn{appearance:none;border:1px solid var(--edge-hi);cursor:pointer;
+  background:linear-gradient(165deg,rgba(92,225,255,.17),rgba(0,168,216,.06));
+  color:var(--signal);font:600 15px/1.25 Inter,sans-serif;text-align:center;
+  min-height:52px;padding:12px 22px;border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),opacity .3s var(--ease)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 12px 32px -14px rgba(92,225,255,.6)}
+.btn:active{transform:translateY(0)}
+.btn--ghost{background:none;color:var(--ink-2);border-color:var(--edge)}
+.btn--ghost:hover{color:var(--ink);box-shadow:none}
+.btn--gold{color:var(--gold);border-color:rgba(255,207,138,.45);
+  background:linear-gradient(165deg,rgba(255,207,138,.19),rgba(255,207,138,.05))}
+.btn--sm{min-height:44px;font-size:14px;padding:10px 18px}
+.btn[disabled]{opacity:.4;cursor:default;transform:none;box-shadow:none}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;
+  border:1px solid var(--edge);border-radius:var(--r-pill);
+  font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2)}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--signal);
+  box-shadow:0 0 9px var(--signal);flex:0 0 auto;animation:bre 2.8s ease-in-out infinite}
+.chip--gold i{background:var(--gold);box-shadow:0 0 9px var(--gold);animation:none}
+.chip--rest i{background:var(--ink-2);box-shadow:none;animation:none;opacity:.5}
+@keyframes bre{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* ── SEGMENTED CONTROL ── */
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.seg button{appearance:none;cursor:pointer;background:none;
+  border:1px solid var(--edge);border-radius:var(--r-pill);
+  color:var(--ink-2);font:600 13px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.1em;text-transform:uppercase;min-height:44px;padding:0 16px;
+  transition:color .28s var(--ease),background .28s var(--ease),border-color .28s var(--ease)}
+.seg button.on{color:var(--signal);border-color:rgba(92,225,255,.45);
+  background:rgba(92,225,255,.09)}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(16px)}
+.rv.seen{opacity:1;transform:none;
+  transition:opacity .7s var(--ease),transform .7s var(--ease)}
+
+/* ── FOOT ── */
+footer,footer.wrap{padding-top:66px;padding-bottom:86px;
+  border-top:1px solid var(--edge);margin-top:26px}
+.colo{font:500 13.5px/1.75 "IBM Plex Mono",monospace;color:var(--ink-2);opacity:.85}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THE CROSSING — the mark, drawn.
+   Two curves turning into each other, lit where they meet.
+   §14 grants it exactly three moments: the arrival, the
+   confirmation at threshold, and the moment a Trax is signed.
+   Nowhere else. Scarcity is what keeps it meaning something.
+   ═══════════════════════════════════════════════════════════ */
+.cross{display:block;width:100%;height:100%;overflow:visible}
+.cx{fill:none;stroke:var(--signal);stroke-width:5.5;stroke-linecap:round;
+  filter:drop-shadow(0 0 9px rgba(92,225,255,.65))}
+.cxc{fill:#fff6e6;opacity:0;transform-box:fill-box;transform-origin:center;
+  transform:scale(0);filter:drop-shadow(0 0 12px rgba(255,207,138,.95))}
+.cxh{fill:none;stroke:var(--gold);stroke-width:1.5;opacity:0;
+  transform-box:fill-box;transform-origin:center}
+.cross.on .cx{animation:cxDraw 1s cubic-bezier(.22,1,.36,1) forwards}
+.cross.on .cx--b{animation-delay:.12s}
+.cross.on .cxc{animation:cxCore .85s var(--spring) .86s forwards}
+.cross.on .cxh{animation:cxHalo 1.5s cubic-bezier(.22,1,.36,1) .9s forwards}
+@keyframes cxDraw{to{stroke-dashoffset:0}}
+@keyframes cxCore{0%{opacity:0;transform:scale(0)}
+  58%{opacity:1;transform:scale(1.55)}100%{opacity:1;transform:scale(1)}}
+@keyframes cxHalo{0%{opacity:.85;transform:scale(.5)}100%{opacity:0;transform:scale(1.9)}}
+.cross--gold .cx{stroke:var(--gold);filter:drop-shadow(0 0 10px rgba(255,207,138,.7))}
+
+/* the seal that lands on a confirmed Sesh */
+.seal-x{position:relative;width:96px;height:96px;margin:4px auto 2px}
+.seal-x .cross{position:absolute;inset:0}
+
+/* ── THE STEP PATH — six steps, one line ── */
+.pathsteps{position:relative}
+.pathsteps::before{content:"";position:absolute;left:26px;top:12px;bottom:12px;width:2px;
+  background:linear-gradient(180deg,transparent,var(--edge-hi) 8%,var(--edge-hi) 92%,transparent);
+  opacity:.5}
+@media(min-width:700px){ .pathsteps::before{display:none} }
+
+/* ═══════════════════════════════════════════════════════════
+   DEPTH — blur is the hierarchy, not more hairlines.
+   Three planes only. A surface never sits on its own plane
+   without a reason a reader could name.
+   ═══════════════════════════════════════════════════════════ */
+.d1{background:rgba(148,180,235,.035);border:1px solid rgba(150,180,240,.11)}
+.d2{background:rgba(148,180,235,.06);border:1px solid var(--edge);
+  box-shadow:0 18px 44px -30px rgba(0,0,0,.9)}
+.d3{background:rgba(16,22,40,.72);border:1px solid var(--edge-hi);
+  -webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+  box-shadow:0 30px 70px -34px rgba(0,0,0,.95)}
+
+/* ── ARRIVAL ── transform only, never opacity: a frozen animation
+   must degrade to "slightly offset", never to "invisible". ── */
+@keyframes riseIn{from{transform:translateY(12px)}to{transform:none}}
+.stg > *{animation:riseIn .5s var(--ease)}
+.stg > *:nth-child(1){animation-delay:0ms}
+.stg > *:nth-child(2){animation-delay:55ms}
+.stg > *:nth-child(3){animation-delay:110ms}
+.stg > *:nth-child(4){animation-delay:165ms}
+.stg > *:nth-child(5){animation-delay:220ms}
+.stg > *:nth-child(6){animation-delay:275ms}
+.stg > *:nth-child(n+7){animation-delay:330ms}

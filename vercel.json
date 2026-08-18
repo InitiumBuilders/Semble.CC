@@ -1,0 +1,34 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/SEMBLE-SPEC.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/live",
+      "destination": "https://motuslive.vercel.app/live",
+      "permanent": false
+    }
+  ]
+}

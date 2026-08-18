@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Convene With Confidence</title>
+<meta name="description" content="The app to physically build in public. Init a Semble Session, take your Semble Steps, and it happens the moment enough people come with you."/>
+<meta name="theme-color" content="#05070e"/>
+<meta property="og:title" content="Semble — Convene With Confidence"/>
+<meta property="og:description" content="The app to physically build in public."/>
+<meta property="og:image" content="/assets/mark-512.png"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+/* ── HERO ── */
+.hero{min-height:calc(100svh - var(--nav-h));display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:48px 22px 44px}
+.hero__m{position:relative;width:min(52vw,206px);aspect-ratio:1;margin:0 auto 30px;
+  display:grid;place-items:center}
+.hero__m img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1}
+.halo{position:absolute;inset:-24%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%, rgba(92,225,255,.34), rgba(0,168,216,.13) 42%, transparent 68%);
+  animation:halo 7.5s ease-in-out infinite;will-change:opacity,transform}
+.hero__m.rest .halo{animation-play-state:paused}
+@keyframes halo{0%,100%{opacity:.5;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+.hero h1{margin-bottom:13px}
+.hero .sub{font:700 clamp(1.05rem,4.8vw,1.42rem)/1.4 Sora,sans-serif;color:var(--ink);margin:0 0 12px}
+.hero .one{font-size:clamp(1.05rem,4.4vw,1.28rem);color:var(--ink-2);max-width:26ch;margin:0 auto 32px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* ── LEXICON ── */
+.lex{display:grid;gap:12px;margin-top:28px}
+@media(min-width:720px){.lex{grid-template-columns:repeat(2,1fr)}}
+.lx{background:var(--glass);border:1px solid var(--edge);border-radius:var(--r-pane);padding:22px 20px}
+.lx__w{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.lx__w b{font:800 1.3rem/1.1 Sora,sans-serif;letter-spacing:-.02em}
+.lx__w span{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--signal)}
+.lx p{margin:0;font-size:.97rem}
+.lx--lead{grid-column:1 / -1;border-color:rgba(92,225,255,.32);
+  background:linear-gradient(168deg,rgba(0,168,216,.1),var(--glass) 62%)}
+
+/* ── THRESHOLD ── */
+.thr{display:grid;gap:26px}
+@media(min-width:900px){.thr{grid-template-columns:1fr 1fr;align-items:center;gap:46px}}
+.ring{position:relative;aspect-ratio:1;width:100%;max-width:320px;margin:0 auto}
+.ring svg{width:100%;height:100%;overflow:visible}
+.trk{fill:none;stroke:rgba(150,180,240,.15);stroke-width:2.5}
+.dot{fill:var(--signal);opacity:0;transform-box:fill-box;transform-origin:center}
+.dot.on{opacity:1;animation:land .6s var(--spring) both}
+@keyframes land{0%{transform:scale(0)}62%{transform:scale(1.5)}100%{transform:scale(1)}}
+.arc{fill:none;stroke:var(--signal);stroke-width:2.5;stroke-linecap:round;
+  filter:drop-shadow(0 0 10px rgba(92,225,255,.55));transition:stroke-dashoffset .55s var(--ease)}
+.seal{fill:none;stroke:var(--gold);stroke-width:3;opacity:0;
+  filter:drop-shadow(0 0 16px rgba(255,207,138,.7))}
+.ring.done .seal{animation:sealIn 1s var(--spring) both}
+@keyframes sealIn{0%{opacity:0;transform:scale(.88)}60%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+.mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;pointer-events:none;text-align:center}
+.mid b{font:800 clamp(2.2rem,10vw,3rem)/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
+.mid span{font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:8px}
+.ring.done .mid b{color:var(--gold)}
+/* at the threshold the count gives way to the mark — §14 grants the crossing
+   exactly three moments, and this is the second of them */
+.mid b{transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.ring.done .mid b{opacity:0;transform:scale(.7)}
+.ringx{position:absolute;inset:29%;opacity:0;pointer-events:none;
+  transition:opacity .5s var(--ease)}
+.ring.done .ringx{opacity:1}
+.ring.done .mid{justify-content:flex-end;padding-bottom:8%}
+
+/* ── STEPS GRID ── */
+.grid2{display:grid;gap:13px;margin-top:28px}
+@media(min-width:700px){.grid2{grid-template-columns:repeat(2,1fr)}}
+.step{background:var(--glass);border:1px solid var(--edge);border-radius:var(--r-ctl);padding:21px 19px}
+.step .n{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.2em;
+  color:var(--signal);text-transform:uppercase;display:block;margin-bottom:10px}
+.step p{font-size:.96rem;margin:0}
+
+/* ── SPINE ── */
+.spine{display:grid;gap:11px;margin-top:26px}
+.node{background:var(--glass);border:1px solid var(--edge);border-radius:var(--r-ctl);padding:19px}
+.node span{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--signal);display:block;margin-bottom:9px}
+.node b{font:800 1.1rem/1.2 Sora,sans-serif;display:block;margin-bottom:5px}
+.node p{margin:0;font-size:.95rem}
+.node.here{border-color:rgba(92,225,255,.42);box-shadow:0 0 44px -18px rgba(92,225,255,.7)}
+.arw{text-align:center;color:var(--signal);opacity:.4}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/" class="on">Home</a><a href="/init">Init</a><a href="/features">Features</a>
+    <a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<header class="hero">
+  <div class="hero__m" id="heroM">
+    <span class="halo" aria-hidden="true"></span>
+    <img src="/assets/mark-512.png" alt="The Semble mark: two curves meeting at a point of light" width="206" height="206" fetchpriority="high"/>
+  </div>
+  <h1>Semble</h1>
+  <p class="sub">Convene With Confidence.</p>
+  <p class="one">The app to <b>physically build in public.</b></p>
+  <div class="cta">
+    <a class="btn" href="/app">Open the app</a>
+    <a class="btn btn--ghost" href="/init">The word: Init</a>
+  </div>
+</header>
+
+<section class="wrap">
+  <p class="kick rv">The word</p>
+  <h2 class="rv">Semble.</h2>
+  <p class="lede rv">To come together. Something worth coming together around.</p>
+  <p class="rv">It carries <i>assemble</i> inside it, but softer and closer — an invitation rather than a summons. A Semble is both the gathering and the reason for it: the thing you bring, and the people who come to meet it.</p>
+  <p class="rv"><b>Build your Semble. Share it in person with the world.</b></p>
+</section>
+
+<section class="wrap">
+  <p class="kick rv">The building blocks</p>
+  <h2 class="rv">Five words, and you know the whole system.</h2>
+  <p class="lede rv">Everything in Semble is made of these. Nothing else needs learning.</p>
+  <div class="lex">
+    <div class="lx lx--lead rv">
+      <div class="lx__w"><b>Semble</b><span>What you bring</span></div>
+      <p>One active piece of work, shared in the open. Not a bio, not a portfolio — the thing you are actually making right now.</p>
+    </div>
+    <div class="lx rv">
+      <div class="lx__w"><b>Semble Session</b><span>A Sesh</span></div>
+      <p>One gathering, in one real place, at one real time. It is not scheduled until enough people commit — then it is certain.</p>
+      <p style="margin-top:11px"><a class="open" href="/init" style="min-height:0">You open one with <b class="sig">Init</b> &rarr;</a></p>
+    </div>
+    <div class="lx rv">
+      <div class="lx__w"><b>Semble Steps</b><span>The unit of movement</span></div>
+      <p>The small, named, checkable things you actually do: commit, post what you are bringing, read who you will meet, pack it, sign at the door. Steps are how a Sesh gets prepared for, and how it gets kept.</p>
+    </div>
+    <div class="lx rv">
+      <div class="lx__w"><b>Trax</b><span>Your record</span></div>
+      <p>The line your Steps make. Every Sesh you attended, every Step you took, every !MOTUS in and out — dated, signed by the people who were there, and checkable by anyone.</p>
+    </div>
+    <div class="lx rv">
+      <div class="lx__w"><b>!MOTUS</b><span>The credit</span></div>
+      <p>What a room gives you for what you brought. A fixed pool per Sesh, allocated by the people who were present. It buys the compute you build with.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="kick rv">The threshold</p>
+  <h2 class="rv">A Sesh happens when enough people commit.</h2>
+  <div class="thr">
+    <div class="ring rv" id="ring">
+      <svg viewBox="0 0 200 200">
+        <circle class="trk" cx="100" cy="100" r="78"/>
+        <circle class="arc" id="arc" cx="100" cy="100" r="78"
+                stroke-dasharray="490" stroke-dashoffset="490" transform="rotate(-90 100 100)"/>
+        <g id="dots"></g>
+        <circle class="seal" cx="100" cy="100" r="88"/>
+      </svg>
+      <div class="mid"><b id="cnt">0</b><span id="lab">of 6 committed</span></div>
+      <div class="ringx" aria-hidden="true"><svg class="cross cross--gold" id="ringcross" viewBox="0 0 100 100"><circle class="cxh" cx="50" cy="50" r="26"/><path class="cx cx--a" d="M70 16C40 20 36 40 50 50"/><path class="cx cx--b" d="M30 84C60 80 64 60 50 50"/><circle class="cxc" cx="50" cy="50" r="4.6"/></svg></div>
+    </div>
+    <div class="rv">
+      <p><b>Init</b> a build session, a workshop, a walk. Nothing is scheduled until enough people commit — and committing means putting down a small stake that <b>comes straight back when you walk in.</b></p>
+      <p>If it never fills, everyone who committed gets back <b class="au">more than they put down</b>, funded by the convener's bond. Committing early costs you nothing, and pays if it falls through.</p>
+      <button class="btn" id="go" type="button">Commit to this Sesh</button>
+      <p class="cap" id="cap">Free events run 40–60% no-show. Paid ones run 8–15%. The stake captures that difference without charging anyone.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="kick rv">Six Steps</p>
+  <h2 class="rv">And none of them are posting.</h2>
+  <div class="grid2 pathsteps">
+    <div class="step rv"><span class="n">Step 01 · Keep</span><h4>One active Semble</h4>
+      <p>The thing you are making right now, shared in the open. One live piece of work.</p></div>
+    <div class="step rv"><span class="n">Step 02 · Init</span><h4>A Semble Session</h4>
+      <p>Open one: what you convene on, where, when, and how many people it needs. Anywhere real — a library, a park, a workshop.</p></div>
+    <div class="step rv"><span class="n">Step 03 · Commit</span><h4>A stake, not an RSVP</h4>
+      <p>Returned in full when you arrive. Returned with a bonus if the Sesh never fills.</p></div>
+    <div class="step rv"><span class="n">Step 04 · Gather</span><h4>Phones down</h4>
+      <p>Nothing records by default. Anyone present can mark a moment, and only marked moments are kept.</p></div>
+    <div class="step rv"><span class="n">Step 05 · Sign</span><h4>Attendance, signed by the room</h4>
+      <p>Everyone taps the Sesh anchor and co-signs for each other. No location is captured.</p></div>
+    <div class="step rv"><span class="n">Step 06 · Credit</span><h4>To what you brought</h4>
+      <p>A fixed pool, allocated by the people who were there. That credit anchors the compute you build with.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="kick rv">Presence and compute</p>
+  <h2 class="rv">Computation flows from showing up.</h2>
+  <p class="lede rv">Most of the industry is selling agents that work while you sleep. Semble runs the other way: your agent moves while <b>you are there</b>, guiding it — and the capacity to run it is earned by being in rooms with people.</p>
+  <p class="rv">Credits are counted in <b>supervised agent-minutes</b>, a unit you can reason about. Earned with your feet. Spent while present.</p>
+  <div class="pane rv">
+    <h3>What presence actually buys you</h3>
+    <p>Every consequential action an agent takes here is taken with a person present, signed, and logged. That makes it <b>attributable</b> — you can always say who was there and what they authorised — and <b>interruptible</b> — someone is close enough to stop it.</p>
+    <p style="margin:0">That is a safety and accountability claim, and it is the one we make.</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="kick rv">The ecosystem</p>
+  <h2 class="rv">Where Semble sits.</h2>
+  <div class="spine">
+    <div class="node rv"><span>The long move</span><b>MotusMoves.US</b><p>Your strategic arc, posted in public.</p></div>
+    <div class="arw rv">↓</div>
+    <div class="node here rv"><span>The open door · you are here</span><b>Semble.cc</b><p>Your physical working status. Where anyone starts, this week, with four people at a library.</p></div>
+    <div class="arw rv">↓</div>
+    <div class="node rv"><span>The earned stage</span><b>Motus.Events</b><p>What a Semble becomes when it outgrows the room.</p></div>
+    <div class="arw rv">↓</div>
+    <div class="node rv"><span>The settlement</span><b>Motus.Market</b><p>Where action and agency transparently pay off. Live today.</p></div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div class="chip" style="margin-bottom:22px"><i></i>Preview · Baseline v0.5</div>
+  <h2>Let's step, together.</h2>
+  <p><a class="btn" href="/app">Open the app</a></p>
+  <p class="colo">The Motus Method · Semble Baseline v0.5 · August 2026<br/>
+  ~August James Domanchuk · <b>Motus Means Move</b></p>
+</footer>
+
+<script src="/assets/semble.js"></script>
+<script>
+(function(){
+  window.SEMBLE.whileVisible(document.getElementById('heroM'));
+
+  var NEED=6, have=0, R=78, C=2*Math.PI*R;
+  var ring=document.getElementById('ring'), arc=document.getElementById('arc'),
+      dots=document.getElementById('dots'), cnt=document.getElementById('cnt'),
+      lab=document.getElementById('lab'), go=document.getElementById('go'),
+      cap=document.getElementById('cap');
+  if(!ring) return;
+  for(var i=0;i<NEED;i++){
+    var a=(i/NEED)*Math.PI*2-Math.PI/2;
+    var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',(100+Math.cos(a)*R).toFixed(2));
+    c.setAttribute('cy',(100+Math.sin(a)*R).toFixed(2));
+    c.setAttribute('r','6.5'); c.setAttribute('class','dot'); dots.appendChild(c);
+  }
+  arc.setAttribute('stroke-dasharray',C.toFixed(1));
+  arc.setAttribute('stroke-dashoffset',C.toFixed(1));
+  function commit(){
+    if(have>=NEED) return;
+    have++; dots.children[have-1].classList.add('on');
+    arc.setAttribute('stroke-dashoffset',(C*(1-have/NEED)).toFixed(1));
+    cnt.textContent=have;
+    if(have<NEED){
+      lab.textContent='of '+NEED+' committed';
+      go.textContent=(NEED-have)+' more needed';
+    } else {
+      lab.textContent='confirmed';
+      go.textContent="You're on it"; go.classList.add('btn--gold');
+      ring.classList.add('done');
+      window.SEMBLE.cross(document.getElementById('ringcross'), function(){
+        /* the count hands the centre to the mark — guaranteed, not merely transitioned */
+        cnt.style.transition='none'; cnt.style.opacity='0';
+      });
+      cap.innerHTML='<b class="au">Six of six. You\'re on it.</b> Everyone who committed keeps their stake and gets a calendar invite. It is now on the public list.';
+    }
+  }
+  go.addEventListener('click',commit);
+  window.SEMBLE.onceVisible(ring,function(){
+    [400,880,1300,1680].forEach(function(t){ setTimeout(commit,t); });
+  });
+})();
+</script>
+</body>
+</html>

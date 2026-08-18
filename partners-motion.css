@@ -1,0 +1,404 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE PARTNERSHIP CARD — a live component, not a raster.
+   Responsive, animatable, readable by a screen reader, never blurry on a
+   retina phone, and it cannot go missing the way an image file can.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.pcard-sec { padding-top: 10px; }
+.pc { padding: 26px 20px; overflow: hidden; }
+
+/* the aurora behind the card — a slow DRIFT, never a spin.
+   ⚠ A rotating box behind content is permanently banned in this project. */
+.pc-glow {
+  position: absolute; inset: -40%; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(38% 38% at 22% 26%, rgba(34,211,238,.20), transparent 62%),
+    radial-gradient(34% 34% at 78% 30%, rgba(255,107,74,.18), transparent 60%),
+    radial-gradient(42% 42% at 50% 88%, rgba(167,139,255,.16), transparent 64%);
+  animation: pcDrift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes pcDrift {
+  0%   { transform: translate3d(-2%, -1%, 0) scale(1); }
+  100% { transform: translate3d(2%, 2%, 0) scale(1.06); }
+}
+
+.pc-head { text-align: center; margin-bottom: 22px; }
+.pc-marks {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.pc-s, .pc-z {
+  font-family: 'Sora'; font-weight: 800; letter-spacing: -.01em;
+  font-size: clamp(1.35rem, 6.6vw, 2.5rem); line-height: 1;
+}
+.pc-s { color: var(--accent-t); text-shadow: 0 0 34px rgba(34,211,238,.55); }
+.pc-z { color: var(--gold); text-shadow: 0 0 34px rgba(232,196,107,.5); }
+
+/* the join breathes — the one moving glyph, because it is the one that means
+   "these two are one thing now" */
+.pc-plus, .pc-plus2 {
+  color: var(--azure); font-weight: 700; font-size: clamp(1.2rem, 5vw, 1.9rem);
+  animation: pcBeat 3.4s var(--ease) infinite;
+}
+@keyframes pcBeat {
+  0%, 100% { opacity: .6; transform: scale(1); }
+  50%      { opacity: 1;  transform: scale(1.22); text-shadow: 0 0 26px rgba(96,165,250,.9); }
+}
+.pc-kick {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .42em;
+  color: var(--signal-t); margin-bottom: 14px;
+}
+.pc-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: clamp(11.5px, 3.2vw, 13.5px);
+  letter-spacing: .16em; color: var(--ink); line-height: 2;
+}
+.pc-tag span { color: var(--accent-t); }
+
+.pc-body { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.pc-h { font-size: clamp(1.2rem, 5.4vw, 1.7rem); margin: 8px 0 10px; letter-spacing: -.01em; }
+.pc-date { margin-top: 12px; font-size: 14px; }
+.pc-date .kicker { display: block; margin-bottom: 3px; }
+
+.pc-who { display: flex; align-items: center; gap: 13px; margin: 12px 0 13px; }
+.avatar.sm { width: 62px; height: 62px; border-radius: 18px; margin: 0; flex: 0 0 auto; }
+.avatar.sm .mono { font-size: 1.4rem; }
+.pc-name {
+  font-family: 'Sora'; font-weight: 800; font-size: clamp(1.5rem, 7vw, 2.1rem);
+  line-height: 1; letter-spacing: .06em;
+  background: linear-gradient(100deg, var(--signal-t), var(--accent-t) 60%, var(--cyan));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+/* ⚠ Gradient text is banned for BODY copy — it cannot be contrast-audited.
+   It is permitted here only because this is a display wordmark, it carries no
+   load-bearing information, and there is a solid fallback directly below. */
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .pc-name { color: var(--ink); }
+}
+.pc-role { font-size: 15px; color: var(--ink2); margin-top: 4px; }
+.pc-role b { color: var(--gold-t); }
+.pc-socials { display: flex; gap: 8px; flex-wrap: wrap; }
+.pc-socials .tag { font-size: 12px; padding: 7px 12px; }
+
+/* ── the five pillars ── */
+.pc-pillars {
+  list-style: none; display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 9px; margin-top: 18px;
+}
+.pc-pillars li {
+  display: flex; flex-direction: column; gap: 2px; padding: 13px 12px;
+  border-radius: var(--r-xs); text-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  border: 1px solid rgba(255,255,255,.09);
+  box-shadow: var(--nn-raise);
+}
+.pc-pillars li:last-child { grid-column: 1 / -1; }
+/* holds a drawn mark now, not a glyph — so it centres as a box, not as text */
+.pc-pillars .pi { display: flex; justify-content: center; margin-bottom: 7px; }
+.pc-pillars b { font-size: 13.5px; color: var(--ink); }
+.pc-pillars i { font-style: normal; font-size: 12px; color: var(--ink2); }
+.pc-pillars li:last-child i { color: var(--gold-t); }
+
+.pc-hash {
+  margin-top: 20px; text-align: center;
+  font-family: 'Sora'; font-weight: 800; letter-spacing: .04em;
+  font-size: clamp(1.05rem, 5.2vw, 1.85rem);
+  background: linear-gradient(100deg, var(--cyan), var(--violet) 42%, var(--gold) 82%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding: 14px 0 2px;
+}
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .pc-hash { color: var(--accent-t); }
+}
+
+@media (min-width: 720px) {
+  .pc { padding: 36px 32px; }
+  .pc-body { grid-template-columns: 1.15fr 1fr; gap: 18px; }
+  .pc-pillars { grid-template-columns: repeat(5, 1fr); }
+  .pc-pillars li:last-child { grid-column: auto; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTUS MOTION FLOW — motion that carries meaning, not motion for its own sake.
+
+   ⚠ THE LAW THIS SECTION EXISTS TO ENFORCE, WRITTEN AFTER BREAKING IT TWICE:
+   ────────────────────────────────────────────────────────────────────────────
+   NO RULE IN THIS FILE MAY LEAVE CONTENT AT opacity:0 WAITING FOR SOMETHING
+   TO HAPPEN.
+
+   Version 1 hid 43 elements and waited for an IntersectionObserver. The
+   observer never delivered a callback on the live deploy and the partnership
+   page shipped INVISIBLE — a nav bar over a blank screen.
+
+   Version 2 added a scroll-sweep fallback. Also unverifiable: the review
+   browser cannot scroll at all (htmlScrollHeight 12020 / clientHeight 812,
+   scrollTop pinned at 0), so a scroll-gated reveal cannot be tested before it
+   reaches a real phone. Shipping a page whose legibility rests on an untested
+   mechanism is the same bet twice.
+
+   So the entrance is now a plain CSS animation with `animation-fill-mode: both`.
+   It ALWAYS terminates in the visible state. If animations are disabled, the
+   engine is busy, or JS never loads, every element's own computed opacity is
+   already 1 — there is nothing to rescue. Visibility costs zero JS.
+
+   The trade, stated honestly: entrances fire on load rather than on scroll,
+   so a card low on the page animates before it is looked at. That is a
+   one-time ~0.7s compositor cost per element, not a running loop — the rule
+   it must not break (never burn a phone's battery animating behind something
+   nobody is watching) is still kept.
+
+   ① Entry is a REVEAL, never a bounce — anticipation, action, settle.
+   ② Only transform/opacity animate, so nothing triggers layout.
+   ③ Everything has a reduced-motion escape at the bottom of this file.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@keyframes mvRise {
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero .badge, .hero h1, .hero .lead, .hero .btns > *,
+  section > .wrap > .kicker, section > .wrap > h2, section > .wrap > .lead,
+  .glass, .pc, .card2, .pc-pillars li {
+    animation: mvRise .74s var(--ease) both;
+  }
+
+  /* the hero arrives as one thought, in order — the only place a delay is
+     long enough to notice, and it is the place worth noticing */
+  .hero .badge      { animation-delay: .02s; }
+  .hero h1          { animation-delay: .08s; }
+  .hero .lead       { animation-delay: .16s; }
+  .hero .btns > *   { animation-delay: .24s; }
+
+  /* staggered children — the eye is led down a group rather than hit with it.
+     Capped at 5 steps so nothing waits long enough to read as missing. */
+  .grid > *:nth-child(1),  .pc-pillars li:nth-child(1) { animation-delay: .04s; }
+  .grid > *:nth-child(2),  .pc-pillars li:nth-child(2) { animation-delay: .11s; }
+  .grid > *:nth-child(3),  .pc-pillars li:nth-child(3) { animation-delay: .18s; }
+  .grid > *:nth-child(4),  .pc-pillars li:nth-child(4) { animation-delay: .25s; }
+  .grid > *:nth-child(n+5),.pc-pillars li:nth-child(n+5) { animation-delay: .32s; }
+}
+
+/* THE CURRENT — a spark travels the loop. The partnership's energy actually
+   moving between the steps, not a decoration. Desktop only: on a phone the
+   loop is stacked and the travel reads as a flicker. */
+@media (min-width: 1000px) and (prefers-reduced-motion: no-preference) {
+  .loop::before { animation: spark 2.6s var(--ease) infinite; }
+  .loop::after  { animation: spark 2.6s var(--ease) .5s infinite; }
+}
+@keyframes spark {
+  0%, 100% { opacity: .35; }
+  45%      { opacity: 1; box-shadow: 0 0 18px 2px rgba(34,211,238,.8); }
+}
+
+/* a raised surface answers the pointer — invitation, not decoration.
+   No JS class: a hover state is CSS's job and always has been. */
+.glass { transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease); }
+@media (hover: hover) {
+  .glass:hover {
+    transform: translate3d(0, -3px, 0);
+    border-color: rgba(123,227,234,.4);
+    box-shadow: var(--nn-raise), 0 0 44px -18px rgba(34,211,238,.9);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTUS — THE CURRENT.
+
+   Everything below is ADDITIVE. Not one rule here can hide a word: no opacity
+   starts at 0, no transform moves anything out of its box, nothing waits on a
+   script. Strip this entire block and the pages read exactly the same — they
+   just stop breathing.
+
+   That constraint is the whole design. It is what makes it safe to put this
+   much motion on a page whose earlier motion system shipped it blank.
+
+   Battery: continuous loops pause when their section leaves the screen, driven
+   by an observer whose FAILURE DIRECTION IS MORE ANIMATION, never less. If the
+   observer never fires, nothing is paused and the page behaves as it does now.
+   An observer may optimise; it may never gate.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① THE RAIL — the journey, drawn. Pure CSS scroll-driven, zero JS. If the
+      browser has no scroll timeline the rail simply stays at zero width and
+      nobody misses it. ── */
+.rail {
+  position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 60;
+  pointer-events: none; transform: scaleX(0); transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet) 52%, var(--gold));
+  box-shadow: 0 0 16px rgba(34, 211, 238, .75);
+}
+@supports (animation-timeline: scroll()) {
+  .rail { animation: railFill linear both; animation-timeline: scroll(root block); }
+}
+@keyframes railFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ── ② THE AURORA BREATHES. A drift, never a spin — a rotating box behind
+      content is permanently banned in this project. ── */
+body::before {
+  content: ''; position: fixed; inset: -22%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(38vw 38vw at 18% 12%, rgba(34, 211, 238, .10), transparent 62%),
+    radial-gradient(34vw 34vw at 84% 22%, rgba(255, 107, 74, .09), transparent 60%),
+    radial-gradient(46vw 46vw at 50% 92%, rgba(167, 139, 255, .09), transparent 64%);
+  animation: auroraDrift 38s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes auroraDrift {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  to   { transform: translate3d(1.5%, 1.5%, 0) scale(1.07); }
+}
+
+/* ── ③ THE CHARGE CROSSES. The single most symbolic motion on the page: light
+      leaves SEMBLE, passes through the ×, and arrives at THE ZAO. One 6s cycle,
+      staged by delay — the partnership performing itself. ── */
+.hero .mark.s { animation: chargeS 6s var(--ease) infinite; }
+.hero .mark-x { animation: chargeX 6s var(--ease) infinite; }
+.hero .mark.z { animation: chargeZ 6s var(--ease) infinite; }
+@keyframes chargeS {
+  0%, 34%, 100% { box-shadow: var(--nn-raise); }
+  12%           { box-shadow: var(--nn-raise), 0 0 44px -6px rgba(34, 211, 238, .9); }
+}
+@keyframes chargeX {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  32%      { opacity: 1; transform: scale(1.3); text-shadow: 0 0 24px rgba(96, 165, 250, .95); }
+}
+@keyframes chargeZ {
+  0%, 42%, 100% { box-shadow: var(--nn-raise); }
+  56%           { box-shadow: var(--nn-raise), 0 0 44px -6px rgba(255, 107, 74, .9); }
+}
+
+/* ── ④ THE CURRENT TRAVELS THE LOOP. The step badges charge in sequence, so
+      the energy visibly moves 1 → 2 → 3 → 4. Works on a phone, where the old
+      desktop-only thread between cards could not. ── */
+.loop .n { animation: stepCharge 5.2s var(--ease) infinite; }
+.loop li:nth-child(1) .n { animation-delay: 0s; }
+.loop li:nth-child(2) .n { animation-delay: .42s; }
+.loop li:nth-child(3) .n { animation-delay: .84s; }
+.loop li:nth-child(4) .n { animation-delay: 1.26s; }
+@keyframes stepCharge {
+  0%, 24%, 100% { transform: scale(1); }
+  9%            { transform: scale(1.16); box-shadow: 0 0 36px 0 var(--cyan); }
+}
+
+/* ── ⑤ THE AVATARS BREATHE. A person is the one thing on this page that is
+      alive, so their frame is the one that never sits perfectly still. ── */
+.avatar { animation: aura 7.5s var(--ease) infinite; }
+@keyframes aura {
+  0%, 100% { box-shadow: var(--nn-raise), 0 0 34px -16px var(--cyan); }
+  50%      { box-shadow: var(--nn-raise), 0 0 54px -10px var(--cyan); }
+}
+.person.z .avatar, .pc-who .avatar { animation-name: auraZ; }
+@keyframes auraZ {
+  0%, 100% { box-shadow: var(--nn-raise), 0 0 34px -16px var(--zao); }
+  50%      { box-shadow: var(--nn-raise), 0 0 54px -10px var(--zao); }
+}
+
+/* ── ⑥ THE NUMBERS LAND. Fired once, by class, after the ledger answers — so
+      the motion means "this just arrived from the ledger", not "decoration". ── */
+.pf.landed b { animation: landPulse .8s var(--ease); }
+@keyframes landPulse {
+  0%   { transform: translate3d(0, 7px, 0) scale(.96); }
+  55%  { transform: none; text-shadow: 0 0 36px rgba(34, 211, 238, .85); }
+  100% { transform: none; }
+}
+
+/* ── ⑦ the marks answer a pointer ── */
+.glass:hover .mk, .pcard:hover .mk { transform: scale(1.12) rotate(-4deg); }
+.mk { transition: transform .32s var(--ease); }
+
+/* ── ⑧ THE RULE DRAWS ITSELF. Each headline's underline is drawn as it enters
+      the viewport — pure CSS view-timeline, per element, zero JS. The headline
+      TEXT is never touched: browsers without view() simply show no rule. ── */
+@supports (animation-timeline: view()) {
+  section > .wrap > h2 { position: relative; }
+  section > .wrap > h2::after {
+    content: ''; position: absolute; left: 0; bottom: -12px; height: 3px; width: 100%;
+    border-radius: 2px; transform: scaleX(0); transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet) 55%, transparent 92%);
+    animation: drawRule linear both;
+    animation-timeline: view();
+    animation-range: entry 15% entry 70%;
+  }
+}
+@keyframes drawRule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ── ⑨ the source tags answer the pointer — invitation, not decoration ── */
+.tag { transition: border-color .28s var(--ease), color .28s var(--ease), transform .28s var(--ease); }
+.tag:hover { border-color: rgba(123,227,234,.55); transform: translateY(-2px); }
+
+/* ── ⑩ the badge breathes gold — the announcement never sits perfectly still ── */
+.badge { animation: badgeBreath 7s var(--ease) infinite; }
+@keyframes badgeBreath {
+  0%, 100% { box-shadow: 0 0 34px -12px rgba(232, 196, 107, .85); }
+  50%      { box-shadow: 0 0 52px -8px rgba(232, 196, 107, 1); }
+}
+
+/* ── ⑪ a face leans in when greeted ── */
+.avatar img { transition: transform .5s var(--ease); }
+.person:hover .avatar img, .pc-who:hover .avatar img { transform: scale(1.07); }
+
+/* ── ⑫ THE PULSE DRAWS ITSELF. The line is created by the same script that
+      fetched its data, so "exists" already means "the ledger answered" — the
+      draw is the arrival made visible. pathLength=1 normalises the dash so no
+      length measuring is needed. Finite, fill:both, ends fully drawn. ── */
+.pulse-line {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: pulseDraw 1.5s var(--ease) .1s both;
+}
+.pulse-glow { opacity: 0; animation: pulseGlowIn .9s ease-out 1.1s both; }
+@keyframes pulseDraw   { to { stroke-dashoffset: 0; } }
+@keyframes pulseGlowIn { to { opacity: 1; } }
+
+/* ── ⑬ THE SPLIT SWEEPS IN — one transform on the whole bar as it enters the
+      viewport. Without view() support it is simply already there. ── */
+@supports (animation-timeline: view()) {
+  .split-bar {
+    transform-origin: 0 50%;
+    animation: splitSweep linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 55%;
+  }
+}
+@keyframes splitSweep { from { transform: scaleX(.12); } to { transform: scaleX(1); } }
+
+/* ── ⑭ the WaveWarZ mark breathes its own blue — same law as the avatars ── */
+.ww-logo { animation: wwBreath 8.5s var(--ease) infinite; }
+@keyframes wwBreath {
+  0%, 100% { filter: drop-shadow(0 0 24px rgba(96,165,250,.30)); }
+  50%      { filter: drop-shadow(0 0 40px rgba(53,224,242,.5)); }
+}
+
+/* ── THE PAUSE GATE. Set by the observer on sections that are off screen.
+   ⚠ SCOPED DELIBERATELY, AND THE SCOPE IS THE SAFETY. A blanket
+   `.off * { animation-play-state: paused }` would also freeze the ENTRANCE
+   animations — and those start at opacity 0, so every section below the fold
+   would be paused into invisibility. That is the exact failure this page
+   already shipped once.
+   So the gate names only the infinite decorative loops. Entrance animations are
+   never touched by it, and cannot be. ── */
+.off .mark.s, .off .mark-x, .off .mark.z,
+.off .loop .n, .off .avatar, .off .badge, .off .ww-logo,
+.off .pc-glow, .off .pc-plus, .off .pc-plus2 { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-glow, .pc-plus, .pc-plus2 { animation: none !important; }
+  .loop::before, .loop::after { animation: none !important; }
+  .glass { transition: none; }
+  .glass:hover { transform: none; }
+  /* everything the current does, undone — the page keeps every word and loses
+     only the movement */
+  .rail { display: none; }
+  body::before,
+  .hero .mark.s, .hero .mark-x, .hero .mark.z,
+  .loop .n, .avatar, .pf.landed b, .badge { animation: none !important; }
+  .mk, .glass:hover .mk, .pcard:hover .mk { transition: none; transform: none; }
+  /* the rule appears fully drawn — the information (a section boundary) stays */
+  section > .wrap > h2::after { animation: none !important; transform: none; }
+  .tag, .avatar img { transition: none; }
+  .tag:hover, .person:hover .avatar img, .pc-who:hover .avatar img { transform: none; }
+  /* the data arrives fully drawn — the information stays, the theatre goes */
+  .pulse-line { animation: none !important; stroke-dashoffset: 0; }
+  .pulse-glow { animation: none !important; opacity: 1; }
+  .split-bar { animation: none !important; transform: none; }
+  .ww-logo { animation: none !important; }
+}

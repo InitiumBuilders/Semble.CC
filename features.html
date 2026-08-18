@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Every Feature</title>
+<meta name="description" content="The complete feature list for Semble: the building blocks, the product, the presence layer, agents and compute, roles, capital and revenue."/>
+<meta name="theme-color" content="#05070e"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+.top{padding-top:52px;padding-bottom:30px}
+.toc{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 0}
+.toc a{font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-2);border:1px solid var(--edge);
+  border-radius:var(--r-pill);padding:11px 15px;min-height:44px;
+  display:inline-flex;align-items:center;transition:color .3s var(--ease),border-color .3s var(--ease)}
+.toc a:hover{color:var(--signal);border-color:var(--edge-hi)}
+.grp{padding-top:56px;scroll-margin-top:calc(var(--nav-h) + 14px)}
+.grp > h2{margin-bottom:8px}
+.grp > .sum{color:var(--ink-2);margin-bottom:26px;max-width:62ch}
+.f{background:var(--glass);border:1px solid var(--edge);border-radius:var(--r-pane);
+  padding:24px 22px;margin-bottom:14px}
+@media(min-width:768px){.f{padding:30px 28px}}
+.f__h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.f__id{font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.18em;
+  color:var(--signal);flex:0 0 auto}
+.f__h h3{margin:0}
+.f p{margin:0 0 14px}
+.f ul{margin:0;padding-left:0;list-style:none}
+.f li{position:relative;padding-left:22px;margin-bottom:9px;color:var(--ink-2);font-size:.98rem}
+.f li::before{content:"";position:absolute;left:4px;top:.62em;width:6px;height:6px;
+  border-radius:50%;background:var(--signal);opacity:.6}
+.f li b{color:var(--ink)}
+.tag{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--edge);border-radius:var(--r-pill);padding:6px 11px;color:var(--ink-2)}
+.tag--now{color:var(--good);border-color:rgba(122,230,184,.4)}
+.tag--next{color:var(--signal);border-color:rgba(92,225,255,.36)}
+.tag--season{color:var(--gold);border-color:rgba(255,207,138,.36)}
+.tag--live{color:var(--gold);border-color:rgba(255,207,138,.5)}
+.never li::before{background:#ff8a8a;opacity:.7}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a><a href="/features" class="on">Features</a>
+    <a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<div class="wrap top">
+  <p class="kick">Every feature</p>
+  <h1 style="font-size:clamp(2.2rem,9vw,3.6rem)">The complete list.</h1>
+  <p class="lede">Every building block, every feature in the product, and every layer beneath it. Tagged by when it ships.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
+    <span class="tag tag--now">Now · v0</span>
+    <span class="tag tag--next">Next · v0.5–v1</span>
+    <span class="tag tag--season">In season · v1+</span>
+    <span class="tag tag--live">Live today</span>
+  </div>
+  <div class="toc">
+    <a href="#blocks">Building blocks</a><a href="#core">The product</a>
+    <a href="#presence">Presence</a><a href="#agents">Agents &amp; compute</a>
+    <a href="#people">Roles &amp; conduct</a><a href="#capital">Capital</a>
+    <a href="#money">Revenue</a><a href="#design">Design system</a>
+  </div>
+</div>
+
+<!-- ══ BUILDING BLOCKS ══ -->
+<div class="wrap grp" id="blocks">
+  <h2 class="rv">The building blocks</h2>
+  <p class="sum rv">Five words carry the whole system. Every feature below is made of them.</p>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">B1</span><h3>Semble</h3><span class="tag tag--now">Now</span></div>
+    <p>What you bring. One active piece of work, shared in the open.</p>
+    <ul>
+      <li>Both the gathering and the reason for it — the thing you make, and the people who come to meet it</li>
+      <li>One at a time. Replacing it archives the last, and nothing is lost</li>
+      <li>Requires a public link: code, a doc, a model, a recording, a craft</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">B2</span><h3>Semble Session · a Sesh</h3><span class="tag tag--now">Now</span></div>
+    <p>One gathering, in one real place, at one real time. The atomic unit of Semble.</p>
+    <ul>
+      <li>A Sesh is opened by a person with <b>Init</b>, never programmed by a platform</li>
+      <li>It is not scheduled until the threshold is met — then it is certain, and everyone is told once</li>
+      <li>It runs on a <b>Model</b> (F8): a proven, forkable shape for how the time is spent</li>
+      <li>It mints one fixed pool of !MOTUS, allocated by the people who were actually there</li>
+      <li>Sesh is how people say it. Semble Session is what it is called in the record</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">B3</span><h3>Semble Steps</h3><span class="tag tag--now">Now</span></div>
+    <p>The unit of movement. A Step is one small, named thing you actually do.</p>
+    <ul>
+      <li><b>Before a Sesh</b> — commit your stake, post what you are bringing, read the Sembles you will meet, pack the thing that is stuck</li>
+      <li><b>At the door</b> — tap the anchor. This Step signs itself, and returns your stake</li>
+      <li><b>After</b> — allocate your share of the pool, and follow through on what you said in the room</li>
+      <li>Every Step you take lands in your Trax, dated. Steps are the only thing Semble counts</li>
+      <li>A Step is never a streak or a nudge. It is a commitment small enough to keep</li>
+      <li><span class="tag tag--next">Next</span> Conveners publish a Step list alongside their Model, so a Sesh arrives with its own preparation attached</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">B4</span><h3>Trax</h3><span class="tag tag--now">Now</span></div>
+    <p>The line your Steps make. Your record and your profile are the same object.</p>
+    <ul>
+      <li>Every Sesh attended, every Step taken, every !MOTUS in and out</li>
+      <li>Dated, narrow, scoped claims — signed by the people who were there, checkable by a stranger</li>
+      <li><b>No score, no rank, no leaderboard, no number.</b> A Trax is read, not compared</li>
+      <li>Exportable in one tap, and it verifies without our servers</li>
+      <li>Nothing in a Trax can be altered after the fact, including by us</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">B5</span><h3>!MOTUS</h3><span class="tag tag--now">Now</span></div>
+    <p>What a room gives you for what you brought.</p>
+    <ul>
+      <li>A fixed pool per Sesh, allocated by attendees. It can be redistributed, never inflated</li>
+      <li>Earned in, sent out, held — all three visible in your Trax at all times</li>
+      <li>Buys <b>supervised agent-minutes</b>: agent work run while you are present</li>
+      <li>Its full economic design, including transferability and how it relates to any future token, is an open decision</li>
+    </ul></div>
+</div>
+
+<!-- ══ CORE ══ -->
+<div class="wrap grp" id="core">
+  <h2 class="rv">The product</h2>
+  <p class="sum rv">Fourteen features. Each one exists to make a loop turn.</p>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F1</span><h3>One Active Semble</h3><span class="tag tag--now">Now</span></div>
+    <p>Your profile is your work. One active Semble at a time — not a bio, not a portfolio.</p>
+    <ul>
+      <li>A title, what you are building, where it lives in the open, and your city</li>
+      <li><b>The open link is required.</b> Code, a doc, a model, a recording, a craft — anything, as long as it is public</li>
+      <li>A drive holds every past Semble, traced and dated</li>
+      <li>Optionally links to your <b>MotusMove</b> on MotusMoves.US as the long arc it serves</li>
+      <li>Two faces on every profile: the <b>builder</b> (your active work) and the <b>backer</b> (what you have credited, and were present for)</li>
+      <li>Replacing your Semble archives the old one automatically — nothing is lost, but only one is live</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F2</span><h3>Init &mdash; open a Semble Session</h3><span class="tag tag--now">Now</span></div>
+    <p><b>Init</b> is the first move: anyone opens a Sesh, and the room decides whether it happens. No organiser class, no application.</p>
+    <ul>
+      <li>What you convene on, where, when, and the number of people it needs</li>
+      <li><b>Init costs a returnable stake and commits you to nothing else</b> — it is a hint, not an all-in. The threshold, not the founder, decides if it is real</li>
+      <li>Anywhere real — a library, a museum, a park, a walk, a workshop</li>
+      <li>Under 90 seconds to complete on a phone</li>
+      <li>Requires an active Semble, and a convener bond that funds the refund bonus</li>
+      <li>Pick a <b>Semble Model</b> (F8) or write your own structure</li>
+      <li>Free-text location plus an optional map pin</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F3</span><h3>The Threshold, the Stake and the Refund Bonus</h3><span class="tag tag--now">Now</span></div>
+    <p>Nothing is scheduled until enough people commit — and committing means something.</p>
+    <ul>
+      <li><b>The stake</b> — a small amount, returned in full the moment you physically arrive. Not a ticket</li>
+      <li><b>The refund bonus</b> — if the Sesh never fills, everyone who committed gets back <b>more than they put down</b>, funded by the convener's bond. Committing early is the rational move rather than the risky one</li>
+      <li>Live count of who has committed, each shown with their active Semble</li>
+      <li>Confirmation fires exactly once, at threshold, with a calendar handoff</li>
+      <li>Configurable threshold per Sesh, with a community-set floor</li>
+      <li>A Sesh that never fills expires gracefully — the convener is invited to Init it again, never marked as failed</li>
+      <li>Per-person bonus caps, so a Sesh that never fills cannot be farmed</li>
+      <li>Stakes are escrowed per Sesh and never pooled</li>
+      <li><span class="tag tag--next">Next</span> Communities can pool staked !MOTUS toward an open Sesh, so the most-wanted Sessions surface by conviction</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F4</span><h3>The Room</h3><span class="tag tag--now">Now</span></div>
+    <p>The Sesh itself. In person is the point; the app's job is before and after.</p>
+    <ul>
+      <li><b>Ephemeral by default</b> — nothing records</li>
+      <li>Anyone present can mark a <b>Motus Moment</b>; only marked moments are kept</li>
+      <li>Every marked moment shows who marked it, visibly, at the time</li>
+      <li>While a room is live its card holds a slow breath and nothing else moves</li>
+      <li><span class="tag tag--next">Next</span> Voice Sembles — live rooms for the community between cities, with marking as the only capture</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F5</span><h3>The Signature, the Trace and the Credit</h3><span class="tag tag--now">Now</span></div>
+    <p>What a Sesh leaves behind.</p>
+    <ul>
+      <li>The room signs its own attendance (see Presence below)</li>
+      <li>A <b>fixed credit pool per Sesh</b>, allocated by attendees to what people brought</li>
+      <li>Only attendees can allocate. The window closes in 48 hours</li>
+      <li>The ledger is append-only</li>
+      <li><b>Forkable traces</b> — carry a shared model, practice or structure into your own Semble, with origin credited automatically</li>
+      <li><b>The follow-through gate</b> — you can Init new Sessions only if you showed up to the ones you committed to. Absence throttles opening new Sessions, never attending</li>
+      <li>States: committed → attended / excused / absent. "Excused" is honourable and carries no penalty</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F6</span><h3>Human Introductions</h3><span class="tag tag--now">Now</span></div>
+    <p>The matching system is people, and possibly always will be.</p>
+    <ul>
+      <li>You can refer someone to a Sesh <b>only if you attended that kind of room yourself</b></li>
+      <li>Every referral carries your name — it is a vouch, not a share link</li>
+      <li>Referrals that lead to real attendance earn <b>$DASH</b>, wallet to wallet</li>
+      <li>Settlement happens on attendance, never on a click</li>
+      <li>The person referred always sees who vouched for them, and that person's Semble</li>
+      <li><b>No algorithm decides who you meet.</b> Suggestions come from people who were there, or from your own agent reading your own record</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F7</span><h3>Privacy Controls</h3><span class="tag tag--now">Now</span></div>
+    <p>Two modes, legible enough to teach.</p>
+    <ul>
+      <li><b>Open</b> — your Semble, traces and record are public to people</li>
+      <li><b>Held</b> — visible only to people you have shared a room with</li>
+      <li>Per item: readable by <b>people only</b>, or <b>people and agents</b>. Agent readability defaults off</li>
+      <li>One tap to change, with a plain-language consequence shown at the moment of change</li>
+      <li>"Who can see this" is always one tap away and always accurate</li>
+      <li>Exactly one intelligence reads your full record: your own agent</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F8</span><h3>Semble Models</h3><span class="tag tag--now">Now</span></div>
+    <p>The shape of a Sesh, as a forkable building block.</p>
+    <ul>
+      <li>Five seed Models ship at v0: <b>Build Session · Pitch Circle · Walk-and-Talk · Workshop · Show-Your-Practice</b></li>
+      <li>Each defines roles, flow, timing, and what gets marked</li>
+      <li>Fork and edit any Model; the origin is credited automatically</li>
+      <li>Every confirmed Sesh displays the Model it runs</li>
+      <li>Models read as documents, not configuration screens</li>
+      <li><span class="tag tag--next">Next</span> Publishing opens to everyone</li>
+      <li><span class="tag tag--season">Season</span> Proven Models graduate into minted <b>MotusModels</b> on Motus.Market — same credit law, one lineage</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F9</span><h3>The Living Block</h3><span class="tag tag--next">Next</span></div>
+    <p>Your work is not a slide. It is live in the room, in other people's hands.</p>
+    <ul>
+      <li>Every active Semble carries a one-tap live link that opens on a second device</li>
+      <li>The people present can open it, try it, and touch it while you talk</li>
+      <li>Their interactions return to you afterward as a trace overlay, attributed to the hands that made them</li>
+      <li>Only <b>marked</b> touches are captured — the same rule as Motus Moments</li>
+      <li>Feedback stops being talk and becomes an artifact</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F10</span><h3>The Stream</h3><span class="tag tag--live">Live today</span></div>
+    <p>The digital room, already shipped on semble.cc.</p>
+    <ul>
+      <li>A builder works in the open; viewers join and contribute from their device</li>
+      <li>Streams are Sessions: moments get marked, credit gets allocated, traces are forkable</li>
+      <li>Contribution is opt-in with a device budget, and metered visibly for both sides</li>
+      <li><b>Stated plainly:</b> contributed device compute is a presence and contribution signal. It does not run the agents — volunteer-device inference is far too slow for interactive work. Agent inference is bought from real providers</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F11</span><h3>Trax — the verified build record</h3><span class="tag tag--now">Now</span></div>
+    <p>Evidence, not a score — and the distinction is the whole design.</p>
+    <ul>
+      <li>Every attested Sesh, kept commitment, allocated credit and credited fork becomes a <b>narrow, dated, scoped claim</b></li>
+      <li>It reads like a receipt: <i>"Ana credited this build, on this date, in a room she was verifiably in."</i></li>
+      <li><b>There is no score.</b> No rank, no leaderboard, no profile number, and no API that computes one</li>
+      <li>One-tap export of the whole set</li>
+      <li>Independently verifiable without Semble's servers</li>
+      <li>The schema is published and open source</li>
+      <li>Nothing in the record can be altered after the fact — including by us</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F14</span><h3>Day one</h3><span class="tag tag--now">Now</span></div>
+    <p>The state a person actually meets first — designed and seeded, not a fallback.</p>
+    <ul>
+      <li>No Semble, no Steps, no Trax, no !MOTUS, nothing scheduled — and every screen still legible</li>
+      <li><b>One entry requirement:</b> keep a Semble, a title and a public link. Nothing else is gated</li>
+      <li>Onboarding is <b>Steps</b>, not a tour — the same primitive the rest of the app runs on</li>
+      <li>Taking a seat without a Semble is refused with a reason and a route, never a dead end</li>
+      <li>A kept-rate with no commitments behind it reads <b>—</b>, never a flattering 100%</li>
+      <li>The Trax line still draws, dimmed, so the shape is legible before there is content in it</li>
+      <li>The preview switches between day one and a six-week-old account in one tap</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">F12</span><h3>!MOTUS history, in and out</h3><span class="tag tag--now">Now</span></div>
+    <p>Every movement of credit you have made or received, in one place.</p>
+    <ul>
+      <li><b>Held</b> — your balance right now, the number that decides what compute you can run</li>
+      <li><b>Earned in</b> — every allocation a room made to you, with the Sesh, the date, and what it was for</li>
+      <li><b>Sent out</b> — every allocation you made to someone else, and every credit spent on agent-minutes</li>
+      <li>Filterable to received or sent, and every row names the person or the Sesh — never an anonymous transaction id</li>
+      <li>Model origin credit lands here automatically when someone forks something of yours</li>
+      <li>The whole ledger is append-only, and exports with your Trax</li>
+    </ul></div>
+</div>
+
+<!-- ══ PRESENCE ══ -->
+<div class="wrap grp" id="presence">
+  <h2 class="rv">The presence layer</h2>
+  <p class="sum rv">How a Sesh produces a record of who was there that a stranger can verify.</p>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">P1</span><h3>The Anchor</h3><span class="tag tag--now">Now</span></div>
+    <ul>
+      <li>Every Sesh has one physical anchor — an NFC card or token held by the convener</li>
+      <li>Attendees tap it. The anchor signs with a key that cannot be extracted from the hardware</li>
+      <li>A <b>rotating nonce</b> changes every 60–120 seconds, so a signature can neither be minted before the Sesh nor replayed after it</li>
+      <li>Anchor custody rotates between conveners</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">P2</span><h3>Peer Co-Signing</h3><span class="tag tag--now">Now</span></div>
+    <ul>
+      <li>After tapping, your phone collects co-signatures from at least three other attendees</li>
+      <li>Co-signers must themselves hold valid anchor signatures from the same window</li>
+      <li>A group that never touched the anchor forms a disconnected component and is discarded</li>
+      <li>People sign for people. A phone can be carried by a friend; a link can be forwarded</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">P3</span><h3>SafeStep — signing and keys</h3><span class="tag tag--next">Next</span></div>
+    <ul>
+      <li>Your key is generated on your device and never leaves it</li>
+      <li>Unlocking requires you. Semble never receives biometric data — the biometric unlocks a local key and nothing more</li>
+      <li>Signs three things: your attendance, your agent's actions in your name, and multi-signature operations</li>
+      <li>Semble cannot sign for you, recover your key, or act as you</li>
+      <li>The high-stakes agent tier stays deferred until this ships</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">P4</span><h3>What the record contains</h3><span class="tag tag--now">Now</span></div>
+    <ul>
+      <li><b>Kept:</b> that the Sesh happened, who attested, for whom, and in which window</li>
+      <li><b>Held by you</b>, disclosed selectively, on an open attestation standard</li>
+      <li>The public graph shows only that a Sesh existed, how many verified attendees, and the credit pool</li>
+    </ul>
+    <p style="margin:14px 0 8px"><b>Never captured:</b></p>
+    <ul class="never">
+      <li>Location or GPS coordinates</li><li>Raw radio logs or nearby-device scans</li>
+      <li>Biometrics</li><li>Photos or recordings</li>
+      <li>How long you stayed, or who you stood near</li>
+      <li>A permanent public list of everywhere you have been</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">P5</span><h3>Keeping the record accurate</h3><span class="tag tag--now">Now</span></div>
+    <ul>
+      <li><b>Fixed pool per Sesh</b> — allocation can redistribute, never inflate</li>
+      <li><b>Cross-cluster dilution</b> — a pool scales with the diversity of attendees' prior co-attendance, so a closed loop meeting weekly earns a decaying pool</li>
+      <li><b>Staked claims</b> — the convener stakes $TRUST on the Sesh; anyone can stake against it</li>
+      <li>Anomalies go to people, never to an automatic penalty</li>
+    </ul></div>
+</div>
+
+<!-- ══ AGENTS ══ -->
+<div class="wrap grp" id="agents">
+  <h2 class="rv">Agents and compute</h2>
+  <p class="sum rv">Davara is the working reference — a live operator with a published baseline, a profile, and a record of work done under her own name.</p>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">A1</span><h3>Presence-gated agency</h3><span class="tag tag--next">Next</span></div>
+    <ul>
+      <li>Every tool call is classified across three axes: private data, untrusted content, external communication</li>
+      <li>Two of the three — the agent runs freely</li>
+      <li><b>All three — hard-gated on live, attested human presence</b></li>
+      <li>Every consequential action carries a signature resolving to a person, plus a per-invocation token carrying that person's authority</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">A2</span><h3>Designed against rubber-stamping</h3><span class="tag tag--next">Next</span></div>
+    <p>A checkbox is not oversight, and the research says explanations do not fix automation bias. So the friction is structural.</p>
+    <ul>
+      <li>The agent states the <b>reversibility</b> of an action before taking it</li>
+      <li>A <b>diff before act</b> on anything consequential</li>
+      <li><b>Approval rate limiting</b>, so mechanically clearing a queue is impossible</li>
+      <li><b>Sampled withholding</b> — on a published fraction of decisions the agent gives evidence but no recommendation</li>
+    </ul></div>
+
+  <div class="f rv"><div class="f__h"><span class="f__id">A3</span><h3>Compute credits</h3><span class="tag tag--next">Next</span></div>
+    <ul>
+      <li>Denominated in <b>supervised agent-minutes</b> — a unit you can reason about</li>
+      <li>Earned by taking Steps and attending Sessions; spent while present</li>
+      <li>A paid layer sits above the earned floor</li>
+      <li>Physical presence is among the strongest Sybil resistance available, because bodies do not scale the way accounts do</li>
+    </ul></div>
+</div>
+
+<!-- ══ PEOPLE ══ -->
+<div class="wrap grp" id="people">
+  <h2 class="rv">Roles and conduct</h2>
+  <p class="sum rv">Six roles, named plainly. Nobody is only one of them, and moving between them is normal.</p>
+  <div class="f rv"><div class="f__h"><span class="f__id">R</span><h3>The roles</h3></div>
+    <ul>
+      <li><b>The Builder</b> — keeps an active Semble and brings it into rooms</li>
+      <li><b>The Backer</b> — credits work they were present for, with their name attached</li>
+      <li><b>The Convener</b> — Inits and holds Semble Sessions, and posts the bond</li>
+      <li><b>The Contributor</b> — gives compute, a venue, a skill, an hour</li>
+      <li><b>The Investor</b> — a professional deploying capital and judgment, under a distinct protocol</li>
+      <li><b>The Steward</b> — holds the code, resolves disputes, answers for conduct</li>
+    </ul></div>
+  <div class="f rv"><div class="f__h"><span class="f__id">C</span><h3>The code</h3></div>
+    <ul>
+      <li><b>Composure</b> — disagree hard, in good faith, without contempt</li>
+      <li><b>Your name on it</b> — vouches, credits and attestations all carry a name. Anonymity is for privacy, not for influence</li>
+      <li><b>No pitching people who did not come to be pitched</b></li>
+      <li><b>Consent before contact</b> — every introduction needs a yes from both sides</li>
+      <li><b>Credit what you build on</b></li>
+      <li><b>Follow through, or say you cannot.</b> Silence is what costs</li>
+      <li>Enforcement is by people, in the open, with an appeal. Every action names the steward and the clause</li>
+    </ul></div>
+</div>
+
+<!-- ══ CAPITAL ══ -->
+<div class="wrap grp" id="capital">
+  <h2 class="rv">Capital</h2>
+  <p class="sum rv">Investing well is a craft practiced under real accountability. The protocol is built to be worth a professional's time.</p>
+  <div class="f rv"><div class="f__h"><span class="f__id">K1</span><h3>What Semble offers</h3><span class="tag tag--next">Next</span></div>
+    <ul>
+      <li><b>The verified build record</b> — what someone said they would do, whether they showed, what they brought, and what the room credited</li>
+      <li><b>Founder-initiated introductions, always, and free</b> — Semble takes nothing on them</li>
+      <li>Semble Sessions and Motus Events, attended under the same code as everyone</li>
+      <li>Weighted on follow-through, deliberately <b>not</b> on capital already raised</li>
+      <li>Export and integration into the tools a firm already runs on</li>
+      <li>A flat annual subscription. Never per deal, never per introduction</li>
+    </ul></div>
+  <div class="f rv"><div class="f__h"><span class="f__id">K2</span><h3>The guarantees, both ways</h3></div>
+    <ul>
+      <li><b>Introductions are free.</b> Semble is never paid a success fee, carry or equity tied to any introduction or round, so the signal it gives you is independent of the outcome</li>
+      <li><b>The investment happens between you and the founder.</b> Semble never hosts, escrows, signs or processes it</li>
+      <li><b>Founders reach out first, always.</b> Nobody is presented to you who did not ask to be, and nobody pays to be in front of you</li>
+      <li><b>Consent is per field, visible, and revocable.</b> Nothing about a builder is published or sold without their explicit yes</li>
+      <li><b>Investors are addressed as principals</b> — no ranking, no tiers, no badges, no leaderboards</li>
+      <li>Signal is weighted on follow-through, deliberately not on capital already raised, so prior funding never quietly becomes the ranking</li>
+    </ul></div>
+</div>
+
+<!-- ══ MONEY ══ -->
+<div class="wrap grp" id="money">
+  <h2 class="rv">Revenue</h2>
+  <p class="sum rv">Motus.Market carries the weight of profit, so the door here can stay open. Every fee fits in one sentence.</p>
+  <div class="f rv"><div class="f__h"><span class="f__id">M</span><h3>The flows</h3></div>
+    <ul>
+      <li><b>Motus.Market fees</b> — the six published fees, already live</li>
+      <li><b>The Semble subscription</b> — free forever to keep a Semble, take your Steps, Init, commit, attend, credit and be introduced. Paid depth: the full traced drive, publishing Models, and tools for frequent hosts</li>
+      <li><b>The Motus Mover subscription</b> — one identity and one record across the ecosystem</li>
+      <li><b>Referral earnings</b> — people paid in $DASH for bringing people into real rooms</li>
+      <li><b>The Trax subscription</b> — professional access, flat annual, export included</li>
+      <li><b>Compute credits</b> — the paid layer above the earned floor</li>
+      <li><span class="tag tag--season">Season</span> <b>Pitch Day</b> — builders whose record opened the door, presenting to investors who came to listen. Free to both sides</li>
+    </ul></div>
+</div>
+
+<!-- ══ DESIGN ══ -->
+<div class="wrap grp" id="design">
+  <h2 class="rv">The design system</h2>
+  <div class="f rv"><div class="f__h"><span class="f__id">D</span><h3>The laws</h3></div>
+    <ul>
+      <li>Mobile-first at 380px, tap parity, targets at least 44px</li>
+      <li>Contrast computed in both modes at roughly 7:1. Secondary text is near-bone or near-ink, <b>never grey</b></li>
+      <li>Sora for display, Inter for body, IBM Plex Mono for labels at 13px and up</li>
+      <li>Body text 18px and up; headlines large; strokes 2.5px and up</li>
+      <li>Motion is anticipation, action, settle — never linear. Only transform, opacity, shadow, filter and stroke animate</li>
+      <li>Captions state plainly what a thing does or what just happened. Never aphorisms</li>
+      <li>Never a sharp corner. Never a highlight box on an interactive mark</li>
+      <li>60fps on a mid-range phone, or the least essential layer is cut</li>
+      <li>The mark — two curves turning into each other, lit where they meet — appears at three moments only</li>
+    </ul></div>
+</div>
+
+<footer class="wrap">
+  <div class="chip" style="margin-bottom:20px"><i></i>Preview · Baseline v0.5</div>
+  <p><a class="btn" href="/spec">Read the full spec</a> <a class="btn btn--ghost" href="/app">Open the app</a></p>
+  <p class="colo">The Motus Method · Semble Baseline v0.5 · August 2026<br/>
+  ~August James Domanchuk · <b>Motus Means Move</b></p>
+</footer>
+<script src="/assets/semble.js"></script>
+</body>
+</html>

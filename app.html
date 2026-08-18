@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — The App</title>
+<meta name="description" content="A working preview of Semble: init a Session, see who is coming and what they are bringing, take your Steps, sign at the door, and read your Trax."/>
+<meta name="theme-color" content="#05070e"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+.app{max-width:580px;margin:0 auto;padding:0 18px 40px}
+.hd{padding:22px 0 14px}
+.hd h1{font-size:clamp(1.66rem,6.6vw,2.2rem);margin-bottom:8px;line-height:1.14}
+.hd p{margin:0;font-size:.99rem;max-width:36ch}
+.pv{display:inline-flex;align-items:center;gap:8px;font:600 12px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+  border:1px solid rgba(255,207,138,.32);border-radius:var(--r-pill);
+  padding:8px 13px;margin-bottom:14px}
+/* the mode switch — day one is a designed state, not a fallback, so it is
+   reachable in one tap and can never rot unseen */
+.modeseg{margin:14px 0 0}
+.modeseg button{min-height:44px}
+.seg__reset{margin-left:auto;color:var(--ink-2)}
+.screen{display:none}
+.screen.on{display:block;animation:scr .4s var(--ease)}
+@keyframes scr{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── THE GUIDE ── the map of the whole loop, six lines long */
+.guide h3{margin-bottom:14px}
+.gflow{list-style:none;margin:0;padding:0;counter-reset:g}
+.gflow li{position:relative;padding:0 0 15px 44px;counter-increment:g}
+.gflow li::before{content:counter(g,decimal-leading-zero);position:absolute;left:0;top:1px;
+  font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;color:var(--signal)}
+.gflow li::after{content:"";position:absolute;left:11px;top:20px;bottom:3px;width:1px;
+  background:linear-gradient(180deg,var(--edge-hi),transparent)}
+.gflow li:last-child{padding-bottom:0}
+.gflow li:last-child::after{display:none}
+.gflow b{display:block;font:700 1rem/1.3 Sora,sans-serif}
+.gflow span{display:block;font-size:.9rem;color:var(--ink-2);margin-top:3px;line-height:1.55}
+
+/* ── CC rows ── */
+.ccrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 15px;margin-bottom:9px;
+  transition:border-color .3s var(--ease)}
+.ccrow:hover{border-color:var(--edge-hi)}
+.ccrow__i{width:40px;height:40px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;
+  border:1px solid rgba(255,207,138,.4);color:var(--gold);
+  background:linear-gradient(160deg,rgba(255,207,138,.16),rgba(255,207,138,.03))}
+.ccrow__i svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.ccrow__t{flex:1;min-width:0}
+.ccrow__t b{display:block;font:700 .98rem/1.3 Sora,sans-serif}
+.ccrow__t span{display:block;font-size:.86rem;color:var(--ink-2);margin-top:3px;line-height:1.5}
+.ccstart{display:flex;gap:9px;margin-top:13px}
+.ccstart input{flex:1;min-width:0;background:rgba(6,9,18,.68);color:var(--ink);
+  border:1px solid var(--edge);border-radius:var(--r-ctl);padding:13px 14px;
+  font:500 16px/1.4 Inter,sans-serif;min-height:52px;outline:none}
+.ccstart input:focus{border-color:var(--edge-hi)}
+.ccstart input[type="datetime-local"]{color-scheme:dark}
+.ccstart .btn{flex:0 0 auto;min-width:0}
+
+/* ── BACK ── */
+.back{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 14px 0 10px;
+  border-radius:var(--r-pill);border:1px solid var(--edge);color:var(--ink-2);
+  font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:16px;transition:color .3s var(--ease),border-color .3s var(--ease)}
+.back:hover{color:var(--signal);border-color:var(--edge-hi)}
+.back svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ── CARD ── */
+.card{border-radius:var(--r-pane);padding:20px;margin-bottom:14px;
+  position:relative;overflow:hidden}
+.card__k{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--signal);margin:0 0 11px;
+  display:flex;align-items:center;gap:9px}
+.card h3{font-size:1.2rem;margin-bottom:7px;line-height:1.26}
+.card p{margin:0 0 10px;font-size:.97rem}
+.card p:last-child{margin-bottom:0}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.meta span{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.05em;
+  border:1px solid var(--edge);border-radius:var(--r-pill);padding:8px 11px;color:var(--ink-2)}
+.meta span b{color:var(--signal)}
+.row{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+.row .btn{flex:1 1 auto;min-width:148px}
+.hint{font-size:.87rem;color:var(--ink-2);margin:9px 0 0;line-height:1.55}
+
+/* ═══ A SESH HAS A LIFE — each state is a different material ═══ */
+/* open · nothing has happened yet, and the edge says so */
+.s-open{background:none;border:1px dashed rgba(150,180,240,.3)}
+.s-open .card__k{color:var(--ink-2)}
+/* filling · lit, unresolved */
+.s-filling{background:linear-gradient(168deg,rgba(0,168,216,.07),rgba(148,180,235,.045) 60%);
+  border:1px solid rgba(92,225,255,.24)}
+/* confirmed · sealed */
+.s-confirmed{background:linear-gradient(168deg,rgba(255,207,138,.1),rgba(148,180,235,.05) 62%);
+  border:1px solid rgba(255,207,138,.4);box-shadow:0 0 58px -26px rgba(255,207,138,.85)}
+.s-confirmed .card__k{color:var(--gold)}
+/* live · it breathes, and only while you can see it */
+.s-live{background:linear-gradient(168deg,rgba(0,168,216,.15),rgba(148,180,235,.05) 62%);
+  border:1px solid rgba(92,225,255,.5)}
+.s-live::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(92,225,255,.4);animation:breathe 4.2s ease-in-out infinite}
+.s-live.rest::after{animation-play-state:paused}
+@keyframes breathe{0%,100%{opacity:.25}50%{opacity:.9}}
+.s-live .card__k{color:var(--signal)}
+/* past · a record, not an invitation. no glow, no lift. */
+.s-past{background:rgba(148,180,235,.028);border:1px solid rgba(150,180,240,.1)}
+.s-past .card__k{color:var(--ink-2)}
+.s-past h3{color:var(--ink-2)}
+
+.dotlive{width:8px;height:8px;border-radius:50%;background:var(--signal);
+  box-shadow:0 0 10px var(--signal);flex:0 0 auto;animation:breathe 2.6s ease-in-out infinite}
+
+/* ═══ SEATS — the threshold, as people ═══ */
+.seats{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 11px}
+/* 6*44 + 5*6 = 294 — one row inside a 299px card at 375px, and 44px is the
+   tap floor, so this is the smallest a seat is ever allowed to be */
+.seat{width:44px;height:44px;flex:0 0 auto;border-radius:15px;display:grid;place-items:center;
+  font:700 14.5px/1 Sora,sans-serif;position:relative;
+  transition:transform .35s var(--spring)}
+.seat--taken{color:#03151f;background:linear-gradient(150deg,#9ff0ff,#00a8d8 58%,#0080b8);
+  box-shadow:0 0 18px -4px rgba(92,225,255,.6)}
+.seat--taken:hover{transform:translateY(-2px)}
+.seat--you{box-shadow:0 0 0 2px var(--gold),0 0 20px -3px rgba(255,207,138,.8)}
+.seat--open{border:1.5px dashed rgba(150,180,240,.34);color:var(--ink-2)}
+.seat--next{border-color:rgba(92,225,255,.55);animation:breathe 2.8s ease-in-out infinite}
+.seat--open svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round}
+.seatcap{font:600 12.5px/1.5 "IBM Plex Mono",monospace;letter-spacing:.06em;
+  color:var(--ink-2);margin:0}
+.seatcap b{color:var(--ink)}
+
+/* who is bringing what */
+.brings{list-style:none;margin:14px 0 0;padding:0}
+.brings li{display:flex;gap:12px;align-items:center;padding:11px 0;
+  border-bottom:1px solid var(--edge)}
+.brings li:last-child{border-bottom:0}
+/* a transparent hit area has no corner to be sharp, but it does need somewhere
+   for a hover to land — the radius is for the feel, not the rule */
+.brings button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  min-height:44px;border-radius:14px;padding:3px 8px;margin:0 -8px;
+  transition:background .28s var(--ease)}
+.brings button:hover{background:rgba(92,225,255,.06)}
+.av{width:40px;height:40px;border-radius:14px;flex:0 0 auto;display:grid;place-items:center;
+  font:700 15px/1 Sora,sans-serif;color:#03151f;
+  background:linear-gradient(150deg,#9ff0ff,#00a8d8 58%,#0080b8)}
+.av--lg{width:58px;height:58px;border-radius:20px;font-size:21px}
+.av--sm{width:32px;height:32px;border-radius:11px;font-size:12.5px}
+.who__t{min-width:0;flex:1}
+.who__t b{display:block;font:700 .99rem/1.3 Sora,sans-serif}
+.who__t span{display:block;font-size:.87rem;color:var(--ink-2);margin-top:3px}
+.chev{width:18px;height:18px;flex:0 0 auto;stroke:var(--ink-2);fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ── COUNTDOWN ── */
+.cd{display:flex;gap:8px;margin:15px 0 2px}
+.cd div{flex:1;border:1px solid var(--edge);border-radius:var(--r-ctl);
+  padding:11px 6px;text-align:center;background:rgba(6,9,18,.4)}
+.cd b{display:block;font:800 1.42rem/1 Sora,sans-serif;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.cd span{display:block;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:7px}
+
+/* ── STEP RING + STEPS ── */
+.sr{display:flex;align-items:center;gap:15px;margin-bottom:4px}
+.sr__ring{width:66px;height:66px;flex:0 0 auto;position:relative}
+.sr__ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.sr__trk{fill:none;stroke:rgba(150,180,240,.16);stroke-width:5}
+.sr__arc{fill:none;stroke:var(--signal);stroke-width:5;stroke-linecap:round;
+  filter:drop-shadow(0 0 7px rgba(92,225,255,.6));
+  transition:stroke-dashoffset .6s var(--ease),stroke .4s var(--ease)}
+.sr__ring.full .sr__arc{stroke:var(--gold);filter:drop-shadow(0 0 9px rgba(255,207,138,.7))}
+.sr__num{position:absolute;inset:0;display:grid;place-items:center;
+  font:800 .98rem/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
+.sr__ring.full .sr__num{color:var(--gold)}
+.sr__t b{display:block;font:700 1.06rem/1.3 Sora,sans-serif}
+.sr__t span{display:block;font-size:.9rem;color:var(--ink-2);margin-top:3px}
+.stps{list-style:none;margin:16px 0 0;padding:0}
+.stp{display:flex;gap:13px;align-items:flex-start;width:100%;text-align:left;
+  border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 15px;margin-bottom:9px;
+  transition:border-color .3s var(--ease),background .3s var(--ease),opacity .3s var(--ease)}
+.stp:hover{border-color:var(--edge-hi)}
+.stp__box{width:26px;height:26px;flex:0 0 auto;margin-top:1px;border-radius:9px;
+  border:1.5px solid var(--edge-hi);display:grid;place-items:center;
+  transition:background .34s var(--ease),border-color .34s var(--ease)}
+.stp__box svg{width:15px;height:15px;stroke:#03151f;fill:none;stroke-width:2.8;
+  stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .42s var(--ease) .06s}
+.stp__t{min-width:0;flex:1}
+.stp__t b{display:block;font:700 .99rem/1.35 Sora,sans-serif}
+.stp__t span{display:block;font-size:.875rem;color:var(--ink-2);margin-top:3px;line-height:1.5}
+.stp__w{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--signal);margin-top:8px;display:inline-block}
+.stp.done{background:rgba(92,225,255,.055);border-color:rgba(92,225,255,.3)}
+.stp.done .stp__box{background:var(--signal);border-color:var(--signal)}
+.stp.done .stp__box svg{stroke-dashoffset:0}
+.stp.done .stp__t b{color:var(--ink-2)}
+.stp.lock{opacity:.55}
+.stp.lock .stp__box{border-style:dashed}
+.stp.lock .stp__w{color:var(--ink-2)}
+
+/* ── FORM ── */
+.fld{margin-bottom:15px}
+.fld label{display:block;font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);margin-bottom:8px}
+.fld input,.fld textarea{width:100%;background:rgba(6,9,18,.68);color:var(--ink);
+  border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 15px;
+  font:500 16px/1.5 Inter,sans-serif;min-height:52px;outline:none;
+  transition:border-color .3s var(--ease)}
+.fld textarea{min-height:94px;resize:vertical}
+.fld input:focus,.fld textarea:focus{border-color:var(--edge-hi)}
+.stepr{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.stepr button{width:52px;height:52px;flex:0 0 auto;border-radius:var(--r-ctl);
+  border:1px solid var(--edge-hi);color:var(--signal);
+  background:rgba(92,225,255,.08);font:700 22px/1 Sora,sans-serif}
+.stepr b{font:800 1.5rem/1 Sora,sans-serif;min-width:3ch;text-align:center;
+  font-variant-numeric:tabular-nums}
+.stepr i{font-style:normal;font-size:.88rem;color:var(--ink-2);flex:1 1 150px;line-height:1.45}
+
+/* ═══ THE ALLOCATION ═══ */
+.pool{display:flex;align-items:baseline;gap:10px;margin:4px 0 2px}
+.pool b{font:800 clamp(2rem,9vw,2.6rem)/1 Sora,sans-serif;color:var(--gold);
+  font-variant-numeric:tabular-nums}
+.pool span{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2)}
+.alloc{list-style:none;margin:16px 0 0;padding:0}
+/* the stepper takes its own row so the controls can hold 44px without
+   squeezing what the person actually brought down to a column of two words */
+.alloc li{display:grid;grid-template-columns:32px 1fr;gap:10px 11px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--edge)}
+.alloc li:last-child{border-bottom:0}
+.alloc__t{min-width:0}
+.alloc__t b{display:block;font:700 .97rem/1.3 Sora,sans-serif}
+.alloc__t span{display:block;font-size:.85rem;color:var(--ink-2);margin-top:2px;line-height:1.45}
+.pm{grid-column:1 / -1;display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.pm button{width:44px;height:44px;border-radius:15px;border:1px solid var(--edge);
+  color:var(--signal);font:700 18px/1 Sora,sans-serif;background:rgba(92,225,255,.06)}
+.pm button[disabled]{opacity:.3}
+.pm b{font:700 15px/1 "IBM Plex Mono",monospace;min-width:2.6ch;text-align:center;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* ── MOMENTS ── */
+.moments{list-style:none;margin:14px 0 0;padding:0}
+.moments li{display:flex;gap:11px;align-items:flex-start;padding:10px 0;
+  border-bottom:1px solid var(--edge);font-size:.93rem;color:var(--ink-2)}
+.moments li:last-child{border-bottom:0}
+.moments time{font:600 12px/1.5 "IBM Plex Mono",monospace;color:var(--signal);flex:0 0 auto}
+
+/* ── TRAX STATS + MOTUS ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}
+.stat{border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 10px;
+  text-align:center;background:rgba(6,9,18,.4)}
+.stat b{display:block;font:800 1.55rem/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
+.stat span{display:block;font:600 12px/1.35 "IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:8px}
+.mot{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+.mot__big{grid-column:1 / -1;border:1px solid rgba(255,207,138,.32);border-radius:var(--r-ctl);
+  padding:19px 16px;background:linear-gradient(165deg,rgba(255,207,138,.10),rgba(255,207,138,.02))}
+.mot__big b{display:block;font:800 clamp(2.2rem,10vw,2.9rem)/1 Sora,sans-serif;color:var(--gold);
+  font-variant-numeric:tabular-nums}
+.mot__big span{display:block;font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:9px}
+.mot__c{border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 13px;
+  background:rgba(6,9,18,.4)}
+.mot__c b{display:block;font:800 1.34rem/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
+.mot__c span{display:block;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:7px}
+
+/* ── LEDGER ── */
+.led{list-style:none;margin:14px 0 0;padding:0}
+.led li{display:flex;gap:12px;align-items:flex-start;padding:13px 0;
+  border-bottom:1px solid var(--edge)}
+.led li:last-child{border-bottom:0}
+.led__i{width:32px;height:32px;flex:0 0 auto;border-radius:11px;display:grid;place-items:center;
+  font:700 15px/1 Sora,sans-serif}
+.led__i.in{color:var(--good);background:rgba(122,230,184,.12);border:1px solid rgba(122,230,184,.3)}
+.led__i.out{color:var(--signal);background:rgba(92,225,255,.1);border:1px solid rgba(92,225,255,.28)}
+.led__t{flex:1;min-width:0}
+.led__t b{display:block;font:700 .96rem/1.35 Sora,sans-serif}
+.led__t span{display:block;font-size:.85rem;color:var(--ink-2);margin-top:3px;line-height:1.5}
+.led__t time{display:block;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-2);opacity:.8;margin-top:6px}
+.led__n{font:700 .99rem/1.3 "IBM Plex Mono",monospace;white-space:nowrap;
+  font-variant-numeric:tabular-nums;text-align:right}
+.led__n.in{color:var(--good)} .led__n.out{color:var(--signal)}
+.led__n i{display:block;font-style:normal;font-size:12px;letter-spacing:.04em;
+  color:var(--ink-2);margin-top:4px;text-transform:uppercase}
+.empty{text-align:center;color:var(--ink-2);font-size:.93rem;padding:26px 0;margin:0}
+
+/* ═══ TRAX — THE LINE YOUR STEPS MAKE ═══
+   The path is generated from where the entries actually land, so the
+   shape of the line is the shape of your record. Not an ornament. */
+.tline{position:relative;margin-top:18px}
+.tline__svg{position:absolute;left:0;top:0;width:58px;height:100%;overflow:visible;
+  pointer-events:none}
+.tline__p{fill:none;stroke:url(#tgrad);stroke-width:2.5;stroke-linecap:round;
+  filter:drop-shadow(0 0 8px rgba(92,225,255,.45))}
+.tline__n{fill:var(--signal);filter:drop-shadow(0 0 7px rgba(92,225,255,.85))}
+.tline__n.gold{fill:var(--gold);filter:drop-shadow(0 0 8px rgba(255,207,138,.9))}
+.te{position:relative;padding:0 0 24px 74px;min-height:56px}
+.te:last-child{padding-bottom:4px}
+.te time{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  color:var(--ink-2);text-transform:uppercase}
+.te b{display:block;font:700 1rem/1.35 Sora,sans-serif;margin:7px 0 5px}
+.te p{margin:0;font-size:.93rem}
+.te .verif{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.06em;color:var(--good);margin-top:8px}
+
+/* ── PERSON ── */
+.phero{display:flex;gap:15px;align-items:center;margin-bottom:16px}
+/* scoped to its own text block — a bare `.phero span` would capture .av
+   (0,1,1 beats 0,1,0) and render the avatar as grey body text */
+.phero__t b{display:block;font:800 1.4rem/1.15 Sora,sans-serif}
+.phero__t span{display:block;font-size:.93rem;color:var(--ink-2);margin-top:5px}
+.open{display:inline-flex;align-items:center;gap:7px;font:600 13.5px/1 "IBM Plex Mono",monospace;
+  color:var(--signal);min-height:44px}
+
+/* ── TABBAR ── */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:3px;
+  background:rgba(5,7,14,.92);-webkit-backdrop-filter:blur(20px) saturate(160%);
+  backdrop-filter:blur(20px) saturate(160%);border-top:1px solid var(--edge)}
+.tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:6px;min-height:62px;border-radius:var(--r-ctl);color:var(--ink-2);
+  font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.02em;text-transform:uppercase;
+  transition:color .3s var(--ease)}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--signal)}
+.tab.on svg{filter:drop-shadow(0 0 8px rgba(92,225,255,.75))}
+
+.toast{position:fixed;left:16px;right:16px;bottom:calc(98px + env(safe-area-inset-bottom,0px));
+  z-index:90;max-width:520px;margin:0 auto;background:rgba(8,12,22,.97);
+  border:1px solid rgba(255,207,138,.38);border-radius:var(--r-ctl);padding:15px 17px;
+  color:var(--ink);font-size:.95rem;line-height:1.5;box-shadow:0 18px 50px -20px rgba(0,0,0,.9);
+  opacity:0;transform:translateY(12px);pointer-events:none;
+  transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.toast.on{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a><a href="/features">Features</a>
+    <a href="/app" class="on">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<div class="app">
+  <div class="hd">
+    <span class="pv">Preview · saved on this device only</span>
+    <h1 id="hdT">Welcome To Semble Sessions.</h1>
+    <p id="hdS">What Are Your Next Semble Sesh Steps?</p>
+    <div class="seg modeseg" id="modeSeg">
+      <button type="button" data-m="day1">Day one</button>
+      <button type="button" data-m="veteran">Six weeks in</button>
+      <button type="button" id="resetBtn" class="seg__reset" aria-label="Reset this preview">Reset</button>
+    </div>
+  </div>
+
+  <div class="screen stg" id="s-sesh"></div>
+  <div class="screen stg" id="s-detail"></div>
+  <div class="screen stg" id="s-person"></div>
+  <div class="screen stg" id="s-room"></div>
+
+  <!-- ══════════ INIT ══════════ -->
+  <div class="screen stg" id="s-init">
+    <div class="card d2">
+      <p class="card__k">Init a Semble Session</p>
+      <div class="fld"><label>What do we convene on</label>
+        <input type="text" id="pT" placeholder="Ship-it Thursday: bring the thing that is stuck"/></div>
+      <div class="fld"><label>The Model it runs on</label>
+        <div class="seg" id="pModel">
+          <button type="button" class="on">Build Session</button>
+          <button type="button">Walk-and-Talk</button>
+          <button type="button">Show-Your-Practice</button>
+          <button type="button">Open Table</button>
+        </div>
+        <p class="hint">A Model is a proven shape for a Sesh. Fork one and the origin is credited automatically.</p>
+      </div>
+      <div class="fld"><label>Where</label>
+        <input type="text" placeholder="A library, a park, a studio — anywhere real"/></div>
+      <div class="fld"><label>When</label><input type="text" placeholder="Thursday, 7pm"/></div>
+      <div class="fld"><label>Seats</label>
+        <div class="stepr">
+          <button type="button" data-d="-1" aria-label="Fewer seats">&#8722;</button>
+          <b id="pN">6</b>
+          <button type="button" data-d="1" aria-label="More seats">+</button>
+          <i>It is not scheduled until this many are taken.</i>
+        </div>
+      </div>
+      <div class="fld"><label>The stake</label>
+        <div class="stepr">
+          <button type="button" data-s="-2" aria-label="Lower stake">&#8722;</button>
+          <b id="pS">$12</b>
+          <button type="button" data-s="2" aria-label="Higher stake">+</button>
+          <i>Returned in full the moment someone walks in.</i>
+        </div>
+        <p class="hint" id="pBond"></p>
+      </div>
+      <div class="fld"><label>What you bring, shared in the open</label>
+        <input type="text" placeholder="A repo, a doc, a model, a recording, a craft"/>
+        <p class="hint">Required. It does not have to be code — it has to be public.</p></div>
+      <div class="row"><button class="btn" type="button" id="postBtn">Init it</button></div>
+    </div>
+  </div>
+
+  <!-- ══════════ YOUR SEMBLE ══════════ -->
+  <div class="screen stg" id="s-me"></div>
+
+  <!-- ══════════ TRAX ══════════ -->
+  <div class="screen on stg" id="s-trax">
+    <div class="card d3 guide">
+      <p class="card__k">The guide</p>
+      <h3>Six words. One loop. That is all of it.</h3>
+      <ol class="gflow">
+        <li><b>Semble</b><span>Keep one piece of work in the open — a title and a public link. The only requirement.</span></li>
+        <li><b>Init</b><span>Open a Sesh, or take a seat in one. A stake that comes straight back; the room decides if it is real.</span></li>
+        <li><b>Steps</b><span>Small, named moves that get you to the door. The last one signs itself when you walk in.</span></li>
+        <li><b>The room</b><span>Phones down. Mark what matters. Tap the anchor — the room signs that you were there.</span></li>
+        <li><b>!MOTUS</b><span>A fixed pool the room shares out to what people actually brought. It buys agent-minutes.</span></li>
+        <li><b>Trax</b><span>Everything lands here: the line your Steps make, signed by the people who were with you.</span></li>
+      </ol>
+      <p class="hint" style="margin-top:13px">And between rooms, voices meet in <b class="sig">CCs</b> — live calls anyone can open, anyone can join. They live on the <b>Semble</b> tab.</p>
+      <div class="row">
+        <a class="btn btn--ghost btn--sm" href="/init" style="flex:0 1 auto">The word: Init</a>
+        <a class="btn btn--ghost btn--sm" href="/features" style="flex:0 1 auto">Every feature</a>
+      </div>
+    </div>
+
+    <div class="card d2">
+      <p class="card__k">Your Trax</p>
+      <div class="phero"><span class="av av--lg">A</span>
+        <span class="phero__t"><b>August</b><span>Chicago · since June 2026</span></span></div>
+      <p>Your Trax is the line your Steps make. No score, no rank, no leaderboard — dated, narrow claims about specific rooms that anyone can check.</p>
+      <div class="stats">
+        <div class="stat"><b id="tSteps">0</b><span>Steps taken</span></div>
+        <div class="stat"><b id="tSesh">0</b><span>Sesh attended</span></div>
+        <div class="stat"><b class="gd" id="tKept">—</b><span>Kept</span></div>
+      </div>
+    </div>
+
+    <div class="card d2">
+      <p class="card__k">!MOTUS</p>
+      <h3>What rooms have credited you.</h3>
+      <p>Allocated by the people who were in the room with you. It cannot be bought and it cannot be inflated — each Sesh mints a fixed pool and shares it out.</p>
+      <div class="mot">
+        <div class="mot__big"><b id="mHeld">0</b><span>Held · your balance</span></div>
+        <div class="mot__c"><b class="gd" id="mIn">0</b><span>Earned in</span></div>
+        <div class="mot__c"><b class="sig" id="mOut">0</b><span>Sent out</span></div>
+      </div>
+      <div class="row">
+        <button class="btn btn--ghost btn--sm" type="button" id="spendBtn">What can I spend it on?</button>
+      </div>
+    </div>
+
+    <div class="card d2">
+      <p class="card__k">!MOTUS history</p>
+      <div class="seg" id="ledSeg">
+        <button type="button" class="on" data-f="all">All</button>
+        <button type="button" data-f="in">Received</button>
+        <button type="button" data-f="out">Sent</button>
+      </div>
+      <ul class="led" id="led"></ul>
+    </div>
+
+    <div class="card d2">
+      <p class="card__k">The line</p>
+      <h3>Every Step, in order.</h3>
+      <p>The shape of this line is the shape of your record — it is drawn from your Steps, not decorated onto them.</p>
+      <div class="tline" id="tline">
+        <svg class="tline__svg" id="tsvg" aria-hidden="true" preserveAspectRatio="none">
+          <defs><linearGradient id="tgrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5ce1ff"/><stop offset="1" stop-color="#0b6f9e"/>
+          </linearGradient></defs>
+          <path class="tline__p" id="tpath" d=""/>
+          <g id="tnodes"></g>
+        </svg>
+        <div id="tentries"></div>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" id="expBtn">Export your Trax</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<nav class="tabs">
+  <button class="tab on" data-s="trax" type="button">
+    <svg viewBox="0 0 24 24"><path d="M4 18c4.5 0 3.5-12 8-12s3.5 12 8 12"/><circle cx="4" cy="18" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="20" cy="18" r="1.5"/></svg>Trax</button>
+  <button class="tab" data-s="init" type="button">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Init</button>
+  <button class="tab" data-s="me" type="button">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5.4 19.2a6.9 6.9 0 0 1 13.2 0"/></svg>Semble</button>
+  <button class="tab" data-s="sesh" type="button">
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.4"/><circle cx="15" cy="15" r="5.4"/></svg>Next Sesh</button>
+</nav>
+
+<script src="/assets/semble.js"></script>
+<script>
+var SA=(function(){
+  'use strict';
+
+  /* ═══════════ PEOPLE — first-class, everywhere ═══════════ */
+  var P = {
+    august:  {n:'August',  c:'Chicago', t:'Motus.Market — the settlement layer',
+              w:'Where action and agency transparently pay off. Shipping the presence proof and the record.',
+              l:'motus.market', since:'Jun 2026', steps:47, sesh:9, motus:85, you:true},
+    rae:     {n:'Rae',     c:'Logan Square', t:'A routing diagram for non-custodial swaps',
+              w:'Drawing every path a swap can take, so the failure modes are visible before they happen.',
+              l:'rae.works/routing', since:'Apr 2026', steps:63, sesh:14, motus:141},
+    dominic: {n:'Dominic', c:'Pilsen', t:'A payout ledger anyone can audit',
+              w:'Append-only, exportable, and it reconciles without trusting me.',
+              l:'github.com/dom/ledger', since:'Feb 2026', steps:88, sesh:21, motus:204},
+    nadia:   {n:'Nadia',   c:'West Town', t:'A Model for rooms that actually finish things',
+              w:'Ninety minutes, one question each, phones down. Forked eleven times so far.',
+              l:'nadia.build/walk', since:'Jan 2026', steps:112, sesh:34, motus:388},
+    mira:    {n:'Mira',    c:'Bridgeport', t:'The anchor, in hardware',
+              w:'An NFC token that signs a rotating nonce and cannot be read out. Rev 3 on the bench.',
+              l:'mira.dev/anchor', since:'Mar 2026', steps:51, sesh:12, motus:97},
+    theo:    {n:'Theo',    c:'Ukrainian Village', t:'A type specimen printed on a hand press',
+              w:'Not code. Still public, still shared in a room, still counts.',
+              l:'theo.press/specimen', since:'May 2026', steps:29, sesh:7, motus:62},
+    sol:     {n:'Sol',     c:'Avondale', t:'Field recordings of rooms that worked',
+              w:'What a good gathering sounds like, before anyone says anything useful.',
+              l:'sol.audio/rooms', since:'Jun 2026', steps:18, sesh:5, motus:41}
+  };
+  Object.keys(P).forEach(function(k){ P[k].id=k; P[k].i=P[k].n.charAt(0); });
+
+  /* ═══════════ THE WORLD, IN TWO STATES ═══════════
+     Day one is the screen every real person sees first and the one that
+     decides whether the product works. It is not a fallback — it is seeded,
+     designed, and switchable, so it can never rot unseen. */
+  var SESH, S, MODE;
+
+  function seedSesh(mode){
+    var day1 = mode === 'day1';
+    return [
+      {id:'walk', state: day1 ? 'filling' : 'confirmed',
+       title:'Walk-and-talk: what are you actually building this quarter',
+       blurb:'Ninety minutes along the lakefront. One question each, answered while walking. Phones stay in pockets.',
+       place:'Lakefront Trail, North Ave', when:'Saturday, 10am', model:'Walk-and-Talk', stake:12,
+       need:6, seats: day1 ? ['nadia','rae'] : ['nadia','rae','dominic','mira','theo','august'],
+       pool:120, yours: day1 ? 0 : 40},
+      {id:'ship', state:'filling', title:'Ship-it Thursday: bring the thing that is stuck',
+       blurb:'Two hours, no talks. Everyone brings the piece of work they are blocked on, and one other person actually looks at it with them.',
+       place:'Harold Washington Library', when:'Thursday, 7pm', model:'Build Session', stake:12,
+       need:6, seats: day1 ? ['rae','dominic'] : ['rae','dominic','mira','theo'], pool:120, yours:0},
+      {id:'prac', state: day1 ? 'open' : 'filling', title:'Show-your-practice: how I actually made it',
+       blurb:'One builder walks the room through their real process — the dead ends included. Then everyone asks the question they actually want answered.',
+       place:'Pilsen · a studio', when:'next Tuesday', model:'Show-Your-Practice', stake:10,
+       need:5, seats: day1 ? [] : ['theo','sol'], pool:100, yours:0},
+      {id:'press', state:'open', title:'Open table: bring a question, not a pitch',
+       blurb:'No structure beyond the one rule. Whoever comes decides what the hour is for.',
+       place:'Avondale · a back room', when:'a week Sunday', model:'Open Table', stake:8,
+       need:4, seats:[], pool:80, yours:0}
+    ].concat(day1 ? [] : [
+      {id:'logan', state:'past', title:'Build Session, Logan Square', date:'26 Jul 2026',
+       blurb:'Four people, two hours, three things unblocked. Rae brought the first routing sketch.',
+       place:'Logan Square · a kitchen table', when:'26 July', model:'Build Session', stake:10,
+       need:4, seats:['rae','august','sol','nadia'], pool:80, yours:0}
+    ]);
+  }
+
+  var STEPS_DAY1 = [
+    {t:'Keep one Semble', d:'The thing you are making right now, with a public link. This is the only required thing.', done:false, goto:'me'},
+    {t:'Take a seat, or Init your own', d:'Join a Sesh below, or open one of your own if nothing fits.', done:false},
+    {t:'Show up, and tap the anchor', d:'That is the whole product. Everything else follows from it.', done:false, lock:true}
+  ];
+  var STEPS_VET = [
+    {t:'Commit your stake', d:'$12, returned the moment you tap the anchor.', done:true},
+    {t:'Post what you are bringing', d:'One line. The room reads it before you arrive.', done:false},
+    {t:'Read the two Sembles you will meet', d:'Rae is on routing. Dominic is on payouts.', done:false},
+    {t:'Pack the thing that is stuck', d:'The piece you actually want another pair of eyes on.', done:false},
+    {t:'Tap the anchor at the door', d:'This is what signs your attendance, and returns your stake.', done:false, lock:true}
+  ];
+
+  function seedState(mode){
+    var day1 = mode === 'day1';
+    return {
+      steps: JSON.parse(JSON.stringify(day1 ? STEPS_DAY1 : STEPS_VET)),
+      ledger: day1 ? [] : [
+        {dir:'in', n:34, who:'Ship-it Thursday', why:'Credited by 6 people for bringing the payout ledger.', date:'16 Aug 2026'},
+        {dir:'out',n:12, who:'Rae', why:'For the routing diagram that unblocked two of us.', date:'16 Aug 2026'},
+        {dir:'out',n:20, who:'Agent compute', why:'20 supervised agent-minutes, spent in the room.', date:'12 Aug 2026'},
+        {dir:'in', n:26, who:'Walk-and-Talk, Lakefront', why:'Credited by 8 people for the quarter question.', date:'09 Aug 2026'},
+        {dir:'in', n:41, who:'Show-Your-Practice, Pilsen', why:'Convened it. Credited by all 5 who came.', date:'02 Aug 2026'},
+        {dir:'out',n:15, who:'Dominic', why:'For sitting with the escrow maths for an hour.', date:'02 Aug 2026'},
+        {dir:'in', n:18, who:'Build Session, Logan Square', why:'Credited by 4 people.', date:'26 Jul 2026'},
+        {dir:'in', n:22, who:'Model origin · Build Session', why:'Someone forked your Model. Origin credit is automatic.', date:'26 Jul 2026'}
+      ],
+      trax: day1 ? [] : [
+        {d:'16 Aug 2026', t:'Credited by 6 people at Ship-it Thursday', p:'For bringing the payout ledger and walking two people through it.', s:'Signed by 6 attendees', gold:true},
+        {d:'09 Aug 2026', t:'Attended Walk-and-Talk, Lakefront', p:'Committed 6 days ahead. Stake returned on arrival.', s:'Signed by 8 attendees'},
+        {d:'02 Aug 2026', t:'Convened Show-Your-Practice, Pilsen', p:'Filled in 4 days. 5 of 5 attended.', s:'Signed by 5 attendees'},
+        {d:'26 Jul 2026', t:'Model forked · Build Session to Ship-it Thursday', p:'Origin credited to the Build Session Model automatically.', s:'Lineage recorded'}
+      ],
+      moments: [], stepsTaken: day1 ? 0 : 47, seshAttended: day1 ? 0 : 9,
+      filter:'all', signed:false, allocated:false,
+      alloc:{rae:0, dominic:0, nadia:0},
+      hasSemble: !day1
+    };
+  }
+
+  /* ═══════════ PERSISTENCE — honest, and easy to clear ═══════════ */
+  var KEY = 'semble.preview.v1';
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({mode:MODE, S:S, SESH:SESH})); }
+    catch(e){ /* private mode, a full quota — the app must not care */ }
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !d.S || !d.SESH) return null;
+      return d;
+    } catch(e){ return null; }
+  }
+  function setMode(mode, keep){
+    MODE = mode;
+    if (!keep){ SESH = seedSesh(mode); S = seedState(mode); }
+    save();
+  }
+  var boot = load();
+  if (boot){ MODE = boot.mode; S = boot.S; SESH = boot.SESH; }
+  else setMode('veteran');
+
+  function sesh(id){ for(var i=0;i<SESH.length;i++) if(SESH[i].id===id) return SESH[i]; return null; }
+  function isDay1(){ return MODE === 'day1'; }
+
+  /* ═══════════ HELPERS ═══════════ */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function num(n){ return n.toLocaleString('en-US'); }
+  var tEl, tT;
+  function toast(msg){
+    tEl = tEl || $('toast');
+    tEl.textContent = msg; tEl.classList.add('on');
+    clearTimeout(tT); tT = setTimeout(function(){ tEl.classList.remove('on'); }, 4600);
+  }
+  var CHK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.6 4.6L19 7.5"/></svg>';
+  var CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  function CROSS(id){ return '<svg class="cross cross--gold" id="'+id+'" viewBox="0 0 100 100">'
+    + '<circle class="cxh" cx="50" cy="50" r="26"/>'
+    + '<path class="cx cx--a" d="M70 16C40 20 36 40 50 50"/>'
+    + '<path class="cx cx--b" d="M30 84C60 80 64 60 50 50"/>'
+    + '<circle class="cxc" cx="50" cy="50" r="4.6"/></svg>'; }
+
+  function seatsHTML(s){
+    var h = '<div class="seats">';
+    for (var i = 0; i < s.need; i++){
+      var pid = s.seats[i];
+      if (pid) h += '<button type="button" class="seat seat--taken'+(P[pid].you?' seat--you':'')+
+                    '" data-person="'+pid+'" aria-label="'+esc(P[pid].n)+'">'+P[pid].i+'</button>';
+      else h += '<span class="seat seat--open'+(i===s.seats.length?' seat--next':'')+'" aria-hidden="true">'
+              + '<svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span>';
+    }
+    var open = s.need - s.seats.length;
+    h += '</div><p class="seatcap">' + (s.seats.length === 0
+        ? '<b>No one yet</b> &middot; ' + s.need + ' seats open'
+        : (open > 0
+          ? '<b>' + s.seats.length + ' of ' + s.need + '</b> seats taken &middot; ' + open + ' still open'
+          : '<b>' + s.need + ' of ' + s.need + '</b> &mdash; this Sesh is confirmed')) + '</p>';
+    return h;
+  }
+  function bringsHTML(s, limit){
+    if (!s.seats.length) return '';
+    return '<ul class="brings">' + s.seats.slice(0, limit || 99).map(function(pid){
+      var p = P[pid];
+      return '<li><button type="button" data-person="'+pid+'">'
+        + '<span class="av av--sm">'+p.i+'</span>'
+        + '<span class="who__t"><b>'+esc(p.n)+(p.you?' · you':'')+'</b><span>'+esc(p.t)+'</span></span>'
+        + CHEV + '</button></li>';
+    }).join('') + '</ul>';
+  }
+  var STATE_K = {open:'Open · no one yet', filling:'Filling', confirmed:'Confirmed',
+                 live:'Live now', past:'Attended'};
+
+  function seshCard(s){
+    var k = STATE_K[s.state] + (s.state==='past' ? ' · '+s.date : ' · '+s.when);
+    return '<div class="card s-'+s.state+'" data-sesh="'+s.id+'">'
+      + '<p class="card__k">'+(s.state==='live'?'<i class="dotlive"></i>':'')+esc(k)+'</p>'
+      + '<h3>'+esc(s.title)+'</h3>'
+      + '<p>'+esc(s.blurb)+'</p>'
+      + seatsHTML(s)
+      + '<div class="meta"><span>'+esc(s.place)+'</span><span>Model &middot; <b>'+esc(s.model)+'</b></span>'
+      + (s.state==='past' ? '' : '<span>Stake &middot; <b>$'+s.stake+'</b></span>') + '</div>'
+      + '<div class="row"><button class="btn btn--ghost" type="button" data-open="'+s.id+'">Open this Sesh</button></div>'
+      + '</div>';
+  }
+
+  /* ═══════════ NAVIGATION ═══════════ */
+  var TITLES = {
+    sesh   :['Welcome To Semble Sessions.','What Are Your Next Semble Sesh Steps?'],
+    room   :['The room','Live now. Nothing is recording.'],
+    init   :['Init a Semble Session','You open it. The room decides whether it happens.'],
+    me     :['Semble','Your work, everyone building in the open, and the live CCs.'],
+    trax   :['Your Trax','Start here. The line your Steps make — and how it all fits.']
+  };
+  var TABOF = {sesh:'sesh', room:'sesh', detail:'sesh', person:'sesh', init:'init', me:'me', trax:'trax'};
+  var stack = [], lastSesh = 'walk';
+
+  function show(name){
+    [].forEach.call(document.querySelectorAll('.screen'), function(el){
+      el.classList.toggle('on', el.id === 's-' + name); });
+    var tab = TABOF[name] || 'sesh';
+    [].forEach.call(document.querySelectorAll('.tab'), function(b){
+      b.classList.toggle('on', b.dataset.s === tab); });
+    try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }catch(e){ window.scrollTo(0,0); }
+  }
+  function setHead(a, b){ $('hdT').textContent = a; $('hdS').textContent = b; }
+  function go(name){
+    stack = [];
+    var t = TITLES[name] || TITLES.sesh;
+    if (name === 'sesh' && isDay1()) t = ['Welcome To Semble Sessions.','Nothing yet. Here is how it starts.'];
+    if (name === 'trax' && isDay1()) t = ['Your Trax','Empty, for now. It begins at your first Step.'];
+    if (name === 'me'   && !S.hasSemble) t = ['Your Semble','You do not have one yet. This is the only required thing.'];
+    setHead(t[0], t[1]);
+    if (name === 'sesh') renderSesh();
+    if (name === 'trax') renderTrax();
+    if (name === 'me')   renderMe();
+    show(name);
+    if (name === 'trax') paintLine();
+  }
+  function push(name, render, a, b){
+    stack.push(name); render(); setHead(a, b); show(name);
+  }
+  function back(){
+    stack.pop();
+    var prev = stack.length ? stack[stack.length - 1] : 'sesh';
+    if (prev === 'detail') openSesh(lastSesh, true); else go('sesh');
+  }
+  function backBtn(label){
+    return '<button class="back" type="button" id="backBtn">'
+      + '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>' + esc(label) + '</button>';
+  }
+
+  /* ═══════════ NEXT SESH ═══════════ */
+  function stepsCardHTML(){
+    var openSteps = S.steps.filter(function(x){ return !x.lock; }),
+        openDone  = openSteps.filter(function(x){ return x.done; }).length,
+        allDone   = S.steps.filter(function(x){ return x.done; }).length,
+        left      = openSteps.length - openDone,
+        C = 2 * Math.PI * 27, srT, srS;
+
+    if (allDone === S.steps.length){ srT = 'Every Step taken.'; srS = 'You showed up, you signed, and the room has your name on it.'; }
+    else if (left === 0){ srT = isDay1() ? 'You are ready.' : 'You are ready for this Sesh.';
+                          srS = 'The last Step signs itself when you walk in and tap the anchor.'; }
+    else if (isDay1()){ srT = 'Three Steps and you are in a room.';
+                        srS = 'That is the whole setup.'; }
+    else { srT = left + ' Step' + (left===1?'':'s') + ' left before this Sesh';
+           srS = 'A Step is one small thing you actually do. Tap one when it is done.'; }
+
+    return '<div class="card d2">'
+      + '  <p class="card__k">' + (isDay1() ? 'Your first Semble Steps' : 'Your Semble Steps') + '</p>'
+      + '  <div class="sr"><div class="sr__ring' + (allDone===S.steps.length?' full':'') + '">'
+      + '    <svg viewBox="0 0 66 66" aria-hidden="true"><circle class="sr__trk" cx="33" cy="33" r="27"/>'
+      + '    <circle class="sr__arc" cx="33" cy="33" r="27" stroke-dasharray="' + C.toFixed(1)
+      + '"    stroke-dashoffset="' + (C * (1 - allDone / S.steps.length)).toFixed(1) + '"/></svg>'
+      + '    <div class="sr__num">' + allDone + '/' + S.steps.length + '</div></div>'
+      + '    <div class="sr__t"><b>' + esc(srT) + '</b><span>' + esc(srS) + '</span></div></div>'
+      + '  <ul class="stps">' + S.steps.map(function(st, i){
+            return '<li><button type="button" class="stp' + (st.done?' done':'') + (st.lock?' lock':'')
+              + '" data-step="' + i + '"><span class="stp__box">' + CHK + '</span>'
+              + '<span class="stp__t"><b>Step ' + (i+1) + ' &middot; ' + esc(st.t) + '</b>'
+              + '<span>' + esc(st.d) + '</span>'
+              + (st.lock ? '<span class="stp__w">Opens at the door</span>' : '')
+              + '</span></button></li>';
+          }).join('') + '</ul>'
+      + '  <p class="hint">Every Step lands in your <b>Trax</b>.</p>'
+      + '</div>';
+  }
+
+  function renderSesh(){
+    var mine = SESH.filter(function(s){ return s.state === 'confirmed' && s.seats.indexOf('august') >= 0; })[0];
+    var html = '';
+
+    if (mine){
+      html += '<div class="card d3 s-confirmed">'
+        + '  <p class="card__k">Your next Sesh &middot; confirmed</p>'
+        + '  <h3>' + esc(mine.title) + '</h3>'
+        + '  <p>' + esc(mine.blurb) + '</p>'
+        + '  <div class="cd"><div><b id="cdD">—</b><span>Days</span></div>'
+        + '    <div><b id="cdH">—</b><span>Hours</span></div>'
+        + '    <div><b id="cdM">—</b><span>Min</span></div></div>'
+        +    seatsHTML(mine) + bringsHTML(mine, 3)
+        + '  <div class="meta"><span>' + esc(mine.place) + '</span><span>Model &middot; <b>' + esc(mine.model) + '</b></span></div>'
+        + '  <div class="row"><button class="btn" type="button" id="roomBtn">Open the room</button>'
+        + '    <button class="btn btn--ghost" type="button" data-open="' + mine.id + '">See the Sesh</button></div>'
+        + '</div>';
+    } else {
+      /* DAY ONE — the screen a real person actually meets first */
+      html += '<div class="card d3">'
+        + '  <p class="card__k">Nothing scheduled</p>'
+        + '  <h3>' + (S.hasSemble
+              ? 'You are not in a room yet.'
+              : 'Start with the one required thing.') + '</h3>'
+        + '  <p>' + (S.hasSemble
+              ? 'Take a seat in something below, or Init your own. A Sesh becomes certain the moment enough people come with you — until then it is only an idea, and that is fine.'
+              : 'Keep one Semble: the thing you are making right now, with a link anyone can open. That is the whole entry requirement. No application, no profile to fill in, no waiting.') + '</p>'
+        + '  <div class="row">'
+        + (S.hasSemble
+            ? '<button class="btn" type="button" id="propJump">Init a Sesh</button>'
+            : '<button class="btn" type="button" data-goto="me">Keep your Semble</button>')
+        + '  </div>'
+        + '</div>';
+    }
+
+    html += stepsCardHTML();
+
+    var others = SESH.filter(function(s){ return (!mine || s.id !== mine.id) && s.state !== 'past'; });
+    if (others.length){
+      html += '<p class="kick" style="margin:26px 0 12px">'
+            + (isDay1() ? 'Open near you' : 'Also filling') + '</p>'
+            + others.map(seshCard).join('');
+    }
+
+    html += '<div class="card s-open" style="border-style:dashed">'
+      + '  <p class="card__k">Init one</p>'
+      + '  <h3>Nothing here fits? Open your own.</h3>'
+      + '  <p>A returnable stake. It schedules when enough people commit.</p>'
+      + '  <div class="row"><button class="btn btn--ghost" type="button" id="propJump2">Init a Sesh</button></div>'
+      + '</div>';
+
+    var past = SESH.filter(function(s){ return s.state === 'past'; });
+    if (past.length) html += past.map(seshCard).join('');
+
+    $('s-sesh').innerHTML = html;
+    if (mine) countdown();
+  }
+
+  /* ═══════════ A SESH, OPENED ═══════════ */
+  function openSesh(id, silent){
+    var s = sesh(id); if (!s) return;
+    lastSesh = id;
+    var seated = s.seats.indexOf('august') >= 0;
+    var html = backBtn('Sessions')
+      + '<div class="card d3 s-' + s.state + '">'
+      + '  <p class="card__k">' + (s.state==='live'?'<i class="dotlive"></i>':'')
+      +      esc(STATE_K[s.state]) + ' &middot; ' + esc(s.state==='past' ? s.date : s.when) + '</p>'
+      + '  <h3>' + esc(s.title) + '</h3>'
+      + '  <p>' + esc(s.blurb) + '</p>'
+      +    seatsHTML(s)
+      + '  <div class="meta"><span>' + esc(s.place) + '</span><span>Model &middot; <b>' + esc(s.model) + '</b></span>'
+      + (s.state==='past' ? '' : '<span>Stake &middot; <b>$' + s.stake + '</b></span>') + '</div>'
+      + (!seated && (s.state === 'filling' || s.state === 'open')
+          ? '<div class="row"><button class="btn" type="button" data-commit="' + s.id + '">'
+            + (s.seats.length ? 'Take a seat &middot; $' + s.stake + ' back on arrival'
+                              : 'Be the first &middot; $' + s.stake) + '</button></div>'
+            + '<p class="hint">' + (s.seats.length
+                ? 'If it never fills you get <b class="au">$' + (s.stake+2) + '</b> back. The extra comes from the convener\'s bond.'
+                : 'First seat pays best — the bonus covers you if it never fills.') + '</p>'
+          : '')
+      + (seated && s.state !== 'past'
+          ? '<p class="hint"><b class="gd">You have a seat.</b> Your $' + s.stake + ' comes back the moment you tap the anchor at the door.</p>'
+          : '')
+      + '</div>'
+      + (s.seats.length ? '<div class="card d2"><p class="card__k">Who is coming, and what they bring</p>'
+          + bringsHTML(s) + '</div>'
+        : '<div class="card d1"><p class="card__k">Who is coming</p>'
+          + '<h3>Nobody, yet.</h3><p>Every room that ever happened started here. The seats fill from the left as people commit.</p></div>')
+      + '<div class="card d1"><p class="card__k">The pool</p>'
+      + '  <div class="pool"><b>' + s.pool + '</b><span>!MOTUS, fixed</span></div>'
+      + '  <p class="hint">Minted once. Allocated by the people who were there.</p>'
+      + '</div>';
+
+    push('detail', function(){ $('s-detail').innerHTML = html; },
+         s.state === 'past' ? 'A Sesh you attended' : 'A Semble Session',
+         s.place + ' · ' + (s.state==='past' ? s.date : s.when));
+    if (!silent) window.SEMBLE.armCrosses($('s-detail'));
+  }
+
+  /* ═══════════ A PERSON ═══════════ */
+  function openPerson(pid){
+    var p = P[pid]; if (!p) return;
+    var theirs = SESH.filter(function(s){ return s.seats.indexOf(pid) >= 0; });
+    var html = backBtn('Back')
+      + '<div class="card d3">'
+      + '  <div class="phero"><span class="av av--lg">' + p.i + '</span>'
+      + '    <span class="phero__t"><b>' + esc(p.n) + (p.you ? ' · you' : '') + '</b><span>' + esc(p.c) + ' &middot; since ' + esc(p.since) + '</span></span></div>'
+      + '  <p class="card__k" style="margin-top:4px">Active Semble</p>'
+      + '  <h3>' + esc(p.t) + '</h3>'
+      + '  <p>' + esc(p.w) + '</p>'
+      + '  <a class="open" href="https://' + esc(p.l) + '" target="_blank" rel="noopener">' + esc(p.l) + ' &rarr;</a>'
+      + '</div>'
+      + '<div class="card d2"><p class="card__k">Their Trax</p>'
+      + '  <div class="stats"><div class="stat"><b>' + p.steps + '</b><span>Steps taken</span></div>'
+      + '    <div class="stat"><b>' + p.sesh + '</b><span>Sesh attended</span></div>'
+      + '    <div class="stat"><b class="au">' + p.motus + '</b><span>!MOTUS held</span></div></div>'
+      + '  <p class="hint">Narrow, dated claims about specific rooms. No score, no rank — you read it and draw your own conclusion.</p>'
+      + '</div>'
+      + (theirs.length ? '<div class="card d2"><p class="card__k">Sessions you would meet them in</p>'
+          + '<ul class="brings">' + theirs.map(function(s){
+              return '<li><button type="button" data-open="' + s.id + '">'
+                + '<span class="who__t"><b>' + esc(s.title) + '</b><span>' + esc(STATE_K[s.state]) + ' &middot; ' + esc(s.place) + '</span></span>'
+                + CHEV + '</button></li>';
+            }).join('') + '</ul></div>' : '');
+
+    push('person', function(){ $('s-person').innerHTML = html; }, p.n, p.c + ' · ' + p.t);
+  }
+
+  /* ═══════════ THE ROOM ═══════════ */
+  function renderRoom(){
+    var s = sesh('walk');
+    var mates = ['rae','dominic','nadia'];
+    var used = mates.reduce(function(a,k){ return a + S.alloc[k]; }, 0);
+
+    var html = backBtn('Sessions')
+      + '<div class="card d3 s-live">'
+      + '  <p class="card__k"><i class="dotlive"></i>Live now &middot; 41 min in</p>'
+      + '  <h3>' + esc(s.title) + '</h3>'
+      + '  <p>Eight people are here. Nothing is recording.</p>'
+      + '  <div class="row"><button class="btn" type="button" id="markBtn">Mark a moment</button></div>'
+      + (S.moments.length
+          ? '<ul class="moments">' + S.moments.map(function(m){
+              return '<li><time>' + esc(m.t) + '</time><span>' + esc(m.s) + '</span></li>'; }).join('') + '</ul>'
+          : '<p class="hint">Nothing is kept unless someone marks it. Marked moments show who marked them, at the time.</p>')
+      + '</div>'
+      + '<div class="card d2">'
+      + '  <p class="card__k">' + (isDay1() ? 'At the door' : 'Step 5 &middot; at the door') + '</p>'
+      + '  <h3>The room signs for itself</h3>'
+      + '  <p>Tap the Sesh anchor, then co-sign for the people around you. That is what makes attendance verifiable later. No location is captured, and nothing is stored about where you were.</p>'
+      + '  <div class="seal-x" id="signseal"' + (S.signed ? '' : ' hidden') + ' aria-hidden="true">' + CROSS('signcross') + '</div>'
+      + '  <div class="row"><button class="btn' + (S.signed ? ' btn--gold' : '') + '" type="button" id="signBtn">'
+      +      (S.signed ? 'Signed by the room' : 'Tap the anchor') + '</button></div>'
+      + '  <p class="hint" id="signh">' + (S.signed
+          ? '<b class="gd">Signed.</b> Three people around you co-signed for you, and you for them. Your attendance is verifiable, and no location was captured.'
+          : 'Requires SafeStep. Your key never leaves your device.') + '</p>'
+      + '</div>'
+      + '<div class="card d2">'
+      + '  <p class="card__k">Then &middot; the credit</p>'
+      + '  <h3>Credit what people brought</h3>'
+      + '  <div class="pool"><b id="allocLeft">' + (s.yours - used) + '</b><span>!MOTUS left to give</span></div>'
+      + '  <p class="hint">You hold ' + s.yours + ' of this Sesh\'s ' + s.pool + '. Give it to what people actually brought — everything you send shows up in your Trax, and in theirs.</p>'
+      + '  <ul class="alloc">' + mates.map(function(k){
+            var p = P[k];
+            return '<li><span class="av av--sm">' + p.i + '</span>'
+              + '<span class="alloc__t"><b>' + esc(p.n) + '</b><span>' + esc(p.t) + '</span></span>'
+              + '<span class="pm"><button type="button" data-alloc="' + k + '" data-d="-2"'
+              + (S.allocated ? ' disabled' : '') + '>&#8722;</button>'
+              + '<b id="a-' + k + '">' + S.alloc[k] + '</b>'
+              + '<button type="button" data-alloc="' + k + '" data-d="2"'
+              + (S.allocated ? ' disabled' : '') + '>+</button></span></li>';
+          }).join('') + '</ul>'
+      + '  <div class="row"><button class="btn btn--ghost" type="button" id="allocBtn"'
+      +      (S.allocated ? ' disabled' : '') + '>' + (S.allocated ? 'Pool allocated' : 'Send it') + '</button></div>'
+      + '  <p class="hint" id="poolh">' + (S.allocated
+          ? '<b class="au">Allocated.</b> It is all in your Trax now, and in theirs.'
+          : 'The window closes 48 hours after the room ends. Attendees only.') + '</p>'
+      + '</div>'
+      + '<div class="card d1"><p class="card__k">Everyone here</p>' + bringsHTML(s) + '</div>';
+
+    $('s-room').innerHTML = html;
+    window.SEMBLE.armCrosses($('s-room'));
+  }
+
+  /* ═══════════ YOUR SEMBLE ═══════════ */
+  function renderMe(){
+    var html = S.hasSemble
+      ? '<div class="card d3">'
+        + '  <p class="card__k">Your active Semble</p>'
+        + '  <div class="phero"><span class="av av--lg">A</span>'
+        + '    <span class="phero__t"><b>August</b><span>Chicago &middot; since June 2026</span></span></div>'
+        + '  <h3>Motus.Market — the settlement layer</h3>'
+        + '  <p>Where action and agency transparently pay off. Currently shipping the presence proof and the record.</p>'
+        + '  <a class="open" href="https://motus.market" target="_blank" rel="noopener">motus.market &rarr;</a>'
+        + '  <div class="meta"><span>Serving &middot; <b>MotusMoves</b></span><span>Open since <b>Jun 2026</b></span></div>'
+        + '</div>'
+      : '<div class="card d3">'
+        + '  <p class="card__k">No active Semble</p>'
+        + '  <h3>One piece of work, shared in the open.</h3>'
+        + '  <p>Not a bio and not a portfolio — the thing you are actually making right now, with a link anyone can open. It does not have to be code. A doc, a model, a recording, a craft, a press-printed specimen all count.</p>'
+        + '  <p class="hint">This is the only thing Semble requires of you before a door opens.</p>'
+        + '</div>';
+
+    /* ═══ SEMBLE CCs — brief. The Models speak; we don't. ═══ */
+    var MIC = '<svg viewBox="0 0 24 24"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M9 20.5h6"/></svg>';
+    html += '<div class="card d2">'
+      + '  <p class="card__k">Semble CCs &middot; Community Cores</p>'
+      + '  <h3>A mic for the brave.</h3>'
+      + '  <button type="button" class="ccrow" data-cc="the-commons"><span class="ccrow__i">' + MIC + '</span>'
+      + '    <span class="ccrow__t"><b>The Commons</b><span>Always open.</span></span>' + CHEV + '</button>'
+      + '  <div class="seg" id="ccModel" style="margin:13px 0 0">'
+      + '    <button type="button" class="on" data-cm="coordination-call">Coordination Call</button>'
+      + '    <button type="button" data-cm="community-call">Community Call</button>'
+      + '    <button type="button" data-cm="commons-circle">Commons Circle</button>'
+      + '    <button type="button" data-cm="core-call">Core Call</button>'
+      + '  </div>'
+      + '  <div class="ccstart">'
+      + '    <input type="text" id="ccName" maxlength="40" placeholder="Name it&hellip;" autocomplete="off"/>'
+      + '    <button class="btn btn--gold" type="button" id="ccStart">Open</button>'
+      + '  </div>'
+      + '  <div class="ccstart" style="margin-top:9px">'
+      + '    <input type="text" id="ccMeaning" maxlength="40" placeholder="What CC stands for &middot; optional" autocomplete="off"/>'
+      + '  </div>'
+      + '  <div class="ccstart" style="margin-top:9px">'
+      + '    <input type="datetime-local" id="ccWhen" aria-label="Schedule for later"/>'
+      + '    <button class="btn btn--ghost" type="button" id="ccSched">Link</button>'
+      + '  </div>'
+      + '  <p class="hint">Open now, or set a time and send the link. <b class="au">#ShareTheMic</b></p>'
+      + '</div>';
+
+    /* ═══ THE SEMBLES — everyone building in the open, right now ═══ */
+    html += '<div class="card d2">'
+      + '  <p class="card__k">The Sembles &middot; in the open now</p>'
+      + '  <ul class="brings">' + Object.keys(P).map(function(k){
+            var p = P[k];
+            return '<li><button type="button" data-person="' + k + '">'
+              + '<span class="av av--sm">' + p.i + '</span>'
+              + '<span class="who__t"><b>' + esc(p.n) + (p.you ? ' &middot; you' : '') + '</b><span>' + esc(p.t) + '</span></span>'
+              + CHEV + '</button></li>';
+          }).join('') + '</ul>'
+      + '  <p class="hint">One live piece of work each. Tap anyone to read what they are making and where it lives.</p>'
+      + '</div>';
+
+    html += '<div class="card d2">'
+      + '  <p class="card__k">' + (S.hasSemble ? 'Change it' : 'Keep one') + '</p>'
+      + '  <div class="fld"><label>Title</label><input type="text" id="meT"'
+      +      (S.hasSemble ? ' value="Motus.Market — the settlement layer"' : ' placeholder="What are you making?"') + '/></div>'
+      + '  <div class="fld"><label>What you are building</label><textarea id="meW"'
+      +      (S.hasSemble ? '' : ' placeholder="One or two sentences. Plainly."') + '>'
+      +      (S.hasSemble ? 'Where action and agency transparently pay off.' : '') + '</textarea></div>'
+      + '  <div class="fld"><label>Where it lives in the open</label><input type="text" id="meL"'
+      +      (S.hasSemble ? ' value="https://motus.market"' : ' placeholder="A link anyone can open"') + '/>'
+      + '    <p class="hint">Required. Public is the point.</p></div>'
+      + '  <div class="row"><button class="btn" type="button" id="saveBtn">'
+      +      (S.hasSemble ? 'Save' : 'Keep this Semble') + '</button></div>'
+      + (S.hasSemble ? '  <p class="hint">One active Semble at a time. Replacing it archives the last one.</p>' : '')
+      + '</div>'
+      + '<div class="card d1">'
+      + '  <p class="card__k">Who can read this</p>'
+      + '  <div class="seg" id="privSeg">'
+      + '    <button type="button" class="on">Open</button><button type="button">Held</button>'
+      + '    <button type="button">Closed</button></div>'
+      + '  <p id="privP" style="margin:0">Your Semble and your Trax are visible to people. Agents cannot read them unless you say so.</p>'
+      + '</div>';
+    $('s-me').innerHTML = html;
+  }
+
+  /* ═══════════ TRAX ═══════════ */
+  function renderTrax(){
+    var inN = 0, outN = 0;
+    S.ledger.forEach(function(e){ if (e.dir === 'in') inN += e.n; else outN += e.n; });
+    $('mIn').textContent   = num(inN);
+    $('mOut').textContent  = num(outN);
+    $('mHeld').textContent = num(inN - outN);
+    $('tSteps').textContent = num(S.stepsTaken);
+    $('tSesh').textContent  = num(S.seshAttended);
+    /* a kept-rate with no commitments behind it is a lie dressed as a number */
+    $('tKept').textContent  = S.seshAttended ? '100%' : '—';
+
+    var rows = S.ledger.filter(function(e){ return S.filter === 'all' || e.dir === S.filter; });
+    $('led').innerHTML = rows.length ? rows.map(function(e){
+      return '<li><span class="led__i ' + e.dir + '">' + (e.dir==='in'?'&darr;':'&uarr;') + '</span>'
+        + '<span class="led__t"><b>' + esc(e.who) + '</b><span>' + esc(e.why) + '</span>'
+        + '<time>' + esc(e.date) + '</time></span>'
+        + '<span class="led__n ' + e.dir + '">' + (e.dir==='in'?'+':'&minus;') + e.n
+        + '<i>' + (e.dir==='in'?'received':'sent') + '</i></span></li>';
+    }).join('')
+      : '<li style="border:0"><p class="empty">' + (S.ledger.length
+          ? 'Nothing ' + (S.filter==='in'?'received':'sent') + ' yet.'
+          : 'No !MOTUS yet. It arrives when a room you were in credits what you brought.') + '</p></li>';
+
+    $('tentries').innerHTML = S.trax.length ? S.trax.map(function(r){
+      return '<div class="te"><time>' + esc(r.d) + '</time>'
+        + '<b>' + esc(r.t) + '</b><p>' + esc(r.p) + '</p>'
+        + '<span class="verif">' + esc(r.s) + '</span></div>';
+    }).join('')
+      : '<div class="te"><time>Not yet</time><b>Your line starts at your first Step.</b>'
+        + '<p>Nothing here is written by us. Every entry is a dated claim about a specific room, signed by the people who were in it with you.</p></div>';
+    paintLine();
+  }
+
+  var lineT1 = 0, lineT2 = 0;
+  function paintLine(){
+    clearTimeout(lineT1); clearTimeout(lineT2);
+    lineT1 = setTimeout(drawLine, 30);
+    lineT2 = setTimeout(drawLine, 420);
+  }
+  function drawLine(){
+    var wrap = $('tline'), svg = $('tsvg'), path = $('tpath'), nodes = $('tnodes');
+    if (!wrap || !svg) return;
+    var entries = [].slice.call(wrap.querySelectorAll('.te'));
+    var H = wrap.offsetHeight, W = 58;
+    /* a hidden screen reports every height as 0 — drawing then commits a stub
+       that looks like a rendering bug forever after */
+    if (!entries.length || H < 40){ path.setAttribute('d',''); nodes.innerHTML=''; return; }
+    var top = wrap.getBoundingClientRect().top;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Math.max(1, H));
+    svg.style.height = H + 'px';
+
+    var real = S.trax.length > 0;
+    var pts = entries.map(function(el, i){
+      var r = el.getBoundingClientRect();
+      return { x: 29 + (real ? (i % 2 ? 11 : -11) : 0), y: (r.top - top) + 16 };
+    });
+    pts.unshift({ x: 29, y: 0 });
+    pts.push({ x: 29, y: H });
+
+    var d = 'M' + pts[0].x + ' ' + pts[0].y.toFixed(1);
+    for (var i = 1; i < pts.length; i++){
+      var a = pts[i-1], b = pts[i], my = (a.y + b.y) / 2;
+      d += ' C' + a.x + ' ' + my.toFixed(1) + ' ' + b.x + ' ' + my.toFixed(1)
+         + ' ' + b.x + ' ' + b.y.toFixed(1);
+    }
+    path.setAttribute('d', d);
+    path.style.opacity = real ? '1' : '.34';
+    nodes.innerHTML = pts.slice(1, -1).map(function(p, i){
+      return '<circle class="tline__n' + (real && S.trax[i] && S.trax[i].gold ? ' gold' : '')
+        + '" cx="' + p.x + '" cy="' + p.y.toFixed(1) + '" r="' + (real ? 5 : 4) + '"'
+        + (real ? '' : ' opacity=".45"') + '/>';
+    }).join('');
+  }
+
+  /* ═══════════ COUNTDOWN ═══════════ */
+  var cdTimer = 0;
+  function countdown(){
+    var d = $('cdD'), h = $('cdH'), m = $('cdM');
+    if (!d) return;
+    function target(){
+      var n = new Date(), t = new Date(n);
+      t.setHours(10,0,0,0);
+      var add = (6 - t.getDay() + 7) % 7;
+      if (add === 0 && t <= n) add = 7;
+      t.setDate(t.getDate() + add);
+      return t;
+    }
+    var T = target();
+    function tick(){
+      if (!document.body.contains(d)) { clearInterval(cdTimer); return; }
+      var ms = T - new Date();
+      if (ms < 0){ T = target(); ms = T - new Date(); }
+      var mins = Math.floor(ms / 60000);
+      d.textContent = Math.floor(mins / 1440);
+      h.textContent = Math.floor(mins % 1440 / 60);
+      m.textContent = mins % 60;
+    }
+    tick(); clearInterval(cdTimer); cdTimer = setInterval(tick, 30000);
+  }
+
+  /* ═══════════ ACTIONS ═══════════ */
+  function takeStep(i){
+    var st = S.steps[i];
+    if (!st) return;
+    if (st.goto && !S.hasSemble){ go(st.goto); return; }
+    if (st.lock){ toast('That Step opens at the door. Tap the anchor in the room and it signs itself.'); return; }
+    if (st.done) return;
+    st.done = true; S.stepsTaken++;
+    S.trax.unshift({d:'Today', t:'Step taken · ' + st.t, p:isDay1() ? 'Your first moves.' : 'Toward the walk-and-talk on Saturday.', s:'Recorded in your Trax'});
+    save(); renderSesh();
+    var left = S.steps.filter(function(x){ return !x.lock && !x.done; }).length;
+    toast(left ? 'Step taken. ' + left + ' more to go.'
+               : 'Every open Step is done. The last one signs itself at the door.');
+  }
+
+  function commit(id){
+    var s = sesh(id);
+    if (!s || s.seats.indexOf('august') >= 0 || s.seats.length >= s.need) return;
+    if (!S.hasSemble){
+      toast('Keep a Semble first — a room needs to know what you are bringing.');
+      go('me'); return;
+    }
+    s.seats.push('august'); S.stepsTaken++;
+    if (s.seats.length >= s.need){
+      s.state = 'confirmed';
+      S.trax.unshift({d:'Today', t:'Took the last seat at ' + s.model, p:s.need + ' of ' + s.need + ' — it is confirmed and on the public list.', s:'Recorded in your Trax'});
+      toast('That was the last seat. ' + s.need + ' of ' + s.need + " — you're on it.");
+    } else {
+      s.state = 'filling';
+      S.trax.unshift({d:'Today', t:'Took a seat at ' + s.model, p:s.seats.length + ' of ' + s.need + ' taken. Your $' + s.stake + ' comes back on arrival.', s:'Recorded in your Trax'});
+      toast('Seat taken. ' + (s.need - s.seats.length) + ' still open — your $' + s.stake + ' comes back when you arrive.');
+    }
+    save(); openSesh(id, true);
+  }
+
+  function doSign(){
+    if (S.signed) return;
+    S.signed = true;
+    var last = S.steps[S.steps.length - 1];
+    last.lock = false; last.done = true;
+    S.stepsTaken++; S.seshAttended++;
+    S.trax.unshift({d:'Today', t:'Attended Walk-and-Talk, Lakefront', p:'Anchor tapped, co-signed by 3 people. Stake returned.', s:'Signed by 8 attendees', gold:true});
+    save(); renderRoom();
+    window.SEMBLE.cross($('signcross'));
+    toast('Attendance signed by the room. Your stake has been returned, and the last Step is complete.');
+  }
+
+  function sendAlloc(){
+    if (S.allocated) return;
+    var s = sesh('walk'), mates = ['rae','dominic','nadia'];
+    var used = mates.reduce(function(a,k){ return a + S.alloc[k]; }, 0);
+    if (!S.signed){ toast('Tap the anchor first — only people the room signed for can allocate the pool.'); return; }
+    if (!used){ toast('Give some of it away first. The pool exists to be shared out, not held.'); return; }
+    S.allocated = true;
+    mates.forEach(function(k){
+      if (S.alloc[k] > 0)
+        S.ledger.unshift({dir:'out', n:S.alloc[k], who:P[k].n, why:'For ' + P[k].t.charAt(0).toLowerCase() + P[k].t.slice(1) + ', at the lakefront walk.', date:'Today'});
+    });
+    S.ledger.unshift({dir:'in', n:31, who:'Walk-and-Talk, Lakefront', why:'Credited by 7 of the 8 people who were there.', date:'Today'});
+    save(); renderRoom();
+    toast('Sent. ' + used + ' !MOTUS went out, and the room sent you 31 back — it is all in your Trax.');
+  }
+
+  function keepSemble(){
+    if (S.hasSemble){ toast('Updated. The previous one moved to your drive, nothing is lost.'); return; }
+    var t = ($('meT') && $('meT').value || '').trim();
+    var l = ($('meL') && $('meL').value || '').trim();
+    if (!t || !l){ toast('It needs a title and a public link. Those two are the whole requirement.'); return; }
+    S.hasSemble = true; S.steps[0].done = true; S.stepsTaken++;
+    S.trax.unshift({d:'Today', t:'Kept a Semble · ' + t.slice(0,48), p:'Shared in the open at ' + l.slice(0,40) + '.', s:'Recorded in your Trax', gold:true});
+    save(); renderMe(); setHead('Your Semble', 'One active piece of work, shared in the open.');
+    toast('Kept. That is the entry requirement met — every door in Semble is open to you now.');
+  }
+
+  /* ═══════════ MODE ═══════════ */
+  function applyMode(mode){
+    setMode(mode, false);
+    [].forEach.call($('modeSeg').querySelectorAll('button'), function(b){
+      b.classList.toggle('on', b.dataset.m === mode); });
+    renderMe(); go('sesh');
+    toast(mode === 'day1'
+      ? 'Day one. No Semble, no Trax, no !MOTUS, nothing scheduled — exactly what a new person sees.'
+      : 'Six weeks in. A Semble kept, nine Sessions attended, and a Trax with a shape.');
+  }
+
+  /* ═══════════ ONE DELEGATED LISTENER ═══════════ */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-person],[data-open],[data-step],[data-commit],[data-alloc],[data-goto],[data-m],[data-cc],[data-cm],'
+          + '#backBtn,#roomBtn,#propJump,#propJump2,#markBtn,#signBtn,#allocBtn,#saveBtn,#spendBtn,#expBtn,#postBtn,#resetBtn,#ccStart,#ccSched');
+    if (!t) return;
+
+    if (t.dataset.cc)     return location.href = '/cc?room=' + t.dataset.cc;
+    if (t.dataset.cm){
+      [].forEach.call($('ccModel').querySelectorAll('button'), function(x){
+        x.classList.toggle('on', x === t); });
+      return;
+    }
+    if (t.id === 'ccStart' || t.id === 'ccSched'){
+      var nm = (($('ccName')||{}).value || '').trim().toLowerCase()
+                 .replace(/[^a-z0-9\-\s]+/g,'').replace(/\s+/g,'-').replace(/^-+|-+$/g,'');
+      if (!nm){ toast('Name it first.'); return; }
+      var cm = ($('ccModel').querySelector('button.on')||{}).dataset.cm || 'coordination-call';
+      var mg = (($('ccMeaning')||{}).value || '').trim().slice(0,40);
+      var url = '/cc?room=' + nm.slice(0,40) + (cm !== 'coordination-call' ? '&model=' + cm : '')
+              + (mg ? '&cc=' + encodeURIComponent(mg) : '');
+      if (t.id === 'ccSched'){
+        var when = ($('ccWhen')||{}).value;
+        if (!when){ toast('Pick the time first.'); return; }
+        var at = Math.floor(new Date(when).getTime() / 1000);
+        if (!at || at * 1000 < Date.now()){ toast('That time has already passed.'); return; }
+        var full = location.origin + url + '&at=' + at;
+        (navigator.clipboard ? navigator.clipboard.writeText(full) : Promise.reject())
+          .then(function(){ toast('Scheduled. The link is copied — send it. Doors count down until then.'); })
+          .catch(function(){ toast('Scheduled: ' + full); });
+        return;
+      }
+      location.href = url;
+      return;
+    }
+    if (t.dataset.m)      return applyMode(t.dataset.m);
+    if (t.dataset.goto)   return go(t.dataset.goto);
+    if (t.dataset.person) return openPerson(t.dataset.person);
+    if (t.dataset.open)   return openSesh(t.dataset.open);
+    if (t.dataset.step !== undefined) return takeStep(+t.dataset.step);
+    if (t.dataset.commit) return commit(t.dataset.commit);
+    if (t.dataset.alloc){
+      if (S.allocated) return;
+      var k = t.dataset.alloc, d = +t.dataset.d, s = sesh('walk');
+      var mates = ['rae','dominic','nadia'];
+      var used = mates.reduce(function(a,x){ return a + S.alloc[x]; }, 0);
+      if (d > 0 && used + d > s.yours){ toast('That is all of it. You hold ' + s.yours + ' !MOTUS for this Sesh.'); return; }
+      S.alloc[k] = Math.max(0, S.alloc[k] + d);
+      $('a-' + k).textContent = S.alloc[k];
+      $('allocLeft').textContent = s.yours - mates.reduce(function(a,x){ return a + S.alloc[x]; }, 0);
+      save(); return;
+    }
+    switch (t.id){
+      case 'backBtn':  return back();
+      case 'roomBtn':  return push('room', renderRoom, TITLES.room[0], TITLES.room[1]);
+      case 'propJump':
+      case 'propJump2': return go('init');
+      case 'markBtn':
+        S.moments.push({t:'41:0' + (S.moments.length + 2), s:'You marked this moment. Everyone here can see that you did.'});
+        save(); renderRoom();
+        return toast('Moment marked. Only marked moments are kept — nothing else is.');
+      case 'signBtn':  return doSign();
+      case 'allocBtn': return sendAlloc();
+      case 'saveBtn':  return keepSemble();
+      case 'spendBtn': return toast('!MOTUS anchors supervised agent-minutes: 1 !MOTUS buys one minute of agent work, run while you are present.');
+      case 'expBtn':   return toast(S.trax.length
+          ? 'Exported. It verifies without our servers, and we cannot change it after the fact.'
+          : 'Nothing to export yet. Your Trax begins at your first Step.');
+      case 'postBtn':  return postInit();
+      case 'resetBtn':
+        try{ localStorage.removeItem(KEY); }catch(err){}
+        return applyMode(MODE);
+    }
+  });
+
+  [].forEach.call(document.querySelectorAll('.tab'), function(b){
+    b.addEventListener('click', function(){ go(b.dataset.s); });
+  });
+  [].forEach.call($('ledSeg').querySelectorAll('button'), function(b){
+    b.addEventListener('click', function(){
+      S.filter = b.dataset.f;
+      [].forEach.call($('ledSeg').querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); });
+      renderTrax();
+    });
+  });
+
+  /* ═══════════ INIT FORM ═══════════ */
+  var iN = 6, iS = 12;
+  function paintInit(){
+    $('pN').textContent = iN;
+    $('pS').textContent = '$' + iS;
+    $('pBond').innerHTML = 'Your bond: <b>$' + (iS*2) + '</b>. If it never fills, everyone who took a seat gets <b class="au">$'
+      + (iS+2) + '</b> back, funded by you. Large enough to bind, small enough not to gate.';
+  }
+  function postInit(){
+    if (!S.hasSemble){ toast('Keep a Semble first — a room needs to know what you are bringing.'); go('me'); return; }
+    var t = ($('pT').value || '').trim();
+    toast((t ? '"' + t.slice(0,40) + '" is open.' : 'Opened.') + ' ' + iN + ' seats at $' + iS
+      + '. Your $' + (iS*2) + ' bond funds the refund bonus if it never fills.');
+    S.trax.unshift({d:'Today', t:'Init a Semble Session', p:iN + ' seats at $' + iS + '. On the public list.', s:'Recorded in your Trax'});
+    S.stepsTaken++; save();
+  }
+  [].forEach.call(document.querySelectorAll('.stepr button'), function(b){
+    b.addEventListener('click', function(){
+      if (b.dataset.d) iN = Math.max(2, Math.min(40, iN + (+b.dataset.d)));
+      if (b.dataset.s) iS = Math.max(0, Math.min(60, iS + (+b.dataset.s)));
+      paintInit();
+    });
+  });
+  [].forEach.call($('pModel').querySelectorAll('button'), function(b){
+    b.addEventListener('click', function(){
+      [].forEach.call($('pModel').querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+  paintInit();
+
+  /* ═══════════ PRIVACY (delegated — the card re-renders) ═══════════ */
+  var PRIV = {
+    'Open'  :'Your Semble and your Trax are visible to people. Agents cannot read them unless you say so.',
+    'Held'  :'Only people you have shared a room with can see your Semble and your Trax.',
+    'Closed':'Nothing is visible. You can still attend, still sign, still earn, and none of it is shown.'
+  };
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('#privSeg button');
+    if (!b) return;
+    [].forEach.call(b.parentNode.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); });
+    $('privP').textContent = PRIV[b.textContent] || '';
+    toast('Set to ' + b.textContent + '. It applies everywhere, immediately.');
+  });
+
+  function restWatch(){
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ e.target.classList.toggle('rest', !e.isIntersecting); });
+    }, {threshold:0});
+    [].forEach.call(document.querySelectorAll('.s-live'), function(el){ io.observe(el); });
+  }
+
+  addEventListener('resize', paintLine, {passive:true});
+  [].forEach.call($('modeSeg').querySelectorAll('button'), function(b){
+    b.classList.toggle('on', b.dataset.m === MODE); });
+  renderMe(); renderSesh(); renderTrax(); restWatch();
+  go('trax');   /* the record leads: the app opens on the line, and the guide */
+  return { go:go, toast:toast, openPerson:openPerson, openSesh:openSesh, mode:applyMode };
+})();
+</script>
+</body>
+</html>

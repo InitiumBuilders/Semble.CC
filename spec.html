@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — The Baseline Spec</title>
+<meta name="description" content="The full Semble baseline spec, open source. Read it here or download the markdown."/>
+<meta name="theme-color" content="#05070e"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+.top{padding-top:48px;padding-bottom:26px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.md{padding-bottom:80px}
+.md h1{font-size:clamp(2rem,8vw,3rem);margin:52px 0 14px}
+.md h2{font-size:clamp(1.55rem,6vw,2.2rem);margin:52px 0 14px;
+  padding-top:24px;border-top:1px solid var(--edge)}
+.md h3{font-size:clamp(1.2rem,4.6vw,1.5rem);margin:32px 0 10px;color:var(--ink)}
+.md h4{font-size:1.08rem;margin:24px 0 8px}
+.md p{margin:0 0 16px;max-width:70ch}
+.md ul{margin:0 0 18px;padding-left:0;list-style:none;max-width:70ch}
+.md li{position:relative;padding-left:21px;margin-bottom:9px;color:var(--ink-2)}
+.md li::before{content:"";position:absolute;left:3px;top:.66em;width:6px;height:6px;
+  border-radius:50%;background:var(--signal);opacity:.55}
+.md ol{margin:0 0 18px;padding-left:22px;max-width:70ch;color:var(--ink-2)}
+.md ol li{padding-left:4px}.md ol li::before{display:none}
+.md blockquote{margin:0 0 20px;padding:16px 20px;border-left:2px solid var(--signal);
+  background:var(--glass);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--ink)}
+.md blockquote p{margin:0}
+.md pre{background:rgba(6,9,18,.8);border:1px solid var(--edge);border-radius:var(--r-ctl);
+  padding:18px;overflow-x:auto;margin:0 0 20px;
+  font:500 13px/1.65 "IBM Plex Mono",monospace;color:var(--ink-2)}
+.md code{font:500 .92em/1.5 "IBM Plex Mono",monospace;color:var(--signal);
+  background:rgba(92,225,255,.09);padding:2px 6px;border-radius:6px}
+.md pre code{background:none;color:inherit;padding:0;font-size:inherit}
+.md hr{border:0;border-top:1px solid var(--edge);margin:34px 0}
+.md table{width:100%;border-collapse:collapse;margin:0 0 20px;font-size:.95rem;
+  display:block;overflow-x:auto}
+.md th,.md td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--edge);
+  color:var(--ink-2)}
+.md th{color:var(--ink);font:600 13px/1.4 "IBM Plex Mono",monospace;
+  letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.md strong{color:var(--ink)}
+.md em{color:var(--ink-2)}
+.md a{color:var(--signal)}
+.load{color:var(--ink-2);font-family:"IBM Plex Mono",monospace;font-size:.95rem}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a><a href="/features">Features</a>
+    <a href="/app">App</a><a href="/spec" class="on">Spec</a>
+  </div>
+</div></nav>
+
+<div class="wrap wrap--narrow top">
+  <p class="kick">Open source</p>
+  <h1 style="font-size:clamp(2.1rem,8.4vw,3.4rem)">The Baseline Spec</h1>
+  <p class="lede">The whole thing, in the open — the five words the system is made of, every feature, the economics, the design system, and the risks we can name.</p>
+  <div class="bar">
+    <a class="btn" href="/SEMBLE-SPEC.md" download="SEMBLE-SPEC.md">Download the markdown</a>
+    <a class="btn btn--ghost" href="/SEMBLE-SPEC.md" target="_blank" rel="noopener">View raw</a>
+  </div>
+</div>
+
+<div class="wrap wrap--narrow md" id="md"><p class="load">Loading the spec…</p></div>
+
+<footer class="wrap wrap--narrow">
+  <p class="colo">The Motus Method · Semble Baseline v0.5 · August 2026<br/>
+  ~August James Domanchuk · <b>Motus Means Move</b></p>
+</footer>
+
+<script src="/assets/semble.js"></script>
+<script>
+/* a small markdown renderer — enough for this document, and no dependency */
+(function(){
+  var box=document.getElementById('md');
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function inline(s){
+    return s
+      .replace(/`([^`]+)`/g,function(_,c){return '<code>'+c+'</code>'})
+      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+      .replace(/(^|[^*])\*([^*]+)\*/g,'$1<em>$2</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  }
+  function render(md){
+    var out=[],lines=md.split('\n'),i=0,inCode=false,code=[],list=null,tbl=null;
+    function closeList(){ if(list){out.push('</'+list+'>');list=null} }
+    function closeTbl(){ if(tbl){out.push('</tbody></table>');tbl=null} }
+    while(i<lines.length){
+      var L=lines[i];
+      if(/^```/.test(L)){
+        if(inCode){ out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');code=[];inCode=false }
+        else { closeList();closeTbl();inCode=true }
+        i++;continue;
+      }
+      if(inCode){ code.push(L);i++;continue }
+      if(/^\|/.test(L)){
+        var cells=L.split('|').slice(1,-1).map(function(c){return c.trim()});
+        if(/^\|[\s:|-]+\|$/.test(L)){ i++;continue }
+        if(!tbl){ closeList();
+          out.push('<table><thead><tr>'+cells.map(function(c){return '<th>'+inline(esc(c))+'</th>'}).join('')+'</tr></thead><tbody>');
+          tbl=1;
+        } else out.push('<tr>'+cells.map(function(c){return '<td>'+inline(esc(c))+'</td>'}).join('')+'</tr>');
+        i++;continue;
+      } else closeTbl();
+      if(/^\s*$/.test(L)){ closeList();i++;continue }
+      if(/^#{1,6}\s/.test(L)){
+        closeList();
+        var lv=L.match(/^#+/)[0].length;
+        out.push('<h'+lv+'>'+inline(esc(L.replace(/^#+\s*/,'')))+'</h'+lv+'>');
+        i++;continue;
+      }
+      if(/^---+\s*$/.test(L)){ closeList();out.push('<hr/>');i++;continue }
+      if(/^>\s?/.test(L)){
+        closeList();var q=[];
+        while(i<lines.length&&/^>\s?/.test(lines[i])){q.push(lines[i].replace(/^>\s?/,''));i++}
+        out.push('<blockquote><p>'+inline(esc(q.join(' ')))+'</p></blockquote>');continue;
+      }
+      if(/^\s*[-*]\s+/.test(L)){
+        if(list!=='ul'){closeList();out.push('<ul>');list='ul'}
+        out.push('<li>'+inline(esc(L.replace(/^\s*[-*]\s+/,'')))+'</li>');i++;continue;
+      }
+      if(/^\s*\d+\.\s+/.test(L)){
+        if(list!=='ol'){closeList();out.push('<ol>');list='ol'}
+        out.push('<li>'+inline(esc(L.replace(/^\s*\d+\.\s+/,'')))+'</li>');i++;continue;
+      }
+      closeList();
+      var para=[];
+      while(i<lines.length&&!/^\s*$/.test(lines[i])&&!/^[#>|`]|^\s*[-*]\s|^\s*\d+\.\s|^---+\s*$/.test(lines[i])){
+        para.push(lines[i]);i++;
+      }
+      if(para.length) out.push('<p>'+inline(esc(para.join(' ')))+'</p>');
+    }
+    closeList();closeTbl();
+    return out.join('\n');
+  }
+  fetch('/SEMBLE-SPEC.md',{cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text() })
+    .then(function(t){ box.innerHTML=render(t); if(window.SEMBLE) window.SEMBLE.reveal(); })
+    .catch(function(e){
+      box.innerHTML='<p class="load">Could not load the spec ('+e.message+'). '+
+        '<a href="/SEMBLE-SPEC.md">Open it directly</a>.</p>';
+    });
+})();
+</script>
+</body>
+</html>

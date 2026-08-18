@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Init</title>
+<meta name="description" content="Init. The word for the first move: how a Semble Session begins, and why four letters carry it."/>
+<meta name="theme-color" content="#05070e"/>
+<meta property="og:title" content="Semble — Init"/>
+<meta property="og:description" content="The word for the first move."/>
+<meta property="og:image" content="/assets/mark-512.png"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+/* one idea per viewport — nothing stacks, nothing competes */
+.act{min-height:76svh;display:flex;flex-direction:column;justify-content:center;
+  padding-top:40px;padding-bottom:40px}
+.act--open{min-height:calc(100svh - var(--nav-h));padding-top:0}
+.word{font:800 clamp(4.4rem,26vw,11rem)/.92 Sora,sans-serif;letter-spacing:-.05em;
+  margin:0 0 22px;background:linear-gradient(168deg,#eaf9ff,#5ce1ff 46%,#0080b8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent}
+.rd2{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 16px}
+.big{font-size:clamp(2.2rem,9vw,3.6rem);margin-bottom:18px}
+.gloss{font:500 clamp(1.06rem,4.3vw,1.3rem)/1.62 Inter,sans-serif;color:var(--ink);
+  max-width:30ch;margin:0 0 18px}
+.after{font-size:1rem;color:var(--ink-2);max-width:52ch}
+.hair{height:1px;max-width:120px;margin:34px 0 0;
+  background:linear-gradient(90deg,var(--signal),transparent)}
+
+/* the live moment */
+.demo{background:var(--glass);border:1px solid var(--edge);border-radius:var(--r-pane);
+  padding:26px 22px;margin-top:30px;position:relative;overflow:hidden;
+  transition:border-color .6s var(--ease),box-shadow .6s var(--ease)}
+.demo::before{content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,var(--edge-hi),transparent)}
+.demo.done{border-color:rgba(255,207,138,.42);box-shadow:0 0 66px -28px rgba(255,207,138,.9)}
+.demo__k{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--signal);margin:0 0 12px}
+.demo.done .demo__k{color:var(--gold)}
+.demo h3{margin-bottom:8px}
+.dbar{height:8px;border-radius:var(--r-pill);background:rgba(150,180,240,.14);
+  overflow:hidden;margin:16px 0 10px}
+.dfill{height:100%;width:0;border-radius:var(--r-pill);
+  background:linear-gradient(90deg,var(--signal-3),var(--signal));
+  box-shadow:0 0 14px rgba(92,225,255,.55);transition:width .55s var(--ease)}
+.demo.done .dfill{background:linear-gradient(90deg,#d99b45,var(--gold));
+  box-shadow:0 0 16px rgba(255,207,138,.65)}
+.dcount{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.seal-x{opacity:0;height:0;transition:opacity .5s var(--ease)}
+.demo.done .seal-x{opacity:1;height:96px}
+.onit{font:800 clamp(1.5rem,6.4vw,2.1rem)/1.1 Sora,sans-serif;color:var(--gold);
+  text-align:center;margin:6px 0 0;opacity:0;transform:translateY(8px)}
+.demo.done .onit{opacity:1;transform:none;transition:opacity .6s var(--ease) 1.5s,transform .6s var(--ease) 1.5s}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init" class="on">Init</a>
+    <a href="/features">Features</a><a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<!-- ── ACT 1 · the word ── -->
+<section class="wrap act act--open">
+  <p class="kick">The first move</p>
+  <h1 class="word">Init</h1>
+  <p class="gloss">The word for opening a Semble Session — before anyone has agreed, before anything is real.</p>
+  <div class="hair"></div>
+</section>
+
+<!-- ── ACT 2 · a beginning ── -->
+<section class="wrap act">
+  <p class="rd2 rv">Reading one</p>
+  <h2 class="big rv">initium</h2>
+  <p class="gloss rv">Latin. <b>A beginning.</b> The entrance to a thing, the first part of it.</p>
+  <p class="after rv">It is also the root of <b>Initium.Builders</b>. So the button that starts everything in Semble carries the root of the name of the company that starts everything — without wearing it, without announcing it. The founder's word in the foundation, not on the sign.</p>
+</section>
+
+<!-- ── ACT 3 · process one ── -->
+<section class="wrap act">
+  <p class="rd2 rv">Reading two</p>
+  <h2 class="big rv">process one</h2>
+  <p class="gloss rv">On every Unix system since 1970, <b>init</b> is the first process — and the one that spawns every other process.</p>
+  <p class="after rv">A Sesh is what spawns Steps, signatures, credit, and a line in someone's Trax. So this is not borrowed prestige. The word is structurally true: init is what everything else descends from.</p>
+</section>
+
+<!-- ── ACT 4 · the verb ── -->
+<section class="wrap act">
+  <p class="rd2 rv">Reading three</p>
+  <h2 class="big rv">a verb, and nothing else</h2>
+  <p class="gloss rv">Sesh, Semble and Trax are words we made. <b>Init</b> is the one plain word in the room.</p>
+  <p class="after rv">That balance is deliberate. A product whose every label is invented becomes a private language, and a private language makes a club instead of a tool. Semble already carries the poetry. The button that opens a room should be humble, four letters long, and understood everywhere.</p>
+</section>
+
+<!-- ── ACT 5 · the moment ── -->
+<section class="wrap act">
+  <p class="kick rv">Try it</p>
+  <h2 class="rv">Init opens it. The room decides.</h2>
+  <p class="lede rv">Pressing Init costs you a stake you get straight back, and commits you to nothing else. It is a hint, not an all-in — the Sesh only becomes real when enough people come with you.</p>
+
+  <div class="demo rv" id="demo">
+    <p class="demo__k" id="dk">Open · not yet real</p>
+    <h3>Ship-it Thursday: bring the thing that is stuck</h3>
+    <p style="margin:0 0 4px">Harold Washington Library · Thursday, 7pm · Build Session</p>
+    <div class="dbar"><div class="dfill" id="dfill"></div></div>
+    <p class="dcount" id="dcount">0 of 4 committed</p>
+
+    <div class="seal-x" aria-hidden="true">
+      <svg class="cross cross--gold" id="dcross" viewBox="0 0 100 100">
+        <circle class="cxh" cx="50" cy="50" r="26"/>
+        <path class="cx cx--a" d="M70 16C40 20 36 40 50 50"/>
+        <path class="cx cx--b" d="M30 84C60 80 64 60 50 50"/>
+        <circle class="cxc" cx="50" cy="50" r="4.6"/>
+      </svg>
+    </div>
+    <p class="onit" id="donit">You're on it.</p>
+
+    <div class="row" style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn" id="dbtn" type="button" style="flex:1;min-width:170px">Init a Sesh</button>
+    </div>
+    <p class="cap" id="dcap">Your $12 comes back the moment you tap the anchor at the door.</p>
+  </div>
+</section>
+
+<!-- ── ACT 6 · on it ── -->
+<section class="wrap act">
+  <p class="rd2 rv">And after</p>
+  <h2 class="big rv">On it.</h2>
+  <p class="gloss rv">When the threshold fills and your Steps are done, Semble says the plainest true thing there is: <b class="au">you're on it.</b></p>
+  <p class="after rv">Init is what you press before anyone has agreed. <em>On it</em> is what the room says back once they have. One word opens, the other confirms — and between them sits the only thing that decides: whether people actually came.</p>
+  <div class="hair rv"></div>
+</section>
+
+<section class="wrap act" style="min-height:auto">
+  <h2 class="rv">Init to open. On it when it's real.</h2>
+  <p class="lede rv">The word is in the app now.</p>
+  <p class="rv" style="display:flex;gap:12px;flex-wrap:wrap">
+    <a class="btn" href="/app">Open the app</a>
+    <a class="btn btn--ghost" href="/features">Every feature</a>
+  </p>
+</section>
+
+<footer class="wrap">
+  <div class="chip" style="margin-bottom:20px"><i></i>Preview · Baseline v0.5</div>
+  <p class="colo">The Motus Method · Semble Baseline v0.5 · August 2026<br/>
+  ~August James Domanchuk · <b>Motus Means Move</b></p>
+</footer>
+
+<script src="/assets/semble.js"></script>
+<script>
+(function(){
+  var NEED = 4, have = 0;
+  var d = document.getElementById('demo'), f = document.getElementById('dfill'),
+      c = document.getElementById('dcount'), b = document.getElementById('dbtn'),
+      k = document.getElementById('dk'), cap = document.getElementById('dcap');
+  if(!d) return;
+  b.addEventListener('click', function(){
+    if(have >= NEED) return;
+    have++;
+    f.style.width = (have/NEED*100) + '%';
+    c.textContent = have + ' of ' + NEED + ' committed';
+    if(have === 1){
+      b.textContent = 'Committed · ' + (NEED-have) + ' more needed';
+      k.textContent = 'Open · filling';
+      cap.textContent = 'You opened it. Nothing is scheduled yet — that is the room’s call, not yours.';
+    } else if(have < NEED){
+      b.textContent = (NEED-have) + ' more needed';
+    } else {
+      d.classList.add('done');
+      k.textContent = 'Confirmed · Thursday, 7pm';
+      b.textContent = 'Add to calendar';
+      b.classList.add('btn--gold');
+      cap.innerHTML = '<b class="au">Four of four.</b> Everyone keeps their stake and gets a calendar invite. It is on the public list.';
+      window.SEMBLE.cross(document.getElementById('dcross'), function(){
+        var o = document.getElementById('donit');
+        o.style.transition = 'none'; o.style.opacity = '1'; o.style.transform = 'none';
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>

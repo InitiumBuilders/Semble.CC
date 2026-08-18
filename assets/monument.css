@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════
+   THE MONUMENT — desktop only.
+   Studied from ThoughtLab (styles.refero.design/style/82d52a5f…):
+   void-black canvas · type so large it is architecture · one
+   crimson action per view · no glow, no fills — space is the design.
+   Mobile keeps the glass. Desktop becomes the monument.
+   August's forever rules still outrank: interactive = pill,
+   nothing readable ever drops below the contrast floor.
+   ═══════════════════════════════════════════════════════════ */
+@media (min-width: 1000px){
+
+:root{
+  --void:#000000;
+  --void-2:#000000;
+  --glass:transparent;
+  --glass-2:transparent;
+  --edge:#1c1c1c;
+  --edge-hi:#3a3a3a;
+  --ink:#ffffff;
+  --ink-2:#cccccc;
+  --crimson:#fc1c46;
+  --r-ctl:14px; --r-pane:18px;
+}
+
+/* the canvas — absolute black, no atmosphere, no grain */
+.atmos{background:#000}
+.grain{display:none}
+body{background:#000;font-size:17px}
+
+/* space is the design */
+.wrap{max-width:1400px;padding-inline:clamp(48px,9vw,126px)}
+section{padding-top:108px;padding-bottom:108px}
+
+/* ── TYPE AS ARCHITECTURE ── */
+h1{font-size:clamp(4rem,11vw,9.5rem);font-weight:700;text-transform:uppercase;
+  letter-spacing:-.055em;line-height:.94}
+h2{font-size:clamp(2.6rem,5.6vw,4.6rem);font-weight:700;text-transform:uppercase;
+  letter-spacing:-.04em;line-height:.98}
+h3{font-weight:600}
+.kick{color:#4c4c4c;letter-spacing:.3em}
+p{color:#cccccc}
+p.lede{color:#fff}
+
+/* ── WEIGHTLESS SURFACES — hierarchy from scale, not containers ── */
+.pane,.lx,.step,.node,.f,.tx,.note,.demo,
+.card.d1,.card.d2,.card.d3{
+  background:transparent;border-color:#1c1c1c;box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+.pane::before,.tx::before,.demo::before{display:none}
+.lx--lead,.node.here,.card--hero,.s-confirmed,.s-filling,.s-live,.demo.done{
+  background:transparent;box-shadow:none}
+.s-confirmed{border-color:#3a2a10}
+.s-live{border-color:#20343a}
+.s-filling{border-color:#1c1c1c}
+.s-open{border-color:#1c1c1c}
+.s-past{background:transparent;border-color:#141414}
+
+/* glow is banished from resting chrome — state may keep a pulse of light */
+.chip i{box-shadow:none}
+.tb__fill,.sr__arc,.dfill,.arc{filter:none;box-shadow:none}
+.seat--taken{box-shadow:none}
+.seat--you{box-shadow:0 0 0 2px var(--gold)}
+.tline__p,.tline__n,.tline__n.gold{filter:none}
+.mk{filter:none}
+
+/* ── ONE CRIMSON ACTION ── */
+.btn{background:#fc1c46;border-color:#fc1c46;color:#fff;
+  border-radius:999px;font-weight:600;box-shadow:none}
+.btn:hover{background:#ff3358;border-color:#ff3358;transform:none;box-shadow:none}
+.btn--gold{background:#fc1c46;border-color:#fc1c46;color:#fff}
+.btn--ghost{background:transparent;border:1px solid #3a3a3a;color:#fff}
+.btn--ghost:hover{border-color:#fff;color:#fff;background:transparent}
+
+/* ── NAV — a hairline over the void ── */
+.nav{background:rgba(0,0,0,.9);border-bottom:1px solid #1c1c1c;
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+.nav__links a{color:#cccccc}
+.nav__links a:hover{color:#fff}
+.nav__links a.on{color:#fff}
+.brand b{color:#fff}
+
+/* ── THE APP, IN THE MONUMENT ── */
+.app{max-width:760px}
+.hd h1{font-size:clamp(2.4rem,4.2vw,3.6rem)}
+.tabs{background:rgba(0,0,0,.94);border-top:1px solid #1c1c1c;
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+.tab.on{color:#fff}
+.tab.on svg{filter:none}
+.pv{color:#cccccc;border-color:#3a2a10}
+.card__k{color:#cccccc}
+.s-confirmed .card__k,.card.done .card__k{color:var(--gold)}
+.fld input,.fld textarea,.ccstart input{
+  background:transparent;border:0;border-bottom:1px solid #3a3a3a;
+  border-radius:0;padding-left:2px;padding-right:2px}
+.fld input:focus,.fld textarea:focus,.ccstart input:focus{
+  border-color:#fff;outline:none}
+.guide h3{text-transform:none;letter-spacing:-.02em}
+.stat,.mot__c,.cd div{background:transparent;border-color:#1c1c1c}
+.mot__big{background:transparent;border-color:#3a2a10}
+
+/* ── THE CC ROOM — the monument at its purest ── */
+.cc{max-width:820px}
+.cc .hd h1{font-size:clamp(3rem,6.5vw,5.5rem);text-transform:uppercase;
+  letter-spacing:-.05em;line-height:.94}
+.cc .card{background:transparent;border-color:#1c1c1c}
+.mic{background:#fc1c46;border-color:#fc1c46}
+.mic svg{stroke:#fff}
+.mic.off{background:transparent;border-color:#3a3a3a}
+.mic.off svg{stroke:#cccccc}
+.folk{background:transparent;border-color:#1c1c1c}
+.folk.talk .folk__a::after{border-color:var(--gold)}
+.reacts button{border-color:#1c1c1c}
+.bdg{border-color:#1c1c1c;color:#cccccc}
+.share{border-color:#1c1c1c}
+
+/* the marketing pages breathe wider */
+.grid2{gap:1px 48px}
+.lex{gap:1px 48px}
+.notes{gap:1px 48px}
+
+}

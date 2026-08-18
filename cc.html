@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — CC</title>
+<meta name="description" content="A Semble CC. Live voice."/>
+<meta name="theme-color" content="#05070e"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="apple-touch-icon" href="/assets/mark-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css"/>
+<style>
+/* CC v2 — the refero synthesis: authority from scale not weight ·
+   hairline borders not glow · ONE chromatic action per view (the mic, gold) ·
+   the mark appears nowhere here — a room is people, not branding. */
+body{padding-bottom:40px}
+.cc{max-width:580px;margin:0 auto;padding:0 18px 40px}
+.hd{padding:26px 0 12px}
+.hd h1{font:600 clamp(1.9rem,8.6vw,2.8rem)/1.08 Sora,sans-serif;letter-spacing:-.03em;
+  margin:0 0 6px;overflow-wrap:anywhere}
+.topic{font-size:1rem;color:var(--ink-2);margin:0}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.bdg{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--edge);border-radius:var(--r-pill);padding:8px 12px;color:var(--ink-2)}
+.bdg--live{color:var(--signal);border-color:rgba(92,225,255,.3)}
+
+.card{border:1px solid var(--edge);border-radius:var(--r-pane);padding:20px;
+  margin-bottom:13px;background:rgba(148,180,235,.03)}
+.card__k{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 12px;
+  display:flex;align-items:center;gap:9px}
+.card h3{font-size:1.16rem;font-weight:600;margin-bottom:7px}
+.card p{margin:0 0 10px;font-size:.95rem}
+.card p:last-child{margin-bottom:0}
+.hint{font-size:.86rem;color:var(--ink-2);margin:9px 0 0;line-height:1.5}
+.row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.row .btn{flex:1 1 auto;min-width:140px}
+.fld input{width:100%;background:rgba(6,9,18,.6);color:var(--ink);
+  border:1px solid var(--edge);border-radius:var(--r-ctl);padding:14px 15px;
+  font:500 16px/1.5 Inter,sans-serif;min-height:52px;outline:none}
+.fld input:focus{border-color:var(--edge-hi)}
+
+.wire{display:inline-flex;align-items:center;gap:9px;
+  font:600 12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--edge);border-radius:var(--r-pill);padding:9px 14px}
+.wire i{width:8px;height:8px;border-radius:50%;background:var(--ink-2);opacity:.5;flex:0 0 auto}
+.wire.ok i{background:var(--good);box-shadow:0 0 9px var(--good);opacity:1}
+.wire.err i{background:#ff8a8a;box-shadow:0 0 9px #ff8a8a;opacity:1}
+
+/* models — quiet rows, hairline, the default marked once */
+.ccm{list-style:none;margin:0;padding:0}
+.ccm li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;
+  padding:12px 0;border-bottom:1px solid rgba(150,180,240,.09)}
+.ccm li:last-child{border-bottom:0}
+.ccm b{font:600 .97rem/1.3 Sora,sans-serif}
+.ccm span{grid-column:1 / -1;font-size:.87rem;color:var(--ink-2);line-height:1.5}
+.ccm .def{grid-column:2;grid-row:1;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--gold);border:1px solid rgba(255,207,138,.3);
+  border-radius:var(--r-pill);padding:6px 10px}
+
+/* ═══ THE ROOM ═══ */
+.stage{display:none}
+.stage.on{display:block;animation:in .4s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.counts{font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-2)}
+.counts b{color:var(--ink)}
+.folks{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));
+  gap:10px;margin:16px 0 4px}
+.folk{border:1px solid rgba(150,180,240,.12);border-radius:var(--r-ctl);
+  padding:14px 8px 11px;text-align:center;background:rgba(6,9,18,.35);
+  position:relative;width:100%;
+  transition:border-color .3s var(--ease)}
+button.folk{cursor:pointer}
+.folk.sel{border-color:var(--edge-hi)}
+.folk__a{width:50px;height:50px;margin:0 auto 8px;border-radius:17px;
+  display:grid;place-items:center;font:700 18px/1 Sora,sans-serif;color:#03151f;
+  background:linear-gradient(150deg,#9ff0ff,#00a8d8 58%,#0080b8);position:relative}
+.folk--listen .folk__a{background:rgba(148,180,235,.14);color:var(--ink-2)}
+.folk__a::after{content:"";position:absolute;inset:-5px;border-radius:21px;
+  border:2px solid transparent;transition:border-color .16s linear,box-shadow .16s linear}
+.folk.talk .folk__a::after{border-color:var(--gold);
+  box-shadow:0 0 15px -2px rgba(255,207,138,.85)}
+.folk b{display:block;font:600 .88rem/1.25 Sora,sans-serif;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folk small{display:block;font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:5px}
+.folk--you{border-color:rgba(255,207,138,.35)}
+.folk--muted .folk__a{filter:saturate(.4) brightness(.82)}
+.hand{position:absolute;top:7px;right:7px;font-size:15px;line-height:1;
+  filter:drop-shadow(0 0 6px rgba(255,207,138,.8))}
+.rolechip{position:absolute;top:7px;left:7px;font:600 9.5px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--gold);opacity:.9}
+
+/* floating reactions — transform+opacity only */
+.fx{position:absolute;left:50%;top:32px;font-size:21px;pointer-events:none;
+  animation:fxUp 1.7s ease-out forwards}
+@keyframes fxUp{
+  0%{opacity:0;transform:translate(-50%,6px) scale(.6)}
+  18%{opacity:1;transform:translate(-50%,-8px) scale(1.15)}
+  100%{opacity:0;transform:translate(-50%,-52px) scale(.9)}}
+
+/* the mic — the one gold action on the page */
+.microw{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0 4px}
+.mic{width:84px;height:84px;border-radius:30px;display:grid;place-items:center;
+  border:1px solid rgba(255,207,138,.5);
+  background:linear-gradient(160deg,rgba(255,207,138,.2),rgba(255,207,138,.04));
+  transition:transform .3s var(--spring),border-color .3s var(--ease),background .3s var(--ease)}
+.mic svg{width:33px;height:33px;stroke:var(--gold);fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.mic:active{transform:scale(.95)}
+.mic.off{border-color:var(--edge);background:rgba(148,180,235,.04)}
+.mic.off svg{stroke:var(--ink-2)}
+.sidebtn{width:56px;height:56px;border-radius:19px;display:grid;place-items:center;
+  border:1px solid var(--edge);color:var(--ink-2);
+  transition:color .3s var(--ease),border-color .3s var(--ease)}
+.sidebtn:hover{color:var(--ink);border-color:var(--edge-hi)}
+.sidebtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.miccap{text-align:center;font:600 12px/1.6 "IBM Plex Mono",monospace;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:2px 0 0}
+.miccap b{color:var(--gold)}
+
+/* reactions bar — quiet until touched */
+.reacts{display:flex;justify-content:center;gap:8px;margin-top:14px}
+.reacts button{width:46px;height:46px;border-radius:16px;border:1px solid rgba(150,180,240,.12);
+  font-size:19px;display:grid;place-items:center;color:var(--ink-2);
+  transition:border-color .25s var(--ease),transform .25s var(--spring)}
+.reacts button:hover{border-color:var(--edge-hi)}
+.reacts button:active{transform:scale(.88)}
+
+/* host action bar for a selected person */
+.hostbar{border:1px solid var(--edge);border-radius:var(--r-ctl);padding:13px 14px;
+  margin-top:12px;display:none}
+.hostbar.on{display:block}
+.hostbar p{font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+.hostbar .row{margin-top:0}
+.hostbar .btn{min-height:44px;font-size:13.5px;padding:9px 14px;min-width:0;flex:1 1 auto}
+
+.share{font:600 12.5px/1.6 "IBM Plex Mono",monospace;color:var(--ink-2);
+  overflow-wrap:anywhere;border:1px solid rgba(150,180,240,.1);
+  border-radius:var(--r-ctl);padding:12px 14px;margin-top:14px}
+.share b{color:var(--signal)}
+
+/* the scheduled door */
+.doorcd{display:flex;gap:8px;margin:14px 0 4px}
+.doorcd div{flex:1;border:1px solid var(--edge);border-radius:var(--r-ctl);
+  padding:12px 6px;text-align:center}
+.doorcd b{display:block;font:600 1.5rem/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
+.doorcd span{display:block;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:7px}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a><a href="/features">Features</a>
+    <a href="/app" class="on">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<div class="cc">
+  <div class="hd">
+    <p class="kick" style="margin-bottom:10px">Semble CC &middot; Community Cores</p>
+    <h1 id="roomName">—</h1>
+    <p class="topic" id="roomTopic" hidden></p>
+    <div class="badges">
+      <span class="bdg" id="modelBdg">Coordination Call</span>
+      <span class="bdg bdg--live" id="liveBdg" hidden>Live</span>
+    </div>
+  </div>
+
+  <!-- ══ THE DOOR ══ -->
+  <div class="stage on" id="st-door">
+    <div class="card" id="doorCard">
+      <div id="cdWrap" hidden>
+        <p class="card__k">Doors open</p>
+        <div class="doorcd">
+          <div><b id="cdD">—</b><span>Days</span></div>
+          <div><b id="cdH">—</b><span>Hrs</span></div>
+          <div><b id="cdM">—</b><span>Min</span></div>
+          <div><b id="cdS">—</b><span>Sec</span></div>
+        </div>
+      </div>
+      <div class="fld" style="margin:0 0 4px"><label class="card__k" for="myName" style="margin-bottom:10px">Your name</label>
+        <input type="text" id="myName" maxlength="24" autocomplete="off"/></div>
+      <div class="row">
+        <button class="btn btn--gold" type="button" id="joinBtn">Step in</button>
+      </div>
+      <p class="hint" id="doorHint">You arrive listening. The mic is one tap away. <b class="au">#ShareTheMic</b></p>
+      <div class="row" style="margin-top:11px"><span class="wire" id="wire"><i></i><span id="wireT">Not connected</span></span></div>
+    </div>
+
+    <div class="card">
+      <p class="card__k">CC Models</p>
+      <ul class="ccm">
+        <li><b>Coordination Call</b><span>What moved · what is stuck · what is next.</span><span class="def">Default</span></li>
+        <li><b>Community Call</b><span>Open floor. One mic at a time.</span></li>
+        <li><b>Commons Circle</b><span>The mic passes. Everyone speaks once first.</span></li>
+        <li><b>Core Call</b><span>The few who hold the thing, deciding.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ LIVE ══ -->
+  <div class="stage" id="st-live">
+    <div class="card">
+      <p class="card__k"><i class="dotlive"></i><span class="counts" id="counts">Live</span></p>
+      <div class="folks" id="folks"></div>
+      <div class="hostbar" id="hostbar">
+        <p id="hostbarT">—</p>
+        <div class="row" id="hostbarB"></div>
+      </div>
+      <div class="microw">
+        <button class="sidebtn" type="button" id="copyBtn" aria-label="Copy the room link">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg></button>
+        <button class="mic off" type="button" id="micBtn" aria-label="The mic">
+          <svg viewBox="0 0 24 24" id="micIco"></svg></button>
+        <button class="sidebtn" type="button" id="leaveBtn" aria-label="Leave">
+          <svg viewBox="0 0 24 24"><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15M10 16l-4-4 4-4M6 12h10"/></svg></button>
+      </div>
+      <p class="miccap" id="micCap">—</p>
+      <div class="reacts" id="reacts" aria-label="Reactions">
+        <button type="button" data-e="&#10084;">&#10084;</button>
+        <button type="button" data-e="&#9994;">&#9994;</button>
+        <button type="button" data-e="&#9996;">&#9996;</button>
+        <button type="button" data-e="&#9733;">&#9733;</button>
+        <button type="button" data-e="&#9889;">&#9889;</button>
+      </div>
+      <div class="share">Send the link — anyone can walk in:<br/><b id="shareUrl"></b></div>
+      <p class="hint">Nothing is recorded.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"
+  style="position:fixed;left:16px;right:16px;bottom:24px;z-index:90;max-width:520px;margin:0 auto;background:rgba(8,12,22,.97);border:1px solid rgba(255,207,138,.38);border-radius:16px;padding:15px 17px;color:var(--ink);font-size:.95rem;line-height:1.5;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .4s,transform .4s"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ═══ the link is the room: ?room= &topic= &model= &at= ═══ */
+  var Q = new URLSearchParams(location.search);
+  function slug(x){ return String(x||'').toLowerCase().replace(/[^a-z0-9\-]+/g,'-')
+                    .replace(/^-+|-+$/g,'').slice(0,40); }
+  var SLUG = slug(Q.get('room')) || 'the-commons';
+  var TOPIC = (Q.get('topic')||'').slice(0,90);
+  var MODELS = {'coordination-call':'Coordination Call','community-call':'Community Call',
+                'commons-circle':'Commons Circle','core-call':'Core Call'};
+  var MODEL = MODELS[slug(Q.get('model'))] || 'Coordination Call';
+  var MEANING = (Q.get('cc')||'').slice(0,40);
+  var AT = parseInt(Q.get('at')||'0',10) * 1000;
+  var HOSTID = 'semble-cc-' + SLUG + '-host';
+  var LINK = location.origin + '/cc?room=' + SLUG
+    + (TOPIC ? '&topic=' + encodeURIComponent(TOPIC) : '')
+    + (MODEL !== 'Coordination Call' ? '&model=' + slug(MODEL) : '')
+    + (MEANING ? '&cc=' + encodeURIComponent(MEANING) : '')
+    + (AT ? '&at=' + Math.floor(AT/1000) : '');
+  var SPEAK_CAP = 10;
+
+  function pretty(s){ return s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}); }
+  document.getElementById('roomName').textContent = pretty(SLUG);
+  document.getElementById('modelBdg').textContent = MODEL;
+  if (MEANING){
+    var mb = document.createElement('span');
+    mb.className = 'bdg'; mb.textContent = 'CC · ' + MEANING;
+    document.querySelector('.badges').appendChild(mb);
+  }
+  if (TOPIC){ var tp=document.getElementById('roomTopic'); tp.textContent=TOPIC; tp.hidden=false; }
+  document.getElementById('shareUrl').textContent = LINK;
+  document.title = 'Semble — CC · ' + pretty(SLUG);
+
+  function $(id){ return document.getElementById(id); }
+  function esc(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  var tT;
+  function toast(m){ var t=$('toast'); t.textContent=m;
+    t.style.opacity='1'; t.style.transform='none';
+    clearTimeout(tT); tT=setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateY(12px)'; },4200); }
+  function wire(state,msg){ $('wire').className='wire '+(state||''); $('wireT').textContent=msg; }
+
+  var MIC_ON = '<path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M9 20.5h6"/>';
+  var MIC_OFF = '<path d="M12 3.5a3 3 0 0 1 3 3v5c0 .5-.1 1-.35 1.45M9 9v2.5a3 3 0 0 0 4.6 2.55"/><path d="M6.5 11.5a5.5 5.5 0 0 0 9.35 3.9M17.5 11.5c0 .7-.13 1.36-.37 1.97M12 17v3.5M9 20.5h6M4 4l16 16"/>';
+  var HAND = '<path d="M8 12V6.2a1.4 1.4 0 0 1 2.8 0V11M10.8 11V4.9a1.4 1.4 0 0 1 2.8 0V11M13.6 11V6.2a1.4 1.4 0 0 1 2.8 0v7.3c0 3.4-2.2 6-5.6 6-2.8 0-4.2-1.4-5.6-4.2L4 12.6a1.3 1.3 0 0 1 2.2-1.3L8 13.6"/>';
+
+  /* ═══ the scheduled door ═══ */
+  if (AT && AT > Date.now()){
+    $('cdWrap').hidden = false;
+    $('joinBtn').textContent = 'Walk in early';
+    $('joinBtn').classList.remove('btn--gold');
+    $('joinBtn').classList.add('btn--ghost');
+    $('doorHint').innerHTML = 'Doors open ' + new Date(AT).toLocaleString([], {weekday:'short', hour:'numeric', minute:'2-digit'}) + '. Early is allowed.';
+    (function tickDoor(){
+      var ms = AT - Date.now();
+      if (ms <= 0){
+        $('cdWrap').hidden = true;
+        $('joinBtn').textContent = 'Step in';
+        $('joinBtn').classList.add('btn--gold'); $('joinBtn').classList.remove('btn--ghost');
+        $('doorHint').innerHTML = 'You arrive listening. The mic is one tap away. <b class="au">#ShareTheMic</b>';
+        return;
+      }
+      var m = Math.floor(ms/60000);
+      $('cdD').textContent = Math.floor(m/1440);
+      $('cdH').textContent = Math.floor(m%1440/60);
+      $('cdM').textContent = m%60;
+      $('cdS').textContent = Math.floor(ms/1000)%60;
+      setTimeout(tickDoor, 1000);
+    })();
+  }
+
+  /* ═══ state ═══ */
+  var peer=null, myId=null, myRole='listener', myName='Guest',
+      localStream=null, hasMic=false, muted=true, handUp=false,
+      conns={}, calls={}, roster={}, meters={}, audioCtx=null, selected=null;
+
+  function amMod(){ return myRole==='host' || myRole==='cohost'; }
+  function speakers(){ return Object.keys(roster).filter(function(id){
+    return ['host','cohost','speaker'].indexOf(roster[id].role) >= 0; }); }
+
+  function silentStream(){
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    var dst = audioCtx.createMediaStreamDestination();
+    var osc = audioCtx.createOscillator();
+    var g = audioCtx.createGain(); g.gain.value = 0;
+    osc.connect(g); g.connect(dst); osc.start();
+    return dst.stream;
+  }
+  function outStream(){ return (hasMic && localStream) ? localStream : silentStream(); }
+
+  function meter(id, stream){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var src = audioCtx.createMediaStreamSource(stream);
+      var an = audioCtx.createAnalyser(); an.fftSize = 512;
+      src.connect(an);
+      meters[id] = {an:an, buf:new Uint8Array(an.fftSize)};
+    }catch(e){}
+  }
+  (function loop(){
+    Object.keys(meters).forEach(function(id){
+      var m = meters[id], el = document.querySelector('[data-folk="'+id+'"]');
+      if (!el) return;
+      m.an.getByteTimeDomainData(m.buf);
+      var peak = 0;
+      for (var i=0;i<m.buf.length;i+=4){ var v=Math.abs(m.buf[i]-128); if(v>peak) peak=v; }
+      el.classList.toggle('talk', peak > 9);
+    });
+    requestAnimationFrame(loop);
+  })();
+
+  /* ═══ the room, drawn ═══ */
+  function paint(){
+    var ids = Object.keys(roster);
+    var sp = speakers().length, li = ids.length - sp;
+    $('folks').innerHTML = ids.map(function(id){
+      var r = roster[id], you = id===myId;
+      var speakerish = ['host','cohost','speaker'].indexOf(r.role) >= 0;
+      var sub = you ? 'you' : (speakerish ? (r.muted?'muted':'live') : 'listening');
+      var tag = r.role==='host' ? 'Host' : (r.role==='cohost' ? 'Co' : '');
+      var Tag = (amMod() && !you) ? 'button' : 'div';
+      return '<' + Tag + ' class="folk' + (you?' folk--you':'') + (speakerish?'':' folk--listen')
+        + (speakerish && r.muted ? ' folk--muted':'') + (selected===id?' sel':'')
+        + '" data-folk="' + id + '"' + (Tag==='button' ? ' type="button"' : '') + '>'
+        + (tag ? '<span class="rolechip">'+tag+'</span>' : '')
+        + (r.hand ? '<span class="hand">&#9995;</span>' : '')
+        + '<span class="folk__a">' + esc((r.name||'?').charAt(0).toUpperCase()) + '</span>'
+        + '<b>' + esc(r.name||'Guest') + '</b><small>' + sub + '</small></' + Tag + '>';
+    }).join('');
+    $('counts').textContent = 'Live · ' + sp + ' speaking · ' + li + ' listening';
+    $('liveBdg').hidden = false;
+    $('liveBdg').textContent = 'Live · ' + ids.length;
+
+    var me = roster[myId] || {};
+    if (myRole === 'listener'){
+      $('micCap').innerHTML = handUp ? '<b>Hand raised</b> · the host can bring you up'
+                                     : 'Listening · tap the mic to raise your hand';
+      $('micIco').innerHTML = handUp ? HAND : MIC_OFF;
+      $('micBtn').classList.add('off');
+    } else {
+      $('micCap').innerHTML = hasMic ? (muted ? 'Muted · tap to speak' : '<b>Your mic is live</b>')
+                                     : 'Tap the mic to turn it on';
+      $('micIco').innerHTML = (hasMic && !muted) ? MIC_ON : MIC_OFF;
+      $('micBtn').classList.toggle('off', !hasMic || muted);
+    }
+    paintHostbar();
+  }
+
+  function paintHostbar(){
+    var hb = $('hostbar');
+    if (!amMod() || !selected || !roster[selected] || selected === myId){
+      hb.classList.remove('on'); return;
+    }
+    var r = roster[selected];
+    var speakerish = ['cohost','speaker'].indexOf(r.role) >= 0;
+    $('hostbarT').textContent = r.name + (r.hand ? ' · hand raised' : '');
+    var b = [];
+    if (!speakerish) b.push('<button class="btn btn--gold" type="button" data-act="grant">Bring up</button>');
+    if (speakerish)  b.push('<button class="btn btn--ghost" type="button" data-act="revoke">To listener</button>');
+    if (speakerish && !r.muted) b.push('<button class="btn btn--ghost" type="button" data-act="hush">Mute</button>');
+    if (myRole==='host') b.push('<button class="btn btn--ghost" type="button" data-act="cohost">'
+      + (r.role==='cohost' ? 'Drop co-host' : 'Co-host') + '</button>');
+    b.push('<button class="btn btn--ghost" type="button" data-act="remove">Remove</button>');
+    $('hostbarB').innerHTML = b.join('');
+    hb.classList.add('on');
+  }
+
+  /* ═══ wire protocol — host is the authority ═══ */
+  function sendAll(msg){ Object.keys(conns).forEach(function(id){ try{ conns[id].send(msg); }catch(e){} }); }
+  function sendTo(id,msg){ if (conns[id]){ try{ conns[id].send(msg); }catch(e){} } }
+  function rosterSend(){ if (myRole==='host') sendAll({t:'roster', roster:roster}); }
+
+  function attach(id, stream){
+    var a = document.getElementById('au-'+id);
+    if (!a){ a=document.createElement('audio'); a.id='au-'+id; a.autoplay=true;
+             a.setAttribute('playsinline',''); document.body.appendChild(a); }
+    a.srcObject = stream; a.play().catch(function(){});
+    meter(id, stream);
+  }
+  function callPeer(id){
+    if (id===myId || calls[id]) return;
+    var c = peer.call(id, outStream(), {metadata:{name:myName}});
+    if (!c) return;
+    calls[id]=c;
+    c.on('stream', function(st){ attach(id,st); });
+    c.on('close', function(){ drop(id); });
+    c.on('error', function(){ drop(id); });
+  }
+  function connPeer(id){ if (id!==myId && !conns[id]) wireData(peer.connect(id,{metadata:{name:myName}})); }
+
+  function wireData(d){
+    d.on('open', function(){
+      conns[d.peer]=d;
+      d.send({t:'hello', name:myName, role:myRole, muted:muted||!hasMic, hand:handUp});
+      if (myRole==='host'){
+        roster[d.peer] = roster[d.peer] || {name:'…', role:'listener', muted:true, hand:false};
+        rosterSend(); paint();
+      }
+    });
+    d.on('data', function(m){
+      if (!m||!m.t) return;
+      if (m.t==='hello'){ roster[d.peer]={name:m.name, role:m.role||'listener', muted:m.muted, hand:!!m.hand};
+                          rosterSend(); paint(); }
+      if (m.t==='state' && roster[d.peer]){
+        roster[d.peer].muted=m.muted;
+        if ('hand' in m) roster[d.peer].hand=!!m.hand;
+        if (m.role) roster[d.peer].role=m.role;
+        rosterSend(); paint();
+        if (m.hand && amMod()) toast(roster[d.peer].name + ' raised a hand.');
+      }
+      if (m.t==='roster' && myRole!=='host'){
+        var mine = roster[myId] || {name:myName, role:myRole, muted:muted||!hasMic, hand:handUp};
+        roster = m.roster; roster[myId] = roster[myId] || mine;
+        if (roster[myId].role && roster[myId].role !== myRole && !amMod()) myRole = roster[myId].role;
+        Object.keys(roster).forEach(function(id){ if(id!==myId){ connPeer(id); callPeer(id); } });
+        paint();
+      }
+      if (m.t==='react') fx(d.peer, m.e);
+      if (m.t==='grant') onGranted();
+      if (m.t==='revoke'){ myRole='listener'; hasMic=false; muted=true;
+        if (localStream){ localStream.getTracks().forEach(function(tr){ tr.stop(); }); localStream=null; }
+        toast('The host moved you to listening.'); stateSend(); paint(); }
+      if (m.t==='hush'){ if (localStream) localStream.getAudioTracks().forEach(function(tr){ tr.enabled=false; });
+        muted=true; toast('The host muted you.'); stateSend(); paint(); }
+      if (m.t==='cohost'){ myRole = m.on ? 'cohost' : 'speaker';
+        toast(m.on ? 'You are a co-host now.' : 'Co-host removed.'); stateSend(); paint(); }
+      if (m.t==='remove'){ cleanup(); document.body.innerHTML =
+        '<div style="display:grid;place-items:center;min-height:100svh;padding:20px;text-align:center">'
+        + '<div><p style="font:600 1.3rem Sora,sans-serif;color:#eef3fb">The host removed you from this CC.</p>'
+        + '<p style="margin-top:10px"><a href="/app" style="color:#5ce1ff">Back to Semble</a></p></div></div>'; }
+    });
+    d.on('close', function(){ drop(d.peer); });
+  }
+  function drop(id){
+    delete conns[id]; delete calls[id]; delete meters[id]; delete roster[id];
+    var a=document.getElementById('au-'+id); if(a) a.remove();
+    if (selected===id) selected=null;
+    rosterSend(); paint();
+  }
+  function stateSend(){
+    sendAll({t:'state', muted:muted||!hasMic, hand:handUp, role:myRole});
+    if (roster[myId]){ roster[myId].muted=muted||!hasMic; roster[myId].hand=handUp; roster[myId].role=myRole; }
+    rosterSend(); paint();
+  }
+
+  /* reactions — everyone, always */
+  function fx(id, e){
+    var el = document.querySelector('[data-folk="'+id+'"]');
+    if (!el) return;
+    var s = document.createElement('span');
+    s.className='fx'; s.textContent=e;
+    el.appendChild(s);
+    setTimeout(function(){ s.remove(); }, 1800);
+  }
+
+  /* ═══ stepping up ═══ */
+  function onGranted(){
+    toast('The mic is yours.');
+    navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}})
+      .then(function(st){
+        localStream=st; hasMic=true; muted=false; handUp=false; myRole = amMod() ? myRole : 'speaker';
+        var track = st.getAudioTracks()[0];
+        Object.keys(calls).forEach(function(id){
+          var pc = calls[id].peerConnection; if (!pc) return;
+          var sn = pc.getSenders().filter(function(x){ return x.track && x.track.kind==='audio'; })[0];
+          if (sn) sn.replaceTrack(track);
+        });
+        meter(myId, st); stateSend();
+      })
+      .catch(function(){ handUp=false; toast('The browser refused the microphone. Check the site permission.'); stateSend(); });
+  }
+
+  /* ═══ joining ═══ */
+  function begin(){
+    myName = ($('myName').value||'').trim() || 'Guest';
+    $('joinBtn').disabled = true;
+    wire('', 'Reaching the network…');
+
+    peer = new Peer(HOSTID, {debug:0});
+    var claimed = true;
+    peer.on('open', function(id){ myId=id; myRole='host'; live();
+      /* the opener speaks — ask once, degrade to muted host gracefully */
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}})
+        .then(function(st){ localStream=st; hasMic=true; muted=false;
+          var tr=st.getAudioTracks()[0];
+          Object.keys(calls).forEach(function(cid){
+            var pc=calls[cid].peerConnection; if(!pc) return;
+            var sn=pc.getSenders().filter(function(x){return x.track&&x.track.kind==='audio';})[0];
+            if (sn) sn.replaceTrack(tr);
+          });
+          meter(myId, st); stateSend(); })
+        .catch(function(){ toast('No mic yet — you hold the room muted.'); });
+    });
+    peer.on('error', function(err){
+      if (err.type==='unavailable-id' && claimed){
+        claimed = false;
+        peer = new Peer(undefined, {debug:0});
+        peer.on('open', function(id){ myId=id; myRole='listener'; live(); connPeer(HOSTID); callPeer(HOSTID); });
+        peer.on('call', answer);
+        peer.on('connection', wireData);
+        peer.on('error', fail);
+      } else fail(err);
+    });
+    peer.on('call', answer);
+    peer.on('connection', wireData);
+
+    function answer(c){
+      c.answer(outStream());
+      calls[c.peer]=c;
+      if (c.metadata && c.metadata.name && !roster[c.peer])
+        roster[c.peer]={name:c.metadata.name, role:'listener', muted:true, hand:false};
+      c.on('stream', function(st){ attach(c.peer, st); });
+      c.on('close', function(){ drop(c.peer); });
+    }
+    function fail(err){
+      wire('err','Network error · '+(err&&err.type||'unknown'));
+      toast('Could not reach the network. Reload to try again.');
+      $('joinBtn').disabled=false;
+    }
+  }
+  function live(){
+    wire('ok', (myRole==='host' ? 'You hold this room' : 'In the room'));
+    roster[myId]={name:myName, role:myRole, muted:muted||!hasMic, hand:false};
+    $('st-door').classList.remove('on');
+    $('st-live').classList.add('on');
+    paint();
+    if (myRole==='host') toast('Open. Send the link below.');
+  }
+  function cleanup(){
+    try{ peer && peer.destroy(); }catch(e){}
+    try{ localStream && localStream.getTracks().forEach(function(tr){ tr.stop(); }); }catch(e){}
+  }
+
+  /* ═══ one listener ═══ */
+  document.addEventListener('click', function(e){
+    var act = e.target.closest('[data-act]');
+    if (act && selected){
+      var id = selected, r = roster[id];
+      if (!r) return;
+      if (act.dataset.act==='grant'){
+        if (speakers().length >= SPEAK_CAP){ toast('The stage is full — ' + SPEAK_CAP + ' speakers is the cap.'); return; }
+        r.role='speaker'; r.hand=false; sendTo(id,{t:'grant'}); rosterSend(); paint();
+      }
+      if (act.dataset.act==='revoke'){ r.role='listener'; r.muted=true; sendTo(id,{t:'revoke'}); rosterSend(); paint(); }
+      if (act.dataset.act==='hush'){ r.muted=true; sendTo(id,{t:'hush'}); rosterSend(); paint(); }
+      if (act.dataset.act==='cohost'){ var on = r.role!=='cohost';
+        r.role = on?'cohost':'speaker'; sendTo(id,{t:'cohost',on:on}); rosterSend(); paint(); }
+      if (act.dataset.act==='remove'){ sendTo(id,{t:'remove'});
+        setTimeout(function(){ drop(id); },300); selected=null; paint(); }
+      return;
+    }
+    var folk = e.target.closest('button.folk');
+    if (folk){ selected = (selected===folk.dataset.folk) ? null : folk.dataset.folk; paint(); return; }
+
+    var rc = e.target.closest('.reacts button');
+    if (rc){ var em = rc.textContent; fx(myId, em); sendAll({t:'react', e:em}); return; }
+
+    var t = e.target.closest('#joinBtn,#micBtn,#copyBtn,#leaveBtn');
+    if (!t) return;
+    if (t.id==='joinBtn') return begin();
+    if (t.id==='copyBtn'){
+      (navigator.clipboard ? navigator.clipboard.writeText(LINK) : Promise.reject())
+        .then(function(){ toast('Link copied.'); })
+        .catch(function(){ toast('Copy this: '+LINK); });
+      return;
+    }
+    if (t.id==='leaveBtn'){ cleanup(); location.href='/app'; return; }
+    if (t.id==='micBtn'){
+      if (myRole==='listener'){
+        handUp = !handUp;
+        stateSend();
+        toast(handUp ? 'Hand raised.' : 'Hand lowered.');
+        return;
+      }
+      if (!hasMic) return onGranted();
+      muted = !muted;
+      localStream.getAudioTracks().forEach(function(tr){ tr.enabled=!muted; });
+      stateSend();
+    }
+  });
+
+  $('micIco').innerHTML = MIC_OFF;
+  wire('', 'Not connected');
+  addEventListener('beforeunload', cleanup);
+})();
+</script>
+</body>
+</html>
