@@ -1,31 +1,27 @@
 /* ═══════════════════════════════════════════════════════════
-   THE HELD ORB v2 — a faithful port of thoughtlab.com's blob,
-   rebuilt from their shipped shader (read from their bundle, not
-   imagined): a 4-step raymarched sphere pair smin-blended so the
-   body stretches viscously while following; perturbed normals;
-   dual fresnel; cubemap iridescence at the rim only; RGB-split
-   refraction; and a second texture that pipes IMAGES through the
-   glass. Their tuned constants kept; textures ours.
-   API: SembleOrb.setImage(urlOrFile) · SembleOrb.clearImage()
-        drag-drop an image anywhere · ?img=<url>
+   THE HELD ORB v3 — a window into the backend.
+   Beneath every page lies a generated circuit world — processors,
+   GPU arrays, RAM banks, buses, vias — cyan on deep navy, visible
+   ONLY through the orb. Where the orb rests, the chips beneath it
+   are watered: they charge cell by cell, glow, and hold their light
+   a while after it moves on.
+   Shader pipeline is the thoughtlab port (raymarched smin pair ·
+   perturbed normals · dual fresnel · cubemap rim · RGB-split
+   refraction). Motion calmed: slower time, shorter reach, deeper lag.
+   API: SembleOrb.setImage(urlOrFile) · clearImage() · state()
    ═══════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
   if (!matchMedia('(min-width: 1000px)').matches) return;
   var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── their tuned constants, verbatim from the bundle ── */
   var C = {
-    distortionFrequency: 2.174, distortionStrength: 1.63,
-    displacementFrequency: 0.186, displacementStrength: 0.042,
-    displacementScale: 0.675, displacementSpeed: 0.315,
-    fresnelOffset: -1.4, fresnelMultiplier: 1.435, fresnelPower: 1.239,
-    refraction: 0.03, refractionColorShift: 0.75,
-    colorMix1Opacity: 0.11, colorMix1Smooth: 0.12,
-    saturation: 0.978, redSat: 1.891, greenSat: 1.0, blueSat: 1.5,
+    displacementSpeed: 0.21,          /* was .315 — steadier surface   */
     sizeDefault: 0.275,
-    lerp1: 0.05, lerp2: 0.075,          /* hero: viscous mouse follow  */
-    scrollLerp1: 0.2, scrollLerp2: 0.15 /* scroll: firmer point follow */
+    lerp1: 0.032, lerp2: 0.05,        /* deeper viscous lag            */
+    scrollLerp1: 0.12, scrollLerp2: 0.09,
+    reach: 0.5,                       /* how far the mouse can pull it */
+    sideDrift: 0.2, yClamp: 0.3
   };
 
   var cv = document.createElement('canvas');
@@ -35,13 +31,134 @@
   var gl = cv.getContext('webgl', {alpha:true, antialias:true, premultipliedAlpha:false});
   if (!gl) return;
 
-  [].forEach.call(document.querySelectorAll('.wrap, .hero, nav.nav, footer'), function(el){
+  [].forEach.call(document.querySelectorAll('.wrap, .hero, nav.nav, footer, .app, .tabs, .cc'), function(el){
     var cs = getComputedStyle(el);
     if (cs.position === 'static') el.style.position = 'relative';
     if (cs.zIndex === 'auto') el.style.zIndex = '1';
   });
 
-  /* ── shaders — their pipeline, reconstructed ── */
+  /* ════════ THE CIRCUIT WORLD ════════ */
+  var base = document.createElement('canvas');
+  var work = document.createElement('canvas');
+  var bctx = base.getContext('2d'), wctx = work.getContext('2d');
+  var CW = 0, CH = 0, chips = [], vias = [];
+
+  function rnd(seed){ var s = seed; return function(){ s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+  function drawChip(g2, c, e, t){
+    var x = c.x, y = c.y, w = c.w, h = c.h;
+    var pulse = e > 0.02 ? e * (0.75 + 0.25 * Math.sin(t * 1.7 + c.phase)) : 0;
+
+    if (pulse > 0.03){
+      g2.save();
+      g2.shadowColor = 'rgba(92,225,255,' + (0.85 * pulse).toFixed(3) + ')';
+      g2.shadowBlur = 22 * pulse;
+      g2.fillStyle = 'rgba(10,26,40,1)';
+      g2.fillRect(x, y, w, h);
+      g2.restore();
+    }
+    g2.fillStyle = pulse > 0.03 ? 'rgba(13,32,50,1)' : '#0a1420';
+    g2.fillRect(x, y, w, h);
+    g2.strokeStyle = 'rgba(92,225,255,' + (0.16 + 0.7 * pulse).toFixed(3) + ')';
+    g2.lineWidth = 1;
+    g2.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+    g2.fillStyle = 'rgba(70,140,190,' + (0.35 + 0.45 * pulse).toFixed(3) + ')';
+    var px2;
+    if (c.kind !== 'ram'){
+      for (px2 = x + 6; px2 < x + w - 4; px2 += 7){
+        g2.fillRect(px2, y - 3, 2, 3); g2.fillRect(px2, y + h, 2, 3);
+      }
+      for (var py2 = y + 6; py2 < y + h - 4; py2 += 7){
+        g2.fillRect(x - 3, py2, 3, 2); g2.fillRect(x + w, py2, 3, 2);
+      }
+    } else {
+      for (px2 = x + 3; px2 < x + w - 2; px2 += 5) g2.fillRect(px2, y + h, 1.5, 2.5);
+    }
+
+    /* the die — growth is visible: cells charge one by one */
+    var m = 5, gx0 = x + m, gy0 = y + m, gw = w - m * 2, gh = h - m * 2;
+    var n = c.grid, cw2 = gw / n;
+    var rows = c.kind === 'ram' ? 1 : n;
+    var chh = gh / rows;
+    var total = n * rows, lit = Math.ceil(total * Math.min(1, e * 1.25));
+    var k = 0;
+    for (var ry = 0; ry < rows; ry++){
+      for (var rx = 0; rx < n; rx++){
+        var on = k < lit && pulse > 0.02;
+        var cp = on ? (0.5 + 0.5 * Math.sin(t * 2.3 + c.phase + k * 0.7)) * pulse : 0;
+        g2.fillStyle = on
+          ? 'rgba(' + Math.round(60 + 140 * cp) + ',' + Math.round(160 + 65 * cp) + ',255,' + (0.35 + 0.6 * cp).toFixed(3) + ')'
+          : 'rgba(30,70,105,0.5)';
+        g2.fillRect(gx0 + rx * cw2 + 1, gy0 + ry * chh + 1, Math.max(1, cw2 - 2), Math.max(1, chh - 2));
+        k++;
+      }
+    }
+  }
+
+  function buildWorld(w, h){
+    CW = Math.round(w / 2); CH = Math.round(h / 2);
+    base.width = work.width = CW; base.height = work.height = CH;
+    var R = rnd(20260818);
+    chips = []; vias = [];
+
+    bctx.fillStyle = '#04070d';
+    bctx.fillRect(0, 0, CW, CH);
+    bctx.fillStyle = 'rgba(80,140,190,0.05)';
+    for (var gy = 8; gy < CH; gy += 16)
+      for (var gx = 8; gx < CW; gx += 16)
+        bctx.fillRect(gx, gy, 1, 1);
+
+    function place(w2, h2){
+      for (var tries = 0; tries < 40; tries++){
+        var x = 12 + R() * (CW - w2 - 24), y = 12 + R() * (CH - h2 - 24);
+        var ok = true;
+        for (var i2 = 0; i2 < chips.length; i2++){
+          var c = chips[i2];
+          if (x < c.x + c.w + 14 && x + w2 + 14 > c.x && y < c.y + c.h + 14 && y + h2 + 14 > c.y){ ok = false; break; }
+        }
+        if (ok) return {x: Math.round(x), y: Math.round(y)};
+      }
+      return null;
+    }
+    function addChip(kind, w2, h2, grid){
+      var p = place(w2, h2); if (!p) return;
+      chips.push({kind: kind, x: p.x, y: p.y, w: w2, h: h2, grid: grid, e: 0, phase: R() * 6.28});
+    }
+    var i;
+    for (i = 0; i < 3; i++) addChip('cpu', 54 + Math.round(R() * 18), 54 + Math.round(R() * 18), 4 + Math.round(R() * 2));
+    for (i = 0; i < 2; i++) addChip('gpu', 88 + Math.round(R() * 22), 50 + Math.round(R() * 10), 8);
+    for (i = 0; i < 4; i++) addChip('ram', 64, 22, 6);
+    for (i = 0; i < 6; i++) addChip('ctl', 20 + Math.round(R() * 10), 14 + Math.round(R() * 8), 2);
+
+    bctx.lineWidth = 1;
+    for (i = 0; i < 46; i++){
+      var a = chips[Math.floor(R() * chips.length)], b = chips[Math.floor(R() * chips.length)];
+      if (!a || !b || a === b) continue;
+      var ax = a.x + a.w / 2 + (R() - 0.5) * a.w * 0.6, ay = a.y + a.h / 2;
+      var bx2 = b.x + b.w / 2, by = b.y + b.h / 2 + (R() - 0.5) * b.h * 0.6;
+      bctx.strokeStyle = R() > 0.65 ? 'rgba(40,120,170,0.5)' : 'rgba(22,70,105,0.45)';
+      bctx.beginPath();
+      bctx.moveTo(ax, ay); bctx.lineTo(ax, by); bctx.lineTo(bx2, by);
+      bctx.stroke();
+      vias.push({x: ax, y: by});
+      if (R() > 0.5) vias.push({x: bx2, y: by});
+    }
+    bctx.fillStyle = 'rgba(90,190,255,0.55)';
+    vias.forEach(function(v){ bctx.beginPath(); bctx.arc(v.x, v.y, 1.6, 0, 6.29); bctx.fill(); });
+
+    chips.forEach(function(c){ drawChip(bctx, c, 0, 0); });
+  }
+
+  var worldDirty = true;
+  function renderWorld(t){
+    wctx.drawImage(base, 0, 0);
+    for (var i = 0; i < chips.length; i++){
+      if (chips[i].e > 0.02) drawChip(wctx, chips[i], chips[i].e, t);
+    }
+  }
+
+  /* ════════ SHADERS — the thoughtlab port ════════ */
   var VERT =
   'attribute vec2 aPos;varying vec2 vUv;' +
   'void main(){vUv=aPos*0.5+0.5;gl_Position=vec4(aPos,0.0,1.0);}';
@@ -52,7 +169,6 @@
   'uniform vec2 uMouse1;uniform vec2 uMouse2;uniform float uSize;\n' +
   'uniform samplerCube tMap;uniform sampler2D tRender;uniform sampler2D tImage;uniform float uImageOpacity;\n' +
   '#define DISTANCE 2.0\n' +
-  /* — their helper stack — */
   'vec3 screenB(vec3 a,vec3 b){return 1.-(1.-a)*(1.-b);}\n' +
   'vec3 sat3(vec3 rgb,float adj){const vec3 W=vec3(0.2125,0.7154,0.0721);return mix(vec3(dot(rgb,W)),rgb,adj);}\n' +
   'vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}\n' +
@@ -79,15 +195,13 @@
   'vec2 n_yz=mix(n_z.xy,n_z.zw,fxyz.y);return 2.2*mix(n_yz.x,n_yz.y,fxyz.x);}\n' +
   'float sdSphere(vec3 p,float r){return length(p)-r;}\n' +
   'float smin(float a,float b,float k){float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);return mix(b,a,h)-k*h*(1.0-h);}\n' +
-  /* the body: two spheres at the lagged follow points, smin-blended —
-     this is what makes it stretch like liquid while it travels */
   'float sdf(vec3 p){' +
   '  vec3 c1=vec3(uMouse1*uResolution.zw*1.2,0.0);' +
   '  vec3 c2=vec3(uMouse2*uResolution.zw*1.2,0.0);' +
   '  return smin(sdSphere(p-c1,uSize),sdSphere(p-c2,uSize*0.92),0.35);}\n' +
   'vec3 getDisplacedPosition(vec3 p){' +
   '  float t=uTime;' +
-  '  vec3 distort=vec3(cnoise(p*' + '2.174' + '+vec3(t*0.5)),cnoise(p*2.174+vec3(t*0.5+13.7)),cnoise(p*2.174+vec3(t*0.5+27.1)))*' + '1.63' + '*0.1;' +
+  '  vec3 distort=vec3(cnoise(p*2.174+vec3(t*0.5)),cnoise(p*2.174+vec3(t*0.5+13.7)),cnoise(p*2.174+vec3(t*0.5+27.1)))*1.63*0.1;' +
   '  vec3 q=p+distort;' +
   '  float d=cnoise(q*(0.186*10.0)+vec3(t))*0.042*(1.0/0.675);' +
   '  vec3 ctr=vec3(uMouse1*uResolution.zw*1.2,0.0);' +
@@ -110,7 +224,7 @@
   '    vec3 pos=camPos+t*ray;' +
   '    vec3 vNormal=calcNormal(pos);' +
   '    vec3 nView=normalize(vNormal-vec3(0.0,0.0,1.0)+vec3(0.0001,0.0,0.0));' +
-  '    float fres=' + '(-1.4)' + '+(1.0+dot(nView,vNormal))*1.435;' +
+  '    float fres=(-1.4)+(1.0+dot(nView,vNormal))*1.435;' +
   '    float fres2=(-1.4)+(2.0+dot(ray,vNormal))*1.435;' +
   '    fres=pow(max(0.0,fres),1.239);' +
   '    float fresFactor=pow(max(0.0,fres+fres2),1.239);' +
@@ -136,9 +250,9 @@
   '    vec3 bw=sat3(mixed,0.0);' +
   '    mixed.r=mix(bw.r,mixed.r,1.891);mixed.g=mix(bw.g,mixed.g,1.0);mixed.b=mix(bw.b,mixed.b,1.5);' +
   '    mixed=sat3(mixed,0.978);' +
-  /* the image pipe — their tRenderHover: media shown through the glass */
   '    vec4 img=texture2D(tImage,vec2(screenUv.x,1.0-screenUv.y));' +
-  '    vec3 background=mix(refracted,img.rgb,uImageOpacity*img.a);' +
+  '    vec3 windowTex=texture2D(tRender,screenUv).rgb;' +
+  '    vec3 background=mix(screenB(refracted*0.55,windowTex*0.75),img.rgb,uImageOpacity*img.a);' +
   '    vec3 extraFres=max(vec3((t-2.135)*30.0),vec3(0.0));' +
   '    finalColor.rgb=screenB(mixed+extraFres,background);finalColor.a=1.0;' +
   '  } else { finalColor.a=0.0; }' +
@@ -173,34 +287,33 @@
   ['uResolution','uTime','uOpacity','uMouse1','uMouse2','uSize','tMap','tRender','tImage','uImageOpacity']
     .forEach(function(n){ U[n] = gl.getUniformLocation(prog, n); });
 
-  /* ── the environment: our palette as a cubemap — crimson, violet,
-        amber and a cold blue, soft blobs on near-black ── */
+  /* the rim environment — the electric cool family: cyan, blue, one violet */
   function envFace(hues){
     var c = document.createElement('canvas'); c.width = c.height = 128;
     var g2 = c.getContext('2d');
-    g2.fillStyle = '#050507'; g2.fillRect(0,0,128,128);
+    g2.fillStyle = '#04060a'; g2.fillRect(0, 0, 128, 128);
     hues.forEach(function(h){
-      var gr = g2.createRadialGradient(h[0],h[1],4,h[0],h[1],h[3]);
+      var gr = g2.createRadialGradient(h[0], h[1], 4, h[0], h[1], h[3]);
       gr.addColorStop(0, h[2]); gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g2.fillStyle = gr; g2.fillRect(0,0,128,128);
+      g2.fillStyle = gr; g2.fillRect(0, 0, 128, 128);
     });
     return c;
   }
   var faces = [
-    envFace([[36,44,'rgba(252,28,70,.95)',72],[96,100,'rgba(120,60,255,.8)',66]]),
-    envFace([[90,40,'rgba(255,160,80,.9)',70],[30,96,'rgba(252,28,70,.75)',64]]),
-    envFace([[64,30,'rgba(255,210,150,.95)',78],[100,90,'rgba(160,60,255,.7)',60]]),
-    envFace([[40,90,'rgba(70,40,160,.85)',72],[100,30,'rgba(252,28,70,.6)',58]]),
-    envFace([[70,64,'rgba(252,28,70,.9)',80],[20,20,'rgba(90,140,255,.65)',56]]),
-    envFace([[54,70,'rgba(140,60,255,.85)',74],[104,40,'rgba(255,140,90,.7)',58]])
+    envFace([[36,44,'rgba(92,225,255,.95)',72],[96,100,'rgba(50,110,255,.8)',66]]),
+    envFace([[90,40,'rgba(120,235,255,.9)',70],[30,96,'rgba(40,90,230,.75)',64]]),
+    envFace([[64,30,'rgba(200,245,255,.95)',78],[100,90,'rgba(120,90,255,.6)',60]]),
+    envFace([[40,90,'rgba(30,70,190,.85)',72],[100,30,'rgba(92,225,255,.6)',58]]),
+    envFace([[70,64,'rgba(70,190,255,.9)',80],[20,20,'rgba(140,110,255,.55)',56]]),
+    envFace([[54,70,'rgba(50,140,255,.85)',74],[104,40,'rgba(150,240,255,.7)',58]])
   ];
   var cube = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, cube);
-  var tgts = [gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-              gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-              gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z];
-  tgts.forEach(function(t,i){ gl.texImage2D(t,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,faces[i]); });
+  [gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+   gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+   gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z]
+    .forEach(function(t, i){ gl.texImage2D(t, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, faces[i]); });
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -217,42 +330,29 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return t;
   }
-  /* tRender — the page the glass bends: a quiet dark field */
-  var bgC = document.createElement('canvas'); bgC.width = bgC.height = 256;
-  var bg2 = bgC.getContext('2d');
-  var gr = bg2.createRadialGradient(128,110,10,128,128,180);
-  gr.addColorStop(0,'#0d0d10'); gr.addColorStop(1,'#000000');
-  bg2.fillStyle = gr; bg2.fillRect(0,0,256,256);
-  var renderTex = tex2D(1);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bgC);
-  gl.uniform1i(U.tRender, 1);
+  var renderTex = tex2D(1); gl.uniform1i(U.tRender, 1);
+  var imgTex = tex2D(2);    gl.uniform1i(U.tImage, 2);
+  (function(){ var c = document.createElement('canvas'); c.width = c.height = 2;
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, imgTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); })();
 
-  /* tImage — the pipe. Anything loaded here shows through the orb. */
-  var imgTex = tex2D(2), imgOpacity = 0, imgTarget = 0;
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,
-                new Uint8Array([0,0,0,0]).length === 4 ? (function(){var c=document.createElement('canvas');c.width=c.height=2;return c;})() : null);
-  gl.uniform1i(U.tImage, 2);
-
+  var imgOpacity = 0, imgTarget = 0;
   function setImage(src){
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function(){
       var c = document.createElement('canvas');
-      var s = Math.min(1024 / img.width, 1024 / img.height, 1);
-      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      var s2 = Math.min(1024 / img.width, 1024 / img.height, 1);
+      c.width = Math.round(img.width * s2); c.height = Math.round(img.height * s2);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, imgTex);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
       imgTarget = 1;
     };
     img.onerror = function(){ imgTarget = 0; };
     img.src = (src instanceof File) ? URL.createObjectURL(src) : src;
   }
-  window.SembleOrb = {
-    setImage: setImage,
-    clearImage: function(){ imgTarget = 0; }
-  };
   addEventListener('dragover', function(e){ e.preventDefault(); });
   addEventListener('drop', function(e){
     e.preventDefault();
@@ -262,43 +362,41 @@
   var qImg = new URLSearchParams(location.search).get('img');
   if (qImg) setImage(qImg);
 
-  /* ── motion: their double-lerped follow. Mouse leads in the hero;
-        scroll hands the orb from section to section. ── */
+  /* ════════ SIZE + MOTION ════════ */
   var W, H, DPR;
   function fit(){
     DPR = Math.min(devicePixelRatio || 1, 1.5);
     W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     gl.viewport(0, 0, cv.width, cv.height);
-    var a = H / W, sx, sy;
-    if (a > 1){ sx = 1; sy = a; } else { sx = 1 / a * 1; sy = 1; }
-    /* uResolution.zw — the ray aspect, as they compute it */
     gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
     var size = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault;
     gl.uniform1f(U.uSize, size * 1.35);
+    buildWorld(W, H);
+    renderWorld(0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, renderTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, work);
+    worldDirty = true;
   }
   fit();
-  addEventListener('resize', fit, {passive:true});
+  var rsT;
+  addEventListener('resize', function(){ clearTimeout(rsT); rsT = setTimeout(fit, 180); }, {passive:true});
 
   var mouse = {x: 0, y: -0.05}, m1 = {x: 0, y: -0.05}, m2 = {x: 0, y: -0.05};
   var lerp1 = C.lerp1, lerp2 = C.lerp2, scrolling = false, scrollT = 0;
 
   addEventListener('mousemove', function(e){
     if (scrolling) return;
-    mouse.x = (e.clientX / W - 0.5) * 0.85;
-    mouse.y = (-e.clientY / H + 0.5) * 0.85;
+    mouse.x = (e.clientX / W - 0.5) * C.reach;
+    mouse.y = (-e.clientY / H + 0.5) * C.reach;
   }, {passive:true});
 
-  /* the sections are the waypoints — the orb is passed down to whichever
-     section holds the viewport, drifting to its quieter side */
-  var points = [];
-  function mapPoints(){
-    points = [].slice.call(document.querySelectorAll('section, .hero')).map(function(el, i){
-      return {el: el, side: (i % 2 ? 0.3 : -0.3)};
-    });
-  }
-  mapPoints();
+  var points = [].slice.call(document.querySelectorAll('section, .hero')).map(function(el, i){
+    return {el: el, side: (i % 2 ? C.sideDrift : -C.sideDrift)};
+  });
   addEventListener('scroll', function(){
+    if (!points.length) return;
     scrolling = true; scrollT = Date.now();
     lerp1 = C.scrollLerp1; lerp2 = C.scrollLerp2;
     var best = null, bd = 1e9;
@@ -310,20 +408,63 @@
     if (best){
       var r2 = best.el.getBoundingClientRect();
       mouse.x = best.side;
-      mouse.y = Math.max(-0.42, Math.min(0.42, -(r2.top + r2.height / 2 - H / 2) / H * 0.6));
+      mouse.y = Math.max(-C.yClamp, Math.min(C.yClamp, -(r2.top + r2.height / 2 - H / 2) / H * 0.5));
     }
   }, {passive:true});
 
-  var opacity = 0, t0 = performance.now();
+  /* world x = m·zw·1.2 → screen uv = 0.5 + m·0.6 */
+  function orbPx(){
+    return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H, r: Math.min(W, H) * 0.30};
+  }
+
+  /* ════════ THE WATERING ════════ */
+  function water(dt){
+    var o = orbPx(), changed = false;
+    for (var i = 0; i < chips.length; i++){
+      var c = chips[i];
+      var cx2 = (c.x + c.w / 2) * 2, cy2 = (c.y + c.h / 2) * 2;
+      var d = Math.hypot(cx2 - o.x, cy2 - o.y);
+      var e0 = c.e;
+      if (d < o.r * 1.05) c.e = Math.min(1, c.e + (1 - c.e) * 0.9 * dt);
+      else c.e = Math.max(0, c.e - c.e * 0.28 * dt);
+      if (Math.abs(c.e - e0) > 0.001) changed = true;
+    }
+    return changed;
+  }
+
+  window.SembleOrb = {
+    setImage: setImage,
+    clearImage: function(){ imgTarget = 0; },
+    state: function(){
+      var lit = chips.filter(function(c){ return c.e > 0.1; });
+      return {chips: chips.length, lit: lit.length, orb: orbPx(),
+              litKinds: lit.map(function(c){ return c.kind; })};
+    }
+  };
+
+  var opacity = 0, t0 = performance.now(), last = t0;
   function draw(now){
     var t = (now - t0) / 1000 * C.displacementSpeed;
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (scrolling && Date.now() - scrollT > 900){
       scrolling = false; lerp1 = C.lerp1; lerp2 = C.lerp2;
     }
-    m1.x += (mouse.x - m1.x) * lerp1; m1.y += (mouse.y - m1.y) * lerp1;
-    m2.x += (m1.x - m2.x) * lerp2;   m2.y += (m1.y - m2.y) * lerp2;
-    opacity += ((RM ? 1 : 1) - opacity) * 0.04;
-    imgOpacity += (imgTarget - imgOpacity) * 0.05;
+    /* time-normalized follows — identical feel at 5fps, 60Hz and 144Hz */
+    var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
+    var f2 = 1 - Math.pow(1 - lerp2, dt * 60);
+    m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
+    m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
+    opacity += (1 - opacity) * (1 - Math.pow(0.965, dt * 60));
+    imgOpacity += (imgTarget - imgOpacity) * (1 - Math.pow(0.95, dt * 60));
+
+    /* stream the living board only while something on it is charged */
+    if (water(dt) || worldDirty){
+      renderWorld((now - t0) / 1000);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, renderTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, work);
+      worldDirty = chips.some(function(c){ return c.e > 0.02; });
+    }
 
     gl.uniform1f(U.uTime, t);
     gl.uniform1f(U.uOpacity, opacity);
@@ -335,7 +476,7 @@
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
-  draw(t0 + 16);                       /* exist before any frame loop runs */
+  draw(t0 + 16);
   if (RM){ opacity = 1; draw(t0 + 32); return; }
 
   var running = true, raf = 0;
