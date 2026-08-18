@@ -2,6 +2,8 @@
 ## Convene With Confidence.
 ### Baseline Spec v0.5 · The Signal To Convene · August 18, 2026
 
+*Builders: the executable order lives in [SEMBLE-BUILD.md](/SEMBLE-BUILD.md).*
+
 > *"It is always the right time for the right moves.
 > And Semble is the move we make together."* — August
 
