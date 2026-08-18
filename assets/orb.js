@@ -148,10 +148,10 @@
   var TRC  = 'rgba(56,112,164,';          /* copper, unlit */
   var LIT  = 'rgba(112,222,255,';         /* copper, charged */
   var ACC = {
-    cpu: '92,225,255',  gpu: '158,128,255', ram: '148,196,255',
-    scu: '96,232,210',  scc: '118,235,180', brg: '255,122,168',
+    cpu: '92,225,255',  gpu: '84,186,242', ram: '150,205,255',
+    scu: '96,232,210',  scc: '104,216,235', brg: '130,200,255',
     mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
-    choke: '255,192,112', phy: '255,168,120'
+    choke: '255,192,112', phy: '92,225,255'
   };
   function acc(c){ return 'rgba(' + (ACC[c.kind] || '92,225,255') + ','; }
 
@@ -374,6 +374,21 @@
     g.stroke();
   }
 
+  function stiffener(g, dx, dy, dw, dh){
+    var m2 = 4.5;
+    var sg = g.createLinearGradient(dx - m2, dy - m2, dx + dw + m2, dy + dh + m2);
+    sg.addColorStop(0, 'rgba(190,205,215,0.55)');
+    sg.addColorStop(0.5, 'rgba(110,125,138,0.45)');
+    sg.addColorStop(1, 'rgba(205,220,230,0.55)');
+    g.strokeStyle = sg; g.lineWidth = 2.4;
+    g.strokeRect(dx - m2, dy - m2, dw + m2 * 2, dh + m2 * 2);
+    g.fillStyle = 'rgba(210,225,235,0.5)';
+    [[dx - m2, dy - m2], [dx + dw + m2, dy - m2],
+     [dx - m2, dy + dh + m2], [dx + dw + m2, dy + dh + m2]].forEach(function(p2){
+      g.beginPath(); g.arc(p2[0], p2[1], 1.3, 0, 6.29); g.fill();
+    });
+  }
+
   function hexPath(g, cx, cy, r){
     g.beginPath();
     for (var i = 0; i < 6; i++){
@@ -402,9 +417,7 @@
       for (i = 0; i < 6; i++)
         smdCap(g, x + w * 0.18 + i * w * 0.115, y + h - u * 0.18, u * 0.09, u * 0.06, pulse);
       var dw = w * 0.62, dh = h * 0.56, dx = c.x - dw / 2, dy = c.y - dh / 2 - u * 0.06;
-      g.strokeStyle = 'rgba(150,190,225,' + (0.18 + 0.3 * pulse).toFixed(3) + ')';
-      g.lineWidth = 1;
-      g.strokeRect(dx - 3.5, dy - 3.5, dw + 7, dh + 7);
+      stiffener(g, dx, dy, dw, dh);
       die(g, dx, dy, dw, dh, pulse * 0.4, false, seed, A);
       var lit = Math.ceil(6 * Math.min(1, e * 1.1));
       var k = 0;
@@ -417,6 +430,7 @@
         k++;
       }
       etch(g, c.x, y + h - u * 0.42, 'CC CORES', Math.max(6, u * 0.26), pulse, null, A);
+      etch(g, c.x, y + h - u * 0.18, 'SMBL-6C-2643', Math.max(4.5, u * 0.13), 0);
       etch(g, x - u * 0.34, y - u * 0.3, 'U1', Math.max(5, u * 0.2), pulse);
       etch(g, x + u * 0.55, y + h + u * 0.36, '2643-B', Math.max(4.5, u * 0.14), 0, 'left');
 
@@ -428,7 +442,11 @@
       pin1(g, x + u * 0.18, y + u * 0.18, pulse);
       dotCode(g, x + w - u * 0.48, y + u * 0.16, u * 0.05, seed + 9);
       var gw = w * 0.44, gh = h * 0.6, gx2 = c.x - gw / 2, gy2 = c.y - gh / 2;
+      stiffener(g, gx2, gy2, gw, gh);
       die(g, gx2, gy2, gw, gh, pulse * 0.6, pulse > 0.03, seed, A);
+      /* substrate micro-caps flanking the die */
+      for (i = 0; i < 5; i++)
+        smdCap(g, gx2 + i * gw * 0.2, gy2 + gh + 3.2, u * 0.07, u * 0.05, pulse);
       var pts = [[0.06,0.7],[0.22,0.52],[0.4,0.6],[0.58,0.34],[0.76,0.44],[0.94,0.22]];
       g.beginPath();
       for (i = 0; i < pts.length; i++){
@@ -1005,6 +1023,49 @@
           g.fillRect(px3 + u * 0.03, py3 + u * 0.035, u * 0.18, u * 0.015);
         }
       }
+      /* gold test points */
+      var tp = lcg(5150);
+      for (i = 0; i < 26; i++){
+        var tx2 = u * 0.7 + tp() * (CW - u * 1.4), ty2 = u * 0.7 + tp() * (WH - u * 2);
+        var okc = comps.every(function(c){
+          return Math.abs(tx2 - c.x) > c.w / 2 + u * 0.4 || Math.abs(ty2 - c.y) > c.h / 2 + u * 0.4; });
+        if (!okc) continue;
+        g.beginPath(); g.arc(tx2, ty2, 1.9, 0, 6.29);
+        g.strokeStyle = 'rgba(212,180,120,0.5)'; g.lineWidth = 1; g.stroke();
+      }
+      /* reference designators — the board's own handwriting */
+      g.font = '600 ' + Math.max(4.5, u * 0.13) + 'px ui-monospace, Consolas, monospace';
+      g.textAlign = 'left'; g.textBaseline = 'middle';
+      g.fillStyle = INK + '0.26)';
+      var dg2 = lcg(2718);
+      for (i = 0; i < 16; i++){
+        var dx3 = u * 0.8 + dg2() * (CW - u * 1.6), dy3 = u * 0.8 + dg2() * (WH - u * 2);
+        var okd = comps.every(function(c){
+          return Math.abs(dx3 - c.x) > c.w / 2 + u * 0.45 || Math.abs(dy3 - c.y) > c.h / 2 + u * 0.45; });
+        if (!okd) continue;
+        g.fillText((dg2() > 0.5 ? 'C' : 'R') + Math.round(dg2() * 89 + 10), dx3, dy3);
+      }
+      /* the assembly sticker — proof a factory touched it */
+      (function(){
+        var sw2 = u * 1.7, sh2 = u * 0.6, sx3 = CW - u * 2.6, sy3 = WH * 0.47;
+        g.save();
+        g.translate(sx3, sy3); g.rotate(-0.06);
+        g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 5; g.shadowOffsetY = 2;
+        g.fillStyle = 'rgba(225,232,238,0.85)';
+        rr(g, 0, 0, sw2, sh2, 2); g.fill();
+        g.shadowColor = 'transparent';
+        g.fillStyle = 'rgba(20,28,36,0.9)';
+        var bx4 = u * 0.12, br2 = lcg(31337);
+        while (bx4 < sw2 - u * 0.14){
+          var bw3 = 0.8 + br2() * 1.8;
+          g.fillRect(bx4, sh2 * 0.16, bw3, sh2 * 0.5);
+          bx4 += bw3 + 0.9 + br2() * 1.4;
+        }
+        g.font = '600 ' + Math.max(4, u * 0.12) + 'px ui-monospace, Consolas, monospace';
+        g.textAlign = 'center'; g.fillStyle = 'rgba(30,40,50,0.85)';
+        g.fillText('SMBL-2643-REV3', sw2 / 2, sh2 * 0.82);
+        g.restore();
+      })();
       g.font = '600 ' + Math.max(7, u * 0.24) + 'px ui-monospace, Consolas, monospace';
       g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillStyle = INK + '0.4)';
@@ -1086,6 +1147,34 @@
       var nCross = Object.keys(crossed).length;
       mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      /* the life of the orb: energy motes fall into the focused one, and ripple */
+      if (focus && o){
+        for (var mi = 0; mi < 3; mi++){
+          var mp = (t * 0.55 + mi / 3) % 1;
+          var ex = o.x + (focus.x - o.x) * mp;
+          var ey = o.y + (focus.y - o.y) * mp;
+          var dxn = focus.y - o.y, dyn = -(focus.x - o.x);
+          var dl = Math.hypot(dxn, dyn) || 1;
+          var perp = Math.sin(mp * 6.283 + mi * 2.1) * u * (1 - mp) * 0.5;
+          ex += dxn / dl * perp; ey += dyn / dl * perp;
+          wctx.save();
+          wctx.shadowColor = acc(focus) + '0.9)';
+          wctx.shadowBlur = 10;
+          wctx.beginPath(); wctx.arc(ex, ey, 2.6 * (1 - mp * 0.55), 0, 6.29);
+          wctx.fillStyle = 'rgba(230,250,255,' + (0.5 + 0.4 * (1 - mp)).toFixed(3) + ')';
+          wctx.fill();
+          wctx.restore();
+        }
+        var rp = (t * 0.55) % 1;
+        if (rp > 0.66){
+          var rq = (rp - 0.66) / 0.34;
+          wctx.beginPath();
+          wctx.arc(focus.x, focus.y, Math.max(focus.w, focus.h) * 0.5 * (0.4 + rq * 0.85), 0, 6.29);
+          wctx.strokeStyle = acc(focus) + (0.5 * (1 - rq)).toFixed(3) + ')';
+          wctx.lineWidth = 1.4;
+          wctx.stroke();
+        }
+      }
       /* the scanner's reticle — a slow hex ring around the studied one */
       if (focus){
         var fr2 = Math.max(focus.w, focus.h) * 0.74 + u * 0.4;
@@ -1124,7 +1213,7 @@
     var bctx = base.getContext('2d'), wctx = work.getContext('2d');
     var comps = [];
     var SYM = {trax: 'line', init: 'spark', me: 'ring', semble: 'ring', sesh: 'time'};
-    var SYMACC = {line: '168,138,255', spark: '255,216,150',
+    var SYMACC = {line: '140,200,255', spark: '255,216,150',
                   ring: '102,228,255', time: '96,232,210'};
     order.forEach(function(tag, i){
       var sy3 = SYM[tag] || 'spark';
@@ -1442,7 +1531,7 @@
       gl.viewport(0, 0, cv.width, cv.height);
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
       var size = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault;
-      gl.uniform1f(U.uSize, size * 1.35);
+      gl.uniform1f(U.uSize, size * 1.12);
       VH = Math.round(H / 2);
       var WHW = Math.round(VH * WORLD_K);
       board = makeBoard(Math.round(W / 2), WHW, VH);
@@ -1488,7 +1577,7 @@
     }, {passive: true});
 
     function orbPx(){
-      return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H, r: Math.min(W, H) * 0.30};
+      return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H, r: Math.min(W, H) * 0.27};
     }
     /* scroll couples the window to the world: the board pans beneath the page */
     var sFrac = 0;
