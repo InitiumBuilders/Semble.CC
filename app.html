@@ -339,7 +339,8 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 /* the mini-orb — the same glass sphere, riding the tab bar to show
    where you are. Desktop keeps the rail; this is the thumb's compass. */
 .orblet{position:absolute;top:50%;left:0;width:54px;height:54px;
-  margin-top:-27px;pointer-events:none;z-index:0}
+  margin-top:-27px;pointer-events:none;z-index:0;
+  filter:drop-shadow(0 0 10px rgba(92,225,255,.38))}
 .tab{position:relative;z-index:1}
 @media(min-width:1000px){.orblet{display:none}}
 

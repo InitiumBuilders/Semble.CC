@@ -151,9 +151,12 @@
     cpu: '92,225,255',  gpu: '84,186,242', ram: '150,205,255',
     scu: '96,232,210',  scc: '104,216,235', brg: '130,200,255',
     mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
-    choke: '255,192,112', phy: '92,225,255'
+    choke: '255,192,112', phy: '92,225,255',
+    guide: '255,216,150', seats: '92,225,255',
+    models: '104,216,235', commons: '96,232,210'
   };
   function acc(c){ return 'rgba(' + (ACC[c.kind] || '92,225,255') + ','; }
+  var A2k = acc;
 
   function rr(g, x, y, w, h, r){
     g.beginPath();
@@ -402,7 +405,20 @@
   /* ── the components of the stack ── */
   function drawComp(g, c, e, t){
     var x = c.x - c.w / 2, y = c.y - c.h / 2, w = c.w, h = c.h;
-    var pulse = e > 0.02 ? e * (0.8 + 0.2 * Math.sin(t * 1.6 + c.phase)) : 0;
+    var surge = c.surge || 0;
+    var pulse = e > 0.02
+      ? Math.min(1.25, e * (0.8 + 0.2 * Math.sin(t * 1.6 + c.phase)) + surge * 0.55)
+      : surge * 0.5;
+    if (surge > 0.05){
+      /* the whole body blooms as the release lands */
+      g.save();
+      g.shadowColor = acc(c) + (0.9 * surge).toFixed(3) + ')';
+      g.shadowBlur = 34 * surge;
+      g.fillStyle = acc(c) + (0.14 * surge).toFixed(3) + ')';
+      rr(g, x - 3, y - 3, w + 6, h + 6, 6);
+      g.fill();
+      g.restore();
+    }
     var u = c.u, i;
     var seed = Math.round(c.x * 31 + c.y * 17);
     var A = acc(c);
@@ -715,6 +731,104 @@
       dotCode(g, x + w - u * 0.46, y + u * 0.16, u * 0.045, seed + 33);
       etch(g, c.x, y + h - u * 0.28, 'MCC · MOTUS', Math.max(5.5, u * 0.2), pulse, null, A);
 
+    } else if (c.kind === 'guide'){
+      /* THE GUIDE — six words in a row; watered, they speak in order */
+      drop(g, x, y, w, h, 2.5);
+      pkg(g, x, y, w, h, pulse, 2.5, seed, A2k(c));
+      var gl2 = Math.ceil(6 * Math.min(1, e * 1.08));
+      for (i = 0; i < 6; i++){
+        var gon = i < gl2 && e > 0.03;
+        var gcp = gon ? (0.55 + 0.45 * Math.sin(t * 2.2 + c.phase + i * 1.05)) * pulse : 0;
+        die(g, x + w * 0.08 + i * w * 0.145, y + h * 0.26, w * 0.115, h * 0.48,
+            gcp, gon, seed + i, A2k(c));
+      }
+      etch(g, c.x, y + h + u * 0.24, 'GUIDE', Math.max(5, u * 0.18), pulse, null, A2k(c));
+
+    } else if (c.kind === 'seats'){
+      /* SEATS — the header people plug into; watered, the seats fill */
+      drop(g, x, y, w, h, 2.5);
+      pkg(g, x, y, w, h, pulse, 2.5, seed);
+      var srow = 6, sfill = Math.ceil(srow * 2 * Math.min(1, e * 1.05));
+      var kx = 0;
+      for (var sr = 0; sr < 2; sr++)
+        for (i = 0; i < srow; i++){
+          var hx3 = x + w * 0.14 + i * w * 0.145, hy3 = y + h * (sr ? 0.66 : 0.34);
+          g.beginPath(); g.arc(hx3, hy3, u * 0.085, 0, 6.29);
+          g.fillStyle = '#03060b'; g.fill();
+          g.strokeStyle = 'rgba(201,168,106,0.7)';
+          g.lineWidth = 1; g.stroke();
+          var son = kx < sfill && e > 0.03;
+          if (son){
+            var scp = (0.5 + 0.5 * Math.sin(t * 2.6 + c.phase + kx * 0.7)) * pulse;
+            g.beginPath(); g.arc(hx3, hy3, u * 0.045, 0, 6.29);
+            g.fillStyle = 'rgba(210,245,255,' + (0.4 + 0.55 * scp).toFixed(3) + ')';
+            g.save();
+            g.shadowColor = A2k(c) + (0.85 * scp).toFixed(3) + ')';
+            g.shadowBlur = 7;
+            g.fill();
+            g.restore();
+          }
+          kx++;
+        }
+      etch(g, c.x, y + h + u * 0.24, 'SEATS', Math.max(5, u * 0.18), pulse, null, A2k(c));
+
+    } else if (c.kind === 'models'){
+      /* MODELS — four dies, four patterns: the C-models a room can run */
+      drop(g, x, y, w, h, 3);
+      qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.17), u * 0.11, pulse, A2k(c));
+      pkg(g, x, y, w, h, pulse, 3, seed, A2k(c));
+      pin1(g, x + u * 0.13, y + u * 0.13, pulse);
+      var mq = [[0.28, 0.3], [0.72, 0.3], [0.28, 0.7], [0.72, 0.7]];
+      for (i = 0; i < 4; i++){
+        var me2 = Math.max(0, Math.min(1, e * 4.4 - i));
+        var mt2 = me2 > 0 && e > 0.03
+          ? me2 * (0.6 + 0.4 * Math.sin(t * 2.5 + c.phase + i * 1.3)) : 0;
+        var mx3 = x + w * mq[i][0], my3 = y + h * mq[i][1];
+        var ms2 = w * 0.17;
+        die(g, mx3 - ms2 / 2, my3 - ms2 / 2, ms2, ms2, mt2, me2 > 0.4, seed + i, A2k(c));
+        /* each model its own micro-mark */
+        g.strokeStyle = 'rgba(220,245,255,' + (0.3 + 0.55 * mt2).toFixed(3) + ')';
+        g.lineWidth = 0.9;
+        if (i === 0){ g.beginPath(); g.arc(mx3, my3, ms2 * 0.22, 0, 6.29); g.stroke(); }
+        if (i === 1){ g.beginPath(); g.moveTo(mx3 - ms2 * 0.22, my3); g.lineTo(mx3 + ms2 * 0.22, my3); g.stroke(); }
+        if (i === 2){ g.strokeRect(mx3 - ms2 * 0.18, my3 - ms2 * 0.18, ms2 * 0.36, ms2 * 0.36); }
+        if (i === 3){ g.beginPath(); g.moveTo(mx3, my3 - ms2 * 0.24); g.lineTo(mx3 + ms2 * 0.21, my3 + 0.13 * ms2); g.lineTo(mx3 - ms2 * 0.21, my3 + 0.13 * ms2); g.closePath(); g.stroke(); }
+      }
+      etch(g, c.x, y + h + u * 0.24, 'MODELS', Math.max(5, u * 0.18), pulse, null, A2k(c));
+
+    } else if (c.kind === 'commons'){
+      /* THE COMMONS — the shield can, perforated, always on air */
+      drop(g, x, y, w, h, 3);
+      var cg = g.createLinearGradient(x, y, x, y + h);
+      cg.addColorStop(0, 'rgba(158,176,190,0.9)');
+      cg.addColorStop(0.5, 'rgba(108,124,138,0.85)');
+      cg.addColorStop(1, 'rgba(70,84,96,0.9)');
+      g.fillStyle = cg;
+      rr(g, x, y, w, h, 3); g.fill();
+      g.fillStyle = 'rgba(220,235,245,0.35)';
+      g.fillRect(x + 2, y + 1, w - 4, 1);
+      g.strokeStyle = 'rgba(50,62,72,0.8)';
+      g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x + w * 0.5, y + 2); g.lineTo(x + w * 0.5, y + h - 2); g.stroke();
+      for (var pyy = y + u * 0.22; pyy < y + h - u * 0.14; pyy += u * 0.2)
+        for (var pxx = x + u * 0.22; pxx < x + w - u * 0.14; pxx += u * 0.2){
+          var pon = e > 0.03 ? (0.4 + 0.6 * Math.sin(t * 2.2 + pxx * 0.7 + pyy)) * pulse : 0;
+          g.beginPath(); g.arc(pxx, pyy, 1, 0, 6.29);
+          g.fillStyle = pon > 0.25
+            ? A2k(c) + (0.3 + 0.5 * pon).toFixed(3) + ')'
+            : 'rgba(30,40,48,0.8)';
+          g.fill();
+        }
+      if (e > 0.03){
+        g.save();
+        g.shadowColor = A2k(c) + (0.7 * pulse).toFixed(3) + ')';
+        g.shadowBlur = 16 * pulse;
+        g.strokeStyle = A2k(c) + (0.5 * pulse).toFixed(3) + ')';
+        rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 3); g.stroke();
+        g.restore();
+      }
+      etch(g, c.x, y + h + u * 0.24, 'COMMONS', Math.max(5, u * 0.18), pulse, null, A2k(c));
+
     } else if (c.kind === 'phy'){
       drop(g, x, y, w, h, 2.5);
       qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11, pulse, A);
@@ -764,7 +878,11 @@
       {id: 'brg',  x: CW * 0.50, y: WH * 0.575, hw: u * 1.12, hh: u * 1.12},
       {id: 'mcc',  x: CW * 0.72, y: WH * 0.63, hw: u * 1.15, hh: u * 1.15},
       {id: 'gpu',  x: CW * 0.30, y: WH * 0.80, hw: u * 2.15, hh: u * 1.3},
-      {id: 'phy',  x: CW * 0.86, y: WH * 0.82, hw: u * 0.63, hh: u * 0.48}
+      {id: 'phy',  x: CW * 0.86, y: WH * 0.82, hw: u * 0.63, hh: u * 0.48},
+      {id: 'guide', x: CW * 0.60, y: WH * 0.245, hw: u * 0.78, hh: u * 0.5},
+      {id: 'seats', x: CW * 0.14, y: WH * 0.55, hw: u * 1.0, hh: u * 0.5},
+      {id: 'models', x: CW * 0.24, y: WH * 0.665, hw: u * 0.85, hh: u * 0.7},
+      {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65}
     ];
     var margin = u * 0.62, it, a2, b2, i;
     for (it = 0; it < 160; it++){
@@ -851,6 +969,10 @@
     var mcc = comp('mcc', P.mcc.x, P.mcc.y, u * 2.0, u * 2.0, {noWater: true});
     var gpu = comp('gpu', P.gpu.x, P.gpu.y, u * 4.3, u * 2.35);
     var phy = comp('phy', P.phy.x, P.phy.y, u * 1.25, u * 0.95);
+    var guide = comp('guide', P.guide.x, P.guide.y, u * 1.5, u * 0.95);
+    var seats = comp('seats', P.seats.x, P.seats.y, u * 1.95, u * 0.95);
+    var models = comp('models', P.models.x, P.models.y, u * 1.65, u * 1.35);
+    var commons = comp('commons', P.commons.x, P.commons.y, u * 1.85, u * 1.25);
 
     for (i = 0; i < 4; i++)
       net(chokes[i], cpu, [[chokes[i].x, chokes[i].y + u * 0.4],
@@ -880,6 +1002,12 @@
       net(sccs[0], gpu, route(sccs[0].x - u * 0.3 + i * u * 0.5, sccs[0].y + sccs[0].h / 2,
                               gpu.x - u * 1.2 + i * u * 0.5, gpu.y - gpu.h / 2), 1);
     net(phy, mcc, route(phy.x - phy.w / 2, phy.y, mcc.x + mcc.w / 2, mcc.y + u * 0.4), 1);
+    net(guide, cpu, route(guide.x - guide.w / 2, guide.y, cpu.x + cpu.w / 2, cpu.y - u * 0.4), 1);
+    for (i = 0; i < 2; i++)
+      net(seats, cpu, route(seats.x + seats.w / 2, seats.y - u * 0.15 + i * u * 0.3,
+                            cpu.x - cpu.w / 2, cpu.y + u * 0.6 + i * u * 0.4), 1);
+    net(models, brg, route(models.x + models.w / 2, models.y, brg.x - u * 1.05, brg.y), 1);
+    net(commons, phy, route(commons.x + commons.w / 2, commons.y, phy.x - phy.w / 2, phy.y + u * 0.2), 1);
     var fingersX = CW * 0.5, fingersW = u * 4;
     for (i = 0; i < 4; i++)
       net(phy, null, route(phy.x - u * 0.4 + i * u * 0.26, phy.y + phy.h / 2,
@@ -1147,6 +1275,11 @@
       var nCross = Object.keys(crossed).length;
       mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      /* surges decay; the beam re-arms */
+      if (typeof render.__lt !== 'number') render.__lt = 0;
+      var dt2 = Math.max(0, Math.min(0.12, t - render.__lt));
+      render.__lt = t;
+      comps.forEach(function(c){ if (c.surge) c.surge = Math.max(0, c.surge - dt2 * 2.1); });
       /* the life of the orb: energy motes fall into the focused one, and ripple */
       if (focus && o){
         for (var mi = 0; mi < 3; mi++){
@@ -1166,12 +1299,38 @@
           wctx.restore();
         }
         var rp = (t * 0.55) % 1;
+        if (typeof render.__rp !== 'number') render.__rp = 0;
+        if (render.__rp > rp) focus.surge = 1;   /* the release lands */
+        render.__rp = rp;
         if (rp > 0.66){
           var rq = (rp - 0.66) / 0.34;
           wctx.beginPath();
           wctx.arc(focus.x, focus.y, Math.max(focus.w, focus.h) * 0.5 * (0.4 + rq * 0.85), 0, 6.29);
           wctx.strokeStyle = acc(focus) + (0.5 * (1 - rq)).toFixed(3) + ')';
           wctx.lineWidth = 1.4;
+          wctx.stroke();
+        }
+        /* the discharge itself — a beam, for one breath */
+        var fsg = focus.surge || 0;
+        if (fsg > 0.55){
+          var ba = (fsg - 0.55) / 0.45;
+          var bg2 = wctx.createLinearGradient(o.x, o.y, focus.x, focus.y);
+          bg2.addColorStop(0, 'rgba(235,252,255,' + (0.05 * ba).toFixed(3) + ')');
+          bg2.addColorStop(1, acc(focus) + (0.5 * ba).toFixed(3) + ')');
+          wctx.save();
+          wctx.strokeStyle = bg2;
+          wctx.lineWidth = 2.6 * ba;
+          wctx.shadowColor = acc(focus) + (0.8 * ba).toFixed(3) + ')';
+          wctx.shadowBlur = 14 * ba;
+          wctx.beginPath();
+          wctx.moveTo(o.x, o.y); wctx.lineTo(focus.x, focus.y);
+          wctx.stroke();
+          wctx.restore();
+          /* shockwave */
+          wctx.beginPath();
+          wctx.arc(focus.x, focus.y, Math.max(focus.w, focus.h) * (0.55 + (1 - ba) * 1.1), 0, 6.29);
+          wctx.strokeStyle = acc(focus) + (0.4 * ba).toFixed(3) + ')';
+          wctx.lineWidth = 1.6;
           wctx.stroke();
         }
       }
@@ -1607,6 +1766,7 @@
       if (scrolling && Date.now() - scrollT > 900){
         scrolling = false; lerp1 = C.lerp1; lerp2 = C.lerp2;
       }
+      var focus2 = (!scrolling && now - lastMouseT > C.idleAfter) ? wLast : null;
       /* the wanderer: idle → visit a system, water it, move on */
       if (!scrolling && now - lastMouseT > C.idleAfter){
         if (now > wanderT){
@@ -1630,6 +1790,10 @@
       }
       var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
       var f2 = 1 - Math.pow(1 - lerp2, dt * 60);
+      if (focus2){
+        var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
+        f1 = Math.min(1, f1 * (1 + 2.2 * Math.max(0, 1 - dLock * 6)));
+      }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
       opacity += (1 - opacity) * (1 - Math.pow(0.965, dt * 60));
@@ -1638,7 +1802,6 @@
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
       var top2 = worldTop();
       gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
-      var focus2 = (!scrolling && now - lastMouseT > C.idleAfter) ? wLast : null;
       if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
         var ob = orbPx();
         board.render((now - t0) / 1000, {x: ob.x / 2, y: top2 + ob.y / 2, r: ob.r / 2}, top2, focus2);
