@@ -21,11 +21,11 @@ Five words carry the whole system, and one verb sets it in motion. Nothing else 
 
 **!MOTUS.** What a room gives you for what you brought. A fixed pool per Sesh, allocated by attendees — redistributable, never inflatable. It buys **supervised agent-minutes**: agent work run while you are present.
 
-**SCU — Semble Compute Unit.** The core building block of Semble compute: one unit of agent capacity, run while you are present. SCUs link — a room's units join into one fabric, and fabrics network across rooms.
+**SCU — Semble Compute Units.** The core building block of Semble compute: one unit of agent capacity, run while you are present. SCUs link — a room's units join into one fabric, and fabrics network across rooms.
 
-**SCC — Semble Compute Credits.** The meter on that fabric. !MOTUS converts to SCC; SCC spends down as agents run. Earned in rooms, spent on compute.
+**SCC — Semble Compute Cores.** Cores made of linked SCUs — the working tier of Semble compute. A room runs on its cores; !MOTUS meters what they burn.
 
-**MCC — Motus Compute Credits.** The highest tier. Motus-level compute, reserved for the magic moments and thresholds — minted when a threshold is crossed, not bought.
+**MCC — Motus Compute Cores.** The highest tier. Motus-level compute, reserved for the magic moments and thresholds — an MCC ignites when a threshold is crossed, not when it is paid for.
 
 **Init.** The verb. To open a Semble Session — before anyone has agreed, before anything is real. It reads three ways at once and all three are true: **initium**, Latin for *a beginning* (and the root of Initium.Builders, so the word that starts everything here carries the root of the name of the company that starts everything, without wearing it); **init**, the first process on every Unix system since 1970 and the one that spawns every other process, exactly as a Sesh spawns Steps, signatures, credit and a line in someone's Trax; and plainly, *the thing you do*. It is deliberately the only ordinary word among the coined ones — a product whose every label is invented becomes a private language, and a private language makes a club instead of a tool. Semble already carries the poetry; the button that opens a room should be humble and understood everywhere.
 

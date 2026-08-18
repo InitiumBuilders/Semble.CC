@@ -11,9 +11,9 @@ Live: [semble.cc](https://www.semble.cc)
 - `/spec` — the open baseline spec ([SEMBLE-SPEC.md](SEMBLE-SPEC.md))
 
 Compute: **SCU** — Semble Compute Units, the core building block · **SCC** — Semble
-Compute Credits, the meter · **MCC** — Motus Compute Credits, the highest tier, minted
-at thresholds. Beneath every page: the Semble Mainboard — the stack etched in silicon,
-seen through The Held Orb (assets/orb.js, raw WebGL).
+Compute Cores, linked SCUs, the working tier · **MCC** — Motus Compute Cores, the
+highest tier — an MCC ignites at thresholds. Beneath every page: the Semble Mainboard —
+the stack etched in silicon, seen through The Held Orb (assets/orb.js, raw WebGL).
 
 Static site. No build step. No backend — CCs run peer-to-peer over WebRTC.
 
