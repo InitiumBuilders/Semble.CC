@@ -1389,61 +1389,27 @@ var SA=(function(){
   renderMe(); renderSesh(); renderTrax(); restWatch();
   go('trax');   /* the record leads: the app opens on the line, and the guide */
 
-  /* ─────────── THE MINI-ORB — the thumb's compass ─────────── */
+  /* ─────── THE MINI-ORB — the same glass, riding the tab bar ─────── */
   (function(){
     var cv = $('orblet');
     if (!cv || matchMedia('(min-width: 1000px)').matches) return;
-    var g = cv.getContext('2d');
-    var RM2 = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var x = -100, tx = -100;
-
-    function target(){
+    if (!window.SembleOrb || !SembleOrb.mini){ cv.style.display = 'none'; return; }
+    var order = [].map.call(document.querySelectorAll('.tab'), function(b){ return b.dataset.s; });
+    var ctl = SembleOrb.mini(cv, {size: 54, order: order});
+    if (!ctl) return;
+    function aim(){
       var on = document.querySelector('.tab.on');
-      if (!on) return tx;
+      if (!on) return;
       var r = on.getBoundingClientRect(), p = cv.parentElement.getBoundingClientRect();
-      return r.left - p.left + r.width / 2 - 27;
+      var idx = order.indexOf(on.dataset.s);
+      ctl.set(r.left - p.left + r.width / 2 - 27, idx < 0 ? 0 : idx, p.width);
     }
-    function paint(t){
-      g.setTransform(2, 0, 0, 2, 0, 0);
-      g.clearRect(0, 0, 54, 54);
-      var cx = 27, cy = 27, R = 19;
-      /* glass body — dark, a window like its parent */
-      var body = g.createRadialGradient(cx - 6, cy - 8, 3, cx, cy, R);
-      body.addColorStop(0, '#101a26');
-      body.addColorStop(0.6, '#08101a');
-      body.addColorStop(1, '#040810');
-      g.beginPath(); g.arc(cx, cy, R, 0, 6.29); g.fillStyle = body; g.fill();
-      /* the rim — quiet electric, slow */
-      for (var i = 0; i < 40; i++){
-        var a0 = (i / 40) * 6.283, a1 = ((i + 1.4) / 40) * 6.283;
-        var lift = Math.max(0, -Math.sin(a0));
-        var hue = 197 + 26 * Math.sin(a0 * 1.5 + t * 0.0004);
-        var al = 0.1 + 0.32 * lift + 0.18 * Math.max(0, Math.sin(a0 * 2 - t * 0.0003));
-        g.beginPath();
-        g.arc(cx, cy, R - 0.4, a0, a1);
-        g.strokeStyle = 'hsla(' + hue + ',90%,64%,' + al.toFixed(3) + ')';
-        g.lineWidth = 1.5 + lift;
-        g.stroke();
-      }
-      /* one crown glint */
-      g.beginPath(); g.arc(cx, cy, R - 1.6, Math.PI * 1.2, Math.PI * 1.62);
-      g.strokeStyle = 'rgba(240,250,255,.5)'; g.lineWidth = 1; g.stroke();
-    }
-    function frame(now){
-      tx = target();
-      if (x < -50) x = tx;                 /* first placement — no fly-in */
-      x += (tx - x) * 0.16;
-      cv.style.transform = 'translateX(' + x.toFixed(1) + 'px)';
-      paint(now || 0);
-      if (!RM2 && !document.hidden) requestAnimationFrame(frame);
-    }
-    frame(0);
-    if (RM2){
-      /* still needs to follow taps, just without the glide */
-      document.addEventListener('click', function(){ setTimeout(function(){ frame(0); }, 50); });
-    }
-    addEventListener('resize', function(){ frame(0); }, {passive:true});
+    aim();
+    document.addEventListener('click', function(){ setTimeout(aim, 40); });
+    addEventListener('resize', function(){ setTimeout(aim, 60); }, {passive:true});
+    window.__orblet = ctl;
   })();
+
   return { go:go, toast:toast, openPerson:openPerson, openSesh:openSesh, mode:applyMode };
 })();
 </script>
