@@ -514,6 +514,7 @@
   }
 
   /* ── the components of the stack ── */
+  var DRAMA = 1;   /* the phone gets the bigger picture: fewer pixels, more theatre */
   function drawComp(g, c, e, t){
     var x = c.x - c.w / 2, y = c.y - c.h / 2, w = c.w, h = c.h;
     var surge = c.surge || 0;
@@ -521,10 +522,17 @@
       ? Math.min(1.25, e * (0.8 + 0.2 * Math.sin(t * 1.6 + c.phase)) + surge * 0.55)
       : surge * 0.5;
     if (surge > 0.05){
-      /* the whole body blooms as the release lands */
+      /* the release: the body blooms, and a halo throws light onto the board */
+      var DR = (typeof DRAMA === 'number') ? DRAMA : 1;
       g.save();
+      var hal = g.createRadialGradient(c.x, c.y, Math.min(w, h) * 0.3,
+                                       c.x, c.y, Math.max(w, h) * (1.15 + 0.5 * DR));
+      hal.addColorStop(0, acc(c) + (0.20 * surge * DR).toFixed(3) + ')');
+      hal.addColorStop(1, acc(c) + '0)');
+      g.fillStyle = hal;
+      g.fillRect(c.x - w * 2, c.y - h * 2, w * 4, h * 4);
       g.shadowColor = acc(c) + (0.9 * surge).toFixed(3) + ')';
-      g.shadowBlur = 34 * surge;
+      g.shadowBlur = (34 + 26 * DR) * surge;
       g.fillStyle = acc(c) + (0.14 * surge).toFixed(3) + ')';
       rr(g, x - 3, y - 3, w + 6, h + 6, 6);
       g.fill();
@@ -1455,6 +1463,19 @@
       var nCross = Object.keys(crossed).length;
       mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      /* the finale: at journey's end the board itself answers */
+      if (typeof window !== 'undefined' && window.__sembleFinale > 0.9){
+        var fin = (Math.sin(t * 1.1) * 0.5 + 0.5) * (window.__sembleFinale - 0.9) / 0.1;
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        var fg2 = wctx.createRadialGradient(CW * 0.5, top + VH * 0.5, VH * 0.1,
+                                            CW * 0.5, top + VH * 0.5, VH * 0.85);
+        fg2.addColorStop(0, 'rgba(120,225,255,' + (0.05 * fin).toFixed(3) + ')');
+        fg2.addColorStop(1, 'rgba(120,225,255,0)');
+        wctx.fillStyle = fg2;
+        wctx.fillRect(0, top, CW, VH);
+        wctx.restore();
+      }
       /* the chips sing — notes rise while the energy runs */
       comps.forEach(function(c){
         if (c.e < 0.55) return;
@@ -1839,6 +1860,7 @@
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
     C.dwell = 4200; C.dwellVar = 4200;
+    DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 300;         /* no cursor — it lives on its own at once */
       C.reach = 0.34;
@@ -2064,7 +2086,7 @@
       return changed;
     }
 
-    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3;
+    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3, lastPaint = -1e9;
     function draw(now){
       var t = (now - t0) / 1000 * C.displacementSpeed;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -2164,11 +2186,18 @@
         irisTo = Math.max(0.42, Math.min(1.45, want / Math.max(1, basePx)));
       } else irisTo = 1;
       iris += (irisTo - iris) * (1 - Math.pow(0.975, dt * 60));
+      window.__sembleFinale = sFrac;
       var grow = (GR.a + GR.b * shaped) * breath * (1 + energy * 0.16) * iris;
       if (!isFinite(grow) || grow <= 0) grow = GR.a;
       gl.uniform1f(U.uSize, baseSize * grow);
       growNow = grow;
-      if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
+      var changed = water(dt, focus2);
+      /* the board is a full-resolution canvas; repainting it every frame is
+         what turns a phone into a hand-warmer. Paint it at a cadence instead —
+         the energy still moves, the silicon just is not redrawn 60×/s. */
+      var due = now - lastPaint >= (MOB ? 52 : 22);
+      if ((changed || worldDirty || Math.abs(top2 - lastTop) > 0.75) && due){
+        lastPaint = now;
         var ob = orbPx();
         board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2);
         frameN++;
