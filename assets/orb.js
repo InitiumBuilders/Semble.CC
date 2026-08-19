@@ -1330,69 +1330,73 @@
       gg.putImageData(im, 0, 0);
     })();
 
-    var plan = [
-      {id: 'cpu',  x: CW * 0.30, y: WH * 0.155, hw: u * 1.8,  hh: u * 1.8},
-      {id: 'xtal', x: CW * 0.30 + u * 3.5, y: WH * 0.155 - u * 0.9, hw: u * 0.58, hh: u * 0.45},
-      {id: 'rom',  x: CW * 0.30 + u * 3.55, y: WH * 0.155 + u * 0.85, hw: u * 0.53, hh: u * 0.4},
-      {id: 'rams', x: CW * 0.845, y: WH * 0.13, hw: u * 1.55, hh: u * 2.25},
-      {id: 'scu',  x: CW * 0.63, y: WH * 0.40, hw: u * 1.5,  hh: u * 1.5},
-      {id: 'sccs', x: CW * 0.27, y: WH * 0.435, hw: u * 2.45, hh: u * 0.72},
-      {id: 'brg',  x: CW * 0.50, y: WH * 0.575, hw: u * 1.12, hh: u * 1.12},
-      {id: 'mcc',  x: CW * 0.72, y: WH * 0.63, hw: u * 1.15, hh: u * 1.15},
-      {id: 'gpu',  x: CW * 0.30, y: WH * 0.80, hw: u * 2.15, hh: u * 1.3},
-      {id: 'phy',  x: CW * 0.86, y: WH * 0.82, hw: u * 0.63, hh: u * 0.48},
-      {id: 'guide', x: CW * 0.60, y: WH * 0.245, hw: u * 0.78, hh: u * 0.5},
-      {id: 'seats', x: CW * 0.14, y: WH * 0.55, hw: u * 1.0, hh: u * 0.5},
-      {id: 'models', x: CW * 0.24, y: WH * 0.665, hw: u * 0.85, hh: u * 0.7},
-      {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65},
-      {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05},
-      {id: 'npu', x: CW * 0.72, y: WH * 0.44, hw: u * 1.45, hh: u * 1.2},
-      {id: 'cortex', x: CW * 0.30, y: WH * 0.585, hw: u * 1.75, hh: u * 1.35},
-      {id: 'dom0', x: CW * 0.12, y: WH * 0.755, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom1', x: CW * 0.29, y: WH * 0.755, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom2', x: CW * 0.46, y: WH * 0.755, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom3', x: CW * 0.63, y: WH * 0.755, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom4', x: CW * 0.80, y: WH * 0.755, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom5', x: CW * 0.20, y: WH * 0.828, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom6', x: CW * 0.44, y: WH * 0.828, hw: u * 0.62, hh: u * 0.62},
-      {id: 'dom7', x: CW * 0.68, y: WH * 0.828, hw: u * 0.62, hh: u * 0.62},
-      {id: 'agents',  x: CW * 0.74, y: WH * 0.885, hw: u * 0.85, hh: u * 0.85},
-      {id: 'ccm0', x: CW * 0.13, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
-      {id: 'ccm1', x: CW * 0.28, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
-      {id: 'ccm2', x: CW * 0.43, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
-      {id: 'ccm3', x: CW * 0.58, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
-      {id: 'motus0', x: CW * 0.20, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62},
-      {id: 'motus1', x: CW * 0.50, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62},
-      {id: 'motus2', x: CW * 0.80, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62}
-    ];
-    var margin = u * 0.9, it, a2, b2, i;
-    for (it = 0; it < 160; it++){
-      var moved = false;
-      for (i = 0; i < plan.length; i++){
-        a2 = plan[i];
-        for (var j = i + 1; j < plan.length; j++){
-          b2 = plan[j];
-          var ox = (a2.hw + b2.hw + margin) - Math.abs(a2.x - b2.x);
-          var oy = (a2.hh + b2.hh + margin) - Math.abs(a2.y - b2.y);
-          if (ox > 0 && oy > 0){
-            moved = true;
-            if (ox < oy){
-              var sx = a2.x < b2.x ? -1 : 1;
-              a2.x += sx * ox / 2; b2.x -= sx * ox / 2;
-            } else {
-              var sy2 = a2.y < b2.y ? -1 : 1;
-              a2.y += sy2 * oy / 2; b2.y -= sy2 * oy / 2;
-            }
-          }
-        }
-        a2.x = Math.max(u * 0.8 + a2.hw, Math.min(CW - u * 0.8 - a2.hw, a2.x));
-        a2.y = Math.max((a2.id === 'cpu' ? u * 2.45 : u * 1.0) + a2.hh,
-                        Math.min(WH - u * 1.5 - a2.hh, a2.y));
-      }
-      if (!moved) break;
-    }
-    var P = {};
-    plan.forEach(function(p){ P[p.id] = p; });
+    /* ═══════════ THE LATTICE ═══════════
+       Twelve columns. Five bands. Everything sits ON the grid, nothing is
+       nudged off it by a solver. Air between the bands is the composition:
+       it is what lets the eye read one idea at a time, top to bottom.
+         I   CONTROL      what opens a room
+         II  COMPUTE      what runs inside it
+         III CORTEX       where it all converges
+         IV  CONSTELLATION the family it belongs to
+         V   EDGE         the way out
+    */
+    var COLS = 12;
+    var MARG = u * 1.6;                       /* the quiet at the edges */
+    var GRID = (CW - MARG * 2) / COLS;
+    function col(c){ return MARG + GRID * c; }         /* left edge of column c */
+    function span(c, n){ return MARG + GRID * c + GRID * n / 2; }  /* centre of a span */
+    /* five bands, each with room to breathe; y is the band's centre line */
+    var BAND = {
+      control: WH * 0.115,
+      compute: WH * 0.345,
+      cortex:  WH * 0.560,
+      family:  WH * 0.760,
+      edge:    WH * 0.930
+    };
+    var P = {
+      /* I · CONTROL — the opener, its power above it, its clock and ROM beside */
+      cpu:    {x: span(1, 4),  y: BAND.control},
+      xtal:   {x: span(5.6, 2), y: BAND.control - u * 1.05},
+      rom:    {x: span(5.6, 2), y: BAND.control + u * 1.05},
+      rams:   {x: span(8, 4),  y: BAND.control},
+      guide:  {x: span(1, 2),  y: BAND.control + u * 3.1},
+      seats:  {x: span(4, 3),  y: BAND.control + u * 3.1},
+      models: {x: span(8, 2),  y: BAND.control + u * 3.1},
+
+      /* II · COMPUTE — the fabric in the centre, cores left, neural right */
+      sccs:   {x: span(0.6, 3), y: BAND.compute},
+      scu:    {x: span(4.5, 3), y: BAND.compute},
+      npu:    {x: span(8.4, 3), y: BAND.compute},
+      loop:   {x: span(0.6, 3), y: BAND.compute + u * 2.6},
+      mcc:    {x: span(8.4, 3), y: BAND.compute + u * 2.6},
+      brg:    {x: span(4.5, 3), y: BAND.compute + u * 2.6},
+
+      /* III · CORTEX — dead centre. Everything above flows into it. */
+      cortex: {x: span(3.5, 5), y: BAND.cortex},
+      agents: {x: span(9, 2.5), y: BAND.cortex},
+      commons:{x: span(0.5, 2.5), y: BAND.cortex},
+
+      /* IV · THE CONSTELLATION — one clean rank of four, twice */
+      dom0: {x: span(0.4, 2.4), y: BAND.family - u * 1.15},
+      dom1: {x: span(3.3, 2.4), y: BAND.family - u * 1.15},
+      dom2: {x: span(6.2, 2.4), y: BAND.family - u * 1.15},
+      dom3: {x: span(9.1, 2.4), y: BAND.family - u * 1.15},
+      dom4: {x: span(0.4, 2.4), y: BAND.family + u * 1.15},
+      dom5: {x: span(3.3, 2.4), y: BAND.family + u * 1.15},
+      dom6: {x: span(6.2, 2.4), y: BAND.family + u * 1.15},
+      dom7: {x: span(9.1, 2.4), y: BAND.family + u * 1.15},
+
+      /* V · THE EDGE — what the community is running, and the way out */
+      motus0: {x: span(0.4, 3.2), y: BAND.edge},
+      motus1: {x: span(4.4, 3.2), y: BAND.edge},
+      motus2: {x: span(8.4, 3.2), y: BAND.edge},
+      gpu:    {x: span(2, 4),   y: BAND.edge + u * 2.2},
+      phy:    {x: span(8.5, 2), y: BAND.edge + u * 2.2},
+      ccm0:   {x: span(0.5, 1.4), y: BAND.edge - u * 1.9},
+      ccm1:   {x: span(2.2, 1.4), y: BAND.edge - u * 1.9},
+      ccm2:   {x: span(3.9, 1.4), y: BAND.edge - u * 1.9},
+      ccm3:   {x: span(5.6, 1.4), y: BAND.edge - u * 1.9}
+    };
 
     function comp(kind, cx, cy, w, h, extra){
       var c = {kind: kind, x: cx, y: cy, w: w, h: h, u: u, e: 0,
@@ -1428,6 +1432,7 @@
       return {x: n.pts[0][0], y: n.pts[0][1]};
     }
 
+    var i;   /* the shared loop cursor the old solver used to declare */
     var cpu = comp('cpu', P.cpu.x, P.cpu.y, u * 3.6, u * 3.6);
     var chokes = [], caps = [];
     for (i = 0; i < 4; i++)
@@ -1612,9 +1617,9 @@
         g.strokeStyle = 'rgba(201,168,106,0.45)';
         g.lineWidth = 1.5; g.stroke();
       });
-      var pours = [[0.06, 0.05, 0.52, 0.24], [0.62, 0.05, 0.32, 0.22],
-                   [0.08, 0.33, 0.55, 0.2], [0.55, 0.32, 0.38, 0.24],
-                   [0.08, 0.66, 0.5, 0.22], [0.62, 0.58, 0.32, 0.22]];
+      var pours = [[0.05, 0.035, 0.90, 0.20], [0.05, 0.265, 0.90, 0.20],
+                   [0.05, 0.495, 0.90, 0.16], [0.05, 0.675, 0.90, 0.18],
+                   [0.05, 0.865, 0.90, 0.13]];
       pours.forEach(function(pr){
         var px4 = CW * pr[0], py4 = WH * pr[1], pw = CW * pr[2], ph2 = WH * pr[3];
         g.fillStyle = 'rgba(20,42,66,0.2)';
@@ -1633,13 +1638,13 @@
         for (var gx = 10; gx < CW; gx += 22)
           g.fillRect(gx, gy, 1.2, 1.2);
       var vr = lcg(4242);
-      for (i = 0; i < 150; i++){
+      for (i = 0; i < 60; i++){
         g.beginPath(); g.arc(vr() * CW, vr() * WH, 0.7 + vr() * 0.8, 0, 6.29);
         g.fillStyle = 'rgba(90,150,200,' + (0.08 + vr() * 0.1).toFixed(3) + ')'; g.fill();
       }
       /* background trace bundles — the highways between tiers */
-      var bnd = [[0.10, 0.28, 0.86, 0.30, 10], [0.14, 0.60, 0.60, 0.63, 8],
-                 [0.50, 0.06, 0.52, 0.94, 9], [0.88, 0.30, 0.70, 0.72, 7]];
+      /* ONE trunk down the spine — the convergence, drawn as a road */
+      var bnd = [[0.50, 0.06, 0.50, 0.96, 5]];
       bnd.forEach(function(bb, b3){
         var ax2 = CW * bb[0], ay2 = WH * bb[1], bx3 = CW * bb[2], by3 = WH * bb[3];
         for (var li = 0; li < bb[4]; li++){
@@ -1663,7 +1668,7 @@
       });
       /* flux ghosts — the residue of assembly */
       var fr = lcg(9911);
-      for (i = 0; i < 4; i++){
+      for (i = 0; i < 0; i++){
         var fx2 = fr() * CW, fy2 = fr() * WH, frr = u * (1.2 + fr() * 2.2);
         var fgr = g.createRadialGradient(fx2, fy2, 1, fx2, fy2, frr);
         var warm = fr() > 0.45;
@@ -1695,7 +1700,7 @@
       caps.forEach(function(cp){ polyCap(g, cp.x, cp.y, cp.r, 0); });
       var s = 987654321;
       function rnd(){ s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }
-      for (var p2 = 0; p2 < 26; p2++){
+      for (var p2 = 0; p2 < 9; p2++){
         var px3 = u * 0.6 + rnd() * (CW - u * 1.2), py3 = u * 0.6 + rnd() * (WH - u * 1.9);
         var clear = comps.every(function(c){
           return Math.abs(px3 - c.x) > c.w / 2 + u * 0.5 || Math.abs(py3 - c.y) > c.h / 2 + u * 0.5;
@@ -1711,7 +1716,7 @@
       }
       /* gold test points */
       var tp = lcg(5150);
-      for (i = 0; i < 26; i++){
+      for (i = 0; i < 8; i++){
         var tx2 = u * 0.7 + tp() * (CW - u * 1.4), ty2 = u * 0.7 + tp() * (WH - u * 2);
         var okc = comps.every(function(c){
           return Math.abs(tx2 - c.x) > c.w / 2 + u * 0.4 || Math.abs(ty2 - c.y) > c.h / 2 + u * 0.4; });
@@ -1724,7 +1729,7 @@
       g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillStyle = INK + '0.26)';
       var dg2 = lcg(2718);
-      for (i = 0; i < 7; i++){
+      for (i = 0; i < 3; i++){
         var dx3 = u * 0.8 + dg2() * (CW - u * 1.6), dy3 = u * 0.8 + dg2() * (WH - u * 2);
         var okd = comps.every(function(c){
           return Math.abs(dx3 - c.x) > c.w / 2 + u * 0.45 || Math.abs(dy3 - c.y) > c.h / 2 + u * 0.45; });
@@ -2133,8 +2138,10 @@
     var status = {store: 'PENDING', models: 0, moves: 0, mcc: 0, pool: 0};
     function setStatus(o){ for (var k in o) status[k] = o[k]; }
     function drawPanel(g, t, top){
+      /* the readout has its OWN lane at the foot of the view — it never sits
+         on top of the silicon it is reporting on */
       var pw = u * 6.4, ph = u * 3.5;
-      var px6 = CW - pw - u * 0.8, py6 = top + u * 0.8;
+      var px6 = CW - pw - u * 0.8, py6 = top + VH - ph - u * 1.9;
       g.save();
       g.fillStyle = 'rgba(5,9,16,0.82)';
       rr(g, px6, py6, pw, ph, 8); g.fill();
