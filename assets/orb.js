@@ -1602,6 +1602,18 @@
         ? (window.__sembleFinale - 0.93) / 0.07 : 0;
       mcc.e += (Math.max(Math.min(1, nCross / 4), arrival) - mcc.e) * 0.06;
       if (arrival > 0.85 && !mcc.surge && Math.sin(t * 0.9) > 0.98) mcc.surge = 1;
+      /* echoes fade, and while they last the component answers with a ring */
+      comps.forEach(function(c){
+        if (!c.echo) return;
+        c.echo = Math.max(0, c.echo - dt2 * 0.8);
+        if (c.echo > 0.02){
+          wctx.beginPath();
+          wctx.arc(c.x, c.y, Math.max(c.w, c.h) * (0.5 + (1 - c.echo) * 0.8), 0, 6.29);
+          wctx.strokeStyle = acc(c) + (0.35 * c.echo).toFixed(3) + ')';
+          wctx.lineWidth = 1.3;
+          wctx.stroke();
+        }
+      });
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
       /* the finale: at journey's end the board itself answers */
       if (typeof window !== 'undefined' && isFinite(window.__sembleFinale)
@@ -1631,6 +1643,22 @@
         wctx.shadowBlur = size * 0.55;
         wctx.fillStyle = colour + alpha.toFixed(3) + ')';
         wctx.fillText(glyph, 0, 0);
+        wctx.restore();
+      }
+      /* the stave — five lines the focused component's voice rides */
+      if (mv && mv.focus && mv.focus.e > 0.35){
+        var sf = mv.focus, sty = sf.y - sf.h / 2 - u * 1.5;
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        for (var li = 0; li < 5; li++){
+          var lw = 0.10 + 0.07 * Math.sin(t * 1.4 + li * 0.7);
+          wctx.beginPath();
+          wctx.moveTo(sf.x - u * 2.2, sty + li * u * 0.22);
+          wctx.lineTo(sf.x + u * 2.2, sty + li * u * 0.22);
+          wctx.strokeStyle = acc(sf) + (lw * sf.e).toFixed(3) + ')';
+          wctx.lineWidth = 0.8;
+          wctx.stroke();
+        }
         wctx.restore();
       }
       comps.forEach(function(c){
@@ -1746,6 +1774,42 @@
         wctx.fillRect(sc.x - sc.w / 2, sy3 - u * 0.06, sc.w, u * 0.12);
         wctx.restore();
       }
+      /* ═══ ARRIVAL ═══ a model just posted by the community: announce it */
+      if (mv && mv.phase === 'ARRIVAL' && mv.focus){
+        var af = mv.focus, ak = Math.min(1, mv.k / 2.2);
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        for (var ai = 0; ai < 4; ai++){
+          var arK = ak * 1.5 - ai * 0.22;
+          if (arK <= 0 || arK > 1) continue;
+          hexPath(wctx, af.x, af.y, Math.max(af.w, af.h) * (0.5 + arK * 2.2));
+          wctx.strokeStyle = acc(af) + ((1 - arK) * 0.55).toFixed(3) + ')';
+          wctx.lineWidth = 2.2 * (1 - arK);
+          wctx.stroke();
+        }
+        wctx.restore();
+        etch(wctx, af.x, af.y - af.h * 0.9, 'NEW \u00b7 JUST POSTED',
+             Math.max(6, u * 0.2), 1 - ak * 0.4, null, acc(af));
+      }
+      /* ═══ HARMONIC ═══ two charged neighbours find each other and ring */
+      nets.forEach(function(n){
+        if (!n.a || !n.b) return;
+        var h1 = n.a.e, h2 = n.b.e;
+        if (h1 < 0.55 || h2 < 0.55) return;
+        var hh = Math.min(h1, h2), mid = along(n, 0.5);
+        var bow = Math.sin(t * 1.6 + n.len) * u * 0.5;
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        wctx.beginPath();
+        wctx.moveTo(n.a.x, n.a.y);
+        wctx.quadraticCurveTo(mid.x + bow, mid.y - u * 0.8, n.b.x, n.b.y);
+        wctx.strokeStyle = 'rgba(190,240,255,' + (0.18 * hh).toFixed(3) + ')';
+        wctx.lineWidth = 1.2;
+        wctx.shadowColor = 'rgba(150,230,255,' + (0.5 * hh).toFixed(3) + ')';
+        wctx.shadowBlur = 10;
+        wctx.stroke();
+        wctx.restore();
+      });
       /* ═══ CASCADE ═══ after the surge, the charge runs out to its neighbours */
       if (mv && mv.phase === 'CASCADE' && mv.focus){
         var ck2 = Math.min(1, mv.k / 1.5), src = mv.focus;
@@ -1761,7 +1825,11 @@
           wctx.fill();
           wctx.restore();
           var other = fwd ? n.b : n.a;
-          if (other && ck2 > 0.75) other.e = Math.max(other.e, 0.35 * (1 - ck2) * 4);
+          if (other && ck2 > 0.75){
+            other.e = Math.max(other.e, 0.35 * (1 - ck2) * 4);
+            /* ═══ ECHO ═══ the arriving charge makes it perform, briefly */
+            if (!other.echo) other.echo = 1;
+          }
         });
       }
       /* the scanner's reticle — a slow hex ring around the studied one */
@@ -1834,17 +1902,27 @@
     }
 
     /* the community posts a model; the board grows it */
+    var knownModels = {};
     function setModels(list){
-      if (!list || !list.length) return;
+      if (!list || !list.length) return null;
+      var fresh = null;
       for (var i = 0; i < motusChips.length; i++){
         var m = list[i % list.length];
+        var id = m.id || m.name;
         motusChips[i].label = (m.name || 'Model');
         motusChips[i].runs = Math.max(1, Math.min(12, m.runs || 1));
         motusChips[i].glyph = m.emoji || '\u2726';
         motusChips[i].by = (m.author && m.author.name) || m.by || '';
         motusChips[i].live = !!m.isLive;
+        motusChips[i].mid = id;
+        /* a model the board has never carried before */
+        if (id && !knownModels[id]){
+          knownModels[id] = 1;
+          if (!fresh && Object.keys(knownModels).length > 1) fresh = motusChips[i];
+        }
       }
       worldRepaint();
+      return fresh;   /* the newcomer, if there is one */
     }
     return {work: work, comps: comps, render: render, u: u, WH: WH, BQ: BQ,
             setModels: setModels, setMoves: setMoves,
@@ -2271,8 +2349,10 @@
               return m.id + ':' + (m.runs || 0); }).join('|');
             if (sig === seen) return;
             seen = sig;
-            board.setModels(list);
+            var fresh = board.setModels(list);
             worldDirty = true;
+            /* ═══ SUMMON ═══ something new was posted: go and see it */
+            if (fresh && window.__sembleSummon) window.__sembleSummon(fresh);
           })
           .catch(function(){ /* offline: the board keeps its own names */ });
       }
@@ -2307,7 +2387,8 @@
     var mouse = {x: HOME.x, y: HOME.y}, m1 = {x: HOME.x, y: HOME.y}, m2 = {x: HOME.x, y: HOME.y};
     var lerp1 = C.lerp1, lerp2 = C.lerp2, scrolling = false, scrollT = 0;
     var lastMouseT = -1e9, wanderT = 0, wLast = null, wRecent = [], wVisits = {};
-    var mvPhase = 'REST', mvT = 0, mvFocus = null;
+    var mvPhase = 'REST', mvT = 0, mvFocus = null, summonWanted = null;
+    window.__sembleSummon = function(chip){ summonWanted = chip; };
 
     if (MOB){
       addEventListener('touchstart', function(e){
@@ -2476,7 +2557,8 @@
       if (focus2){
         var dNow = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
         var held = now - mvT;
-        if (mvPhase === 'APPROACH' && dNow < 0.03){ mvPhase = 'LOCK'; mvT = now; }
+        if (mvPhase === 'ARRIVAL' && held > 2200){ mvPhase = 'APPROACH'; mvT = now; }
+        else if (mvPhase === 'APPROACH' && dNow < 0.03){ mvPhase = 'LOCK'; mvT = now; }
         else if (mvPhase === 'LOCK'    && held > 900){ mvPhase = 'SCAN';    mvT = now; }
         else if (mvPhase === 'SCAN'    && held > (MOB ? 5200 : 4200)){ mvPhase = 'FEED'; mvT = now; }
         else if (mvPhase === 'FEED'    && held > (MOB ? 5600 : 4600)){
@@ -2485,6 +2567,13 @@
         else if (mvPhase === 'CASCADE' && held > 2200){ mvPhase = 'REST';   mvT = now; }
       } else mvPhase = 'REST';
       var MV = {phase: mvPhase, k: (now - mvT) / 1000, focus: focus2};
+      if (summonWanted){
+        /* the newcomer takes precedence over whatever it was reading */
+        wLast = summonWanted; summonWanted = null;
+        aimAt(wLast, C.dwell * 1.4);
+        mvFocus = wLast; mvPhase = 'ARRIVAL'; mvT = now;
+        MV = {phase: mvPhase, k: 0, focus: wLast};
+      }
       /* the wanderer: idle → visit a system, water it, move on */
       if (!scrolling && now - lastMouseT > C.idleAfter){
         if (now > wanderT){
@@ -2653,11 +2742,18 @@
                 models: board.comps.filter(function(c){ return c.kind === 'motus'; })
                           .map(function(c){ return c.label + (c.by ? ' / ' + c.by : ''); }),
                 movement: {phase: mvPhase, beat: +((performance.now() - mvT) / 1000).toFixed(2),
-                           sequence: 'APPROACH·LOCK·SCAN·FEED·SURGE·CASCADE·REST'},
+                           sequence: 'SUMMON→ARRIVAL·APPROACH·LOCK·SCAN·FEED·SURGE·CASCADE(→ECHO)·REST'},
                 reading: themeKinds ? themeKinds.slice() : null,
                 top: Math.round(worldTop()), worldMax: worldMax};
       },
       board: function(){ board.render(1, null, worldTop()); return board.work.toDataURL('image/png'); },
+      /* prove the summons: pretend the community just posted something */
+      summonTest: function(){
+        var chip = board.comps.filter(function(c){ return c.kind === 'motus'; })[0];
+        if (!chip || !window.__sembleSummon) return null;
+        window.__sembleSummon(chip);
+        return {summoned: chip.label, x: Math.round(chip.x), y: Math.round(chip.y)};
+      },
       shot: function(){ draw(performance.now()); return cv.toDataURL('image/png'); }
     };
   }
@@ -2762,6 +2858,7 @@
     state: full ? full.state : function(){ return null; },
     board: full ? full.board : function(){ return null; },
     shot: full ? full.shot : function(){ return null; },
+    summonTest: full ? full.summonTest : function(){ return null; },
     mini: initMini
   };
 })();
