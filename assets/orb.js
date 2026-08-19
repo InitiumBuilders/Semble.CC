@@ -1957,24 +1957,63 @@
       mouse.y = (-e.clientY / H + 0.5) * C.reach;
     }, {passive: true});
 
-    var points = [].slice.call(document.querySelectorAll('section, .hero')).map(function(el, i){
-      return {el: el, side: (i % 2 ? C.sideDrift : -C.sideDrift)};
-    });
+    /* ⚠ THE REAL ZIG-ZAG LIVED HERE. Scrolling used to snap the orb to
+       alternating left/right side-drifts by section parity (i % 2) — so every
+       scroll flipped it side to side, and it never sat on a component at all,
+       only "halfway". Scrolling now does exactly what idling does: choose ONE
+       component near the new viewport centre, by the same weighted memory, and
+       lock to its centre. Desktop and mobile run this identical path. */
+    function chooseNear(centreBias){
+      if (!board) return null;
+      var topW = worldTop();
+      var pool = board.comps.filter(function(c){
+        return c.kind !== 'choke' && !c.noWater
+          && wRecent.slice(-3).indexOf(c.kind + Math.round(c.x)) < 0;
+      });
+      if (!pool.length) pool = board.comps.filter(function(c){
+        return c.kind !== 'choke' && !c.noWater; });
+      var KW = {scu: 1.7, scc: 1.55, loop: 1.5, cpu: 1.25, gpu: 1.2,
+                models: 1.15, guide: 1.1};
+      var tw = 0, wts = pool.map(function(c){
+        var key = c.kind + Math.round(c.x);
+        var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h) * (KW[c.kind] || 1);
+        var sy = (c.y - topW) / H;
+        wt *= Math.exp(-Math.pow((sy - 0.5) / (centreBias ? 0.26 : 0.42), 2));
+        wt /= (1 + 0.55 * (wVisits[key] || 0));
+        var ri = wRecent.indexOf(key);
+        if (ri >= 0) wt *= 0.04 + 0.12 * (ri / Math.max(1, wRecent.length));
+        wt *= 0.35 + Math.random() * 1.6;
+        tw += wt; return Math.max(0, wt);
+      });
+      var pick = pool[0], rw = Math.random() * tw;
+      for (var i = 0; i < pool.length; i++){
+        rw -= wts[i]; if (rw <= 0){ pick = pool[i]; break; } }
+      if (Math.random() < 0.25) pick = pool[Math.floor(Math.random() * pool.length)];
+      var key2 = pick.kind + Math.round(pick.x);
+      wVisits[key2] = (wVisits[key2] || 0) + 1;
+      wRecent.push(key2);
+      if (wRecent.length > 8) wRecent.shift();
+      return pick;
+    }
+    function aimAt(pick){
+      if (!pick) return;
+      wLast = pick;
+      mouse.x = Math.max(-0.83, Math.min(0.83, (pick.x / W - 0.5) / 0.6));
+      mouse.y = Math.max(-0.83, Math.min(0.83, (0.5 - (pick.y - worldTop()) / H) / 0.6));
+    }
+    var lastScrollPick = 0;
     addEventListener('scroll', function(){
-      if (!points.length) return;
       scrolling = true; scrollT = Date.now();
       lerp1 = C.scrollLerp1; lerp2 = C.scrollLerp2;
-      var best = null, bd = 1e9;
-      for (var i = 0; i < points.length; i++){
-        var r = points[i].el.getBoundingClientRect();
-        var d = Math.abs(r.top + r.height / 2 - H / 2);
-        if (d < bd){ bd = d; best = points[i]; }
+      var nw = Date.now();
+      /* re-choose only when the held one has left the frame, or after a beat */
+      var stale = !wLast || nw - lastScrollPick > 2200;
+      if (!stale && wLast){
+        var sy2 = (wLast.y - worldTop()) / H;
+        stale = sy2 < 0.08 || sy2 > 0.92;
       }
-      if (best){
-        var r2 = best.el.getBoundingClientRect();
-        mouse.x = best.side;
-        mouse.y = Math.max(-C.yClamp, Math.min(C.yClamp, -(r2.top + r2.height / 2 - H / 2) / H * 0.5));
-      }
+      if (stale){ aimAt(chooseNear(true)); lastScrollPick = nw; }
+      else aimAt(wLast);   /* hold the lock while the world pans under it */
     }, {passive: true});
 
     function orbPx(){
@@ -2148,6 +2187,9 @@
         var lit = board.comps.filter(function(c){ return c.e > 0.1; });
         return {chips: board.comps.length, lit: lit.length, orb: orbPx(),
                 litKinds: lit.map(function(c){ return c.kind; }), mcc: board.mcc(),
+                target: wLast ? {kind: wLast.kind, x: Math.round(wLast.x),
+                                 y: Math.round(wLast.y - worldTop())} : null,
+                aim: {x: +mouse.x.toFixed(3), y: +mouse.y.toFixed(3)},
                 top: Math.round(worldTop()), worldMax: worldMax};
       },
       board: function(){ board.render(1, null, worldTop()); return board.work.toDataURL('image/png'); },
