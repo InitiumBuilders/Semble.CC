@@ -1870,12 +1870,12 @@
     C.dwell = 4200; C.dwellVar = 4200;
     DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
-      C.idleAfter = 300;         /* no cursor — it lives on its own at once */
+      C.idleAfter = 2400;        /* it settles before it begins to move     */
       C.reach = 0.34;
-      C.lerp1 = 0.011; C.lerp2 = 0.018;        /* deep viscosity            */
-      C.scrollLerp1 = 0.045; C.scrollLerp2 = 0.035;
-      C.displacementSpeed = 0.12;               /* the surface barely stirs  */
-      C.dwell = 7000; C.dwellVar = 6000;        /* it stays, and considers   */
+      C.lerp1 = 0.0065; C.lerp2 = 0.011;       /* moves like it has mass    */
+      C.scrollLerp1 = 0.028; C.scrollLerp2 = 0.021;
+      C.displacementSpeed = 0.085;              /* the surface barely stirs  */
+      C.dwell = 9500; C.dwellVar = 7000;        /* it stays, and considers   */
     }
     var cv = document.createElement('canvas');
     cv.setAttribute('aria-hidden', 'true');
@@ -1964,6 +1964,8 @@
       ph: Math.random() * 6.28
     };
     var energy = 0, lastSF = 0, iris = 1, irisTo = 1;
+    /* it wakes under load: motion is heaviest at the start and eases in */
+    var launch = 0;
     function fit(){
       var DPR = Math.min(devicePixelRatio || 1, MOB ? 1.15 : 1.5);
       W = innerWidth; H = innerHeight;
@@ -2214,15 +2216,18 @@
           mouse.y = Math.max(-0.83, Math.min(0.83, mouse.y + Math.cos(now * 0.00039) * 0.00019));
         }
       }
-      var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
-      var f2 = 1 - Math.pow(1 - lerp2, dt * 60);
+      launch += (1 - launch) * (1 - Math.pow(MOB ? 0.9955 : 0.988, dt * 60));
+      var LAU = 0.22 + 0.78 * launch;      /* starts at a fifth of its ease */
+      var f1 = (1 - Math.pow(1 - lerp1, dt * 60)) * LAU;
+      var f2 = (1 - Math.pow(1 - lerp2, dt * 60)) * LAU;
       if (focus2){
         var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
         f1 = Math.min(1, f1 * (1 + (MOB ? 1.6 : 3.0) * Math.max(0, 1 - dLock * 6)));
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
-      opacity += ((MOB ? 0.60 : 1) - opacity) * (1 - Math.pow(0.965, dt * 60));
+      /* it arrives slowly, and it is meant to be seen */
+      opacity += ((MOB ? 0.82 : 1) - opacity) * (1 - Math.pow(MOB ? 0.988 : 0.965, dt * 60));
       imgOpacity += (imgTarget - imgOpacity) * (1 - Math.pow(0.95, dt * 60));
 
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));

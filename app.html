@@ -338,6 +338,15 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 .tab.on svg{filter:drop-shadow(0 0 8px rgba(92,225,255,.75))}
 /* the mini-orb — the same glass sphere, riding the tab bar to show
    where you are. Desktop keeps the rail; this is the thumb's compass. */
+.crow{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.clab{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;opacity:.8}
+.crow b{font-family:Sora,sans-serif;font-weight:700;font-size:18px}
+.cval{font-family:"IBM Plex Mono",monospace;font-size:12px;opacity:.85}
+.cbar{height:8px;border-radius:6px;background:rgba(60,100,140,.22);overflow:hidden;margin:0 0 12px}
+.cbar i{display:block;height:100%;width:0%;border-radius:6px;
+  background:linear-gradient(90deg,rgba(92,225,255,.7),rgba(150,240,255,.95));
+  box-shadow:0 0 12px rgba(92,225,255,.45);transition:width 1.1s var(--ease)}
 .orblet{position:absolute;top:50%;left:0;width:54px;height:54px;
   margin-top:-27px;pointer-events:none;z-index:1;
   filter:drop-shadow(0 0 10px rgba(92,225,255,.38))}
@@ -390,6 +399,7 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   <div class="screen stg" id="s-room"></div>
 
   <!-- ══════════ INIT ══════════ -->
+  <div class="screen stg" id="s-compute-holder" hidden></div>
   <div class="screen stg" id="s-init">
     <div class="card d2">
       <p class="card__k">Init a Semble Session</p>
@@ -428,6 +438,9 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
         <input type="text" placeholder="A repo, a doc, a model, a recording, a craft"/>
         <p class="hint">Required. It does not have to be code — it has to be public.</p></div>
       <div class="row"><button class="btn" type="button" id="postBtn">Init it</button></div>
+      <p class="hint" style="margin-top:14px">This one lives on your device.
+        <a href="/new" style="color:var(--signal)">Init a real Sesh</a> to get a link
+        other people can commit to.</p>
     </div>
   </div>
 
@@ -436,6 +449,17 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 
   <!-- ══════════ TRAX ══════════ -->
   <div class="screen on stg" id="s-trax">
+    <div class="card d1" id="computeCard">
+      <p class="card__k">Compute</p>
+      <div class="crow"><span class="clab">SCU · units</span><b id="cScu">—</b></div>
+      <div class="cbar"><i id="cBar"></i></div>
+      <div class="crow"><span class="clab">SCC · cores</span><span class="cval" id="cScc">—</span></div>
+      <div class="crow"><span class="clab" style="color:#ecd396">MCC · Motus level</span>
+        <span class="cval" id="cMcc">ignites at a threshold</span></div>
+      <p class="hint">Semble Compute Units link into Cores. Motus Compute Cores are not
+        bought — they ignite when a threshold is crossed.
+        <a href="/compute" style="color:var(--signal)">The rail</a></p>
+    </div>
     <div class="card d3 guide">
       <p class="card__k">The guide</p>
       <h3>Six words. One loop. That is all of it.</h3>
@@ -1485,6 +1509,24 @@ var SA=(function(){
     addEventListener('resize', measure, {passive: true});
     document.addEventListener('click', function(){ setTimeout(measure, 40); });
     window.__ferro = {remeasure: measure};
+  })();
+
+  /* ─────── THE COMPUTE RAIL, LIVE ─────── */
+  (function(){
+    var GOAL = 1000;
+    var elS = $('cScu'), elB = $('cBar'), elC = $('cScc'), elM = $('cMcc');
+    if (!elS) return;
+    function paint(total){
+      var frac = Math.min(1, total / GOAL);
+      elS.textContent = total.toLocaleString();
+      elB.style.width = (frac * 100).toFixed(1) + '%';
+      elC.textContent = Math.floor(total / 250) + ' of 4 linked';
+      elM.textContent = frac >= 1 ? 'IGNITED' : 'ignites at ' + GOAL.toLocaleString();
+      window.__semblePool = {scc: frac, mcc: frac >= 1 ? 1 : frac * 0.9};
+    }
+    fetch('/api/pledge').then(function(r){ return r.json(); })
+      .then(function(j){ paint(j.total || 0); })
+      .catch(function(){ paint(0); });
   })();
 
   /* ─────── THE MINI-ORB — the same glass, riding the tab bar ─────── */
