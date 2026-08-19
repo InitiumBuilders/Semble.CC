@@ -155,6 +155,72 @@ button.folk{cursor:pointer}
 .doorcd b{display:block;font:600 1.5rem/1 Sora,sans-serif;font-variant-numeric:tabular-nums}
 .doorcd span{display:block;font:600 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-2);margin-top:7px}
+
+/* ═══════════ THE ROOM · ALIEN PRESENCE ═══════════
+   A cell per person: hexagonal glass, a living rim, and light that
+   answers the voice inside it. */
+#folks{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
+  padding:4px 0 8px;align-items:start}
+.folk{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:14px 8px 12px;border:0;background:none;cursor:default;
+  -webkit-tap-highlight-color:transparent;isolation:isolate}
+.folk[data-folk]{cursor:pointer}
+/* the cell */
+.folk__a{position:relative;width:64px;height:64px;display:grid;place-items:center;
+  font:800 22px Sora,sans-serif;color:#eaf8ff;letter-spacing:.01em;
+  clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  background:
+    radial-gradient(120% 90% at 32% 18%, rgba(120,215,255,.30), rgba(10,18,30,.86) 62%),
+    linear-gradient(160deg, rgba(146,220,255,.16), rgba(6,12,22,.92));
+  box-shadow:inset 0 1px 0 rgba(190,235,255,.30), 0 10px 26px rgba(0,0,0,.55);
+  transition:transform .5s var(--ease), filter .5s var(--ease)}
+/* the rim — drawn as a slightly larger hex behind the cell */
+.folk__a::before{content:'';position:absolute;inset:-3px;z-index:-1;
+  clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  background:linear-gradient(150deg,rgba(92,225,255,.85),rgba(140,120,255,.55),rgba(96,232,210,.8));
+  opacity:.30;transition:opacity .45s var(--ease)}
+/* speaking: the rim breathes, and the cell lifts */
+.folk--live .folk__a{transform:translateY(-2px) scale(1.03);
+  filter:drop-shadow(0 0 16px rgba(92,225,255,.45))}
+.folk--live .folk__a::before{opacity:.95;animation:rimBreathe 2.6s var(--ease) infinite}
+@keyframes rimBreathe{0%,100%{opacity:.55}50%{opacity:1}}
+/* the voice ring — scaled live from the speaker's own audio */
+.folk__ring{position:absolute;top:14px;width:64px;height:64px;pointer-events:none;
+  clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  box-shadow:0 0 0 2px rgba(92,225,255,.55) inset;
+  opacity:0;transform:scale(1);transition:opacity .25s linear}
+.folk--live .folk__ring{opacity:.9}
+.folk--muted .folk__a{filter:grayscale(.35) brightness(.82)}
+.folk--listen .folk__a{width:52px;height:52px;font-size:18px;opacity:.9}
+.folk--listen .folk__a::before{opacity:.16}
+.folk--you .folk__a{box-shadow:inset 0 1px 0 rgba(200,240,255,.4),
+  0 10px 30px rgba(0,0,0,.6), 0 0 0 1px rgba(92,225,255,.35)}
+.folk b{font:600 13.5px Inter,sans-serif;color:#dff2ff;max-width:104px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.folk small{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:#8fc9e8;opacity:.9}
+.folk.sel .folk__a::before{opacity:1}
+.folk.sel::after{content:'';position:absolute;inset:2px;border-radius:22px;
+  box-shadow:0 0 0 1px rgba(236,204,150,.5);pointer-events:none}
+.rolechip{position:absolute;top:4px;right:6px;z-index:2;
+  font:600 8.5px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;
+  color:#08131e;background:linear-gradient(180deg,#bfefff,#6fd7ff);
+  padding:2px 6px;border-radius:8px}
+.hand{position:absolute;top:2px;left:4px;z-index:2;font-size:15px;
+  filter:drop-shadow(0 0 8px rgba(236,204,150,.9));animation:handWave 1.6s var(--ease) infinite}
+@keyframes handWave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg)}}
+/* reactions rise out of the room and dissolve */
+.rx{position:fixed;pointer-events:none;z-index:60;font-size:26px;
+  filter:drop-shadow(0 0 12px rgba(92,225,255,.7));animation:rxRise 1.5s var(--ease) forwards}
+@keyframes rxRise{
+  0%{opacity:0;transform:translate(-50%,0) scale(.6)}
+  18%{opacity:1;transform:translate(-50%,-18px) scale(1.15)}
+  100%{opacity:0;transform:translate(-50%,-120px) scale(.9)}}
+@media(max-width:520px){
+  #folks{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+  .folk__a{width:56px;height:56px;font-size:19px}
+  .folk--listen .folk__a{width:46px;height:46px;font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -362,6 +428,66 @@ button.folk{cursor:pointer}
   })();
 
   /* ═══ the room, drawn ═══ */
+
+  /* ═══ THE VOICE, MADE VISIBLE ═══
+     One analyser per live stream. The cell's ring scales with the actual
+     loudness of that person's voice — so you can SEE who is talking, even
+     with the sound off. */
+  var VOX = (function(){
+    var AC = null, nodes = {}, raf = 0, live = false;
+    function ctx(){
+      if (!AC){
+        var K = window.AudioContext || window.webkitAudioContext;
+        if (!K) return null;
+        AC = new K();
+      }
+      if (AC.state === 'suspended') AC.resume().catch(function(){});
+      return AC;
+    }
+    function watch(id, stream){
+      try {
+        var c = ctx(); if (!c || !stream || !stream.getAudioTracks().length) return;
+        drop(id);
+        var src = c.createMediaStreamSource(stream);
+        var an = c.createAnalyser();
+        an.fftSize = 256; an.smoothingTimeConstant = 0.75;
+        src.connect(an);
+        nodes[id] = {an: an, src: src, buf: new Uint8Array(an.frequencyBinCount), v: 0};
+        start();
+      } catch (e){}
+    }
+    function drop(id){
+    try { VOX.drop(id); } catch (e){}
+      var n = nodes[id];
+      if (!n) return;
+      try { n.src.disconnect(); } catch (e){}
+      delete nodes[id];
+    }
+    function frame(){
+      if (!live){ raf = 0; return; }
+      for (var id in nodes){
+        var n = nodes[id];
+        n.an.getByteFrequencyData(n.buf);
+        var sum = 0;
+        for (var i = 2; i < 40; i++) sum += n.buf[i];
+        var lvl = Math.min(1, (sum / 38) / 96);
+        n.v += (lvl - n.v) * 0.35;            /* smooth, never twitchy */
+        var el = document.querySelector('[data-ring="' + id + '"]');
+        if (el){
+          el.style.transform = 'scale(' + (1 + n.v * 0.30).toFixed(3) + ')';
+          el.style.opacity = (0.25 + n.v * 0.75).toFixed(3);
+        }
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    function start(){ if (!raf){ live = true; raf = requestAnimationFrame(frame); } }
+    document.addEventListener('visibilitychange', function(){
+      live = !document.hidden;
+      if (live && !raf) raf = requestAnimationFrame(frame);
+    });
+    return {watch: watch, drop: drop};
+  })();
+
   function paint(){
     var ids = Object.keys(roster);
     var sp = speakers().length, li = ids.length - sp;
@@ -371,11 +497,14 @@ button.folk{cursor:pointer}
       var sub = you ? 'you' : (speakerish ? (r.muted?'muted':'live') : 'listening');
       var tag = r.role==='host' ? 'Host' : (r.role==='cohost' ? 'Co' : '');
       var Tag = (amMod() && !you) ? 'button' : 'div';
+      var live = speakerish && !r.muted;
       return '<' + Tag + ' class="folk' + (you?' folk--you':'') + (speakerish?'':' folk--listen')
-        + (speakerish && r.muted ? ' folk--muted':'') + (selected===id?' sel':'')
+        + (speakerish && r.muted ? ' folk--muted':'') + (live ? ' folk--live':'')
+        + (selected===id?' sel':'')
         + '" data-folk="' + id + '"' + (Tag==='button' ? ' type="button"' : '') + '>'
         + (tag ? '<span class="rolechip">'+tag+'</span>' : '')
         + (r.hand ? '<span class="hand">&#9995;</span>' : '')
+        + '<span class="folk__ring" data-ring="' + id + '"></span>'
         + '<span class="folk__a">' + esc((r.name||'?').charAt(0).toUpperCase()) + '</span>'
         + '<b>' + esc(r.name||'Guest') + '</b><small>' + sub + '</small></' + Tag + '>';
     }).join('');
@@ -511,6 +640,7 @@ button.folk{cursor:pointer}
     navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}})
       .then(function(st){
         localStream=st; hasMic=true; muted=false; handUp=false; myRole = amMod() ? myRole : 'speaker';
+        try { VOX.watch(myId, st); } catch(e){}
         var track = st.getAudioTracks()[0];
         Object.keys(calls).forEach(function(id){
           var pc = calls[id].peerConnection; if (!pc) return;
@@ -533,7 +663,7 @@ button.folk{cursor:pointer}
     peer.on('open', function(id){ myId=id; myRole='host'; live();
       /* the opener speaks — ask once, degrade to muted host gracefully */
       navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}})
-        .then(function(st){ localStream=st; hasMic=true; muted=false;
+        .then(function(st){ localStream=st; hasMic=true; muted=false; try { VOX.watch(myId, st); } catch(e){}
           var tr=st.getAudioTracks()[0];
           Object.keys(calls).forEach(function(cid){
             var pc=calls[cid].peerConnection; if(!pc) return;
@@ -561,7 +691,7 @@ button.folk{cursor:pointer}
       calls[c.peer]=c;
       if (c.metadata && c.metadata.name && !roster[c.peer])
         roster[c.peer]={name:c.metadata.name, role:'listener', muted:true, hand:false};
-      c.on('stream', function(st){ attach(c.peer, st); });
+      c.on('stream', function(st){ attach(c.peer, st); VOX.watch(c.peer, st); });
       c.on('close', function(){ drop(c.peer); });
     }
     function fail(err){
