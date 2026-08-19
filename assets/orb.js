@@ -151,7 +151,7 @@
     cpu: '92,225,255',  gpu: '84,186,242', ram: '150,205,255',
     scu: '96,232,210',  scc: '104,216,235', brg: '130,200,255',
     mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
-    choke: '255,192,112', phy: '92,225,255',
+    choke: '255,192,112', phy: '92,225,255', loop: '124,214,255',
     guide: '255,216,150', seats: '92,225,255',
     models: '104,216,235', commons: '96,232,210'
   };
@@ -202,7 +202,7 @@
     g.textBaseline = 'middle';
     g.fillStyle = 'rgba(0,0,0,0.55)';
     g.fillText(txt, Math.round(x), Math.round(y) + 1);
-    g.fillStyle = (accStr && e > 0.15 ? accStr : INK) + (0.55 + 0.45 * e).toFixed(3) + ')';
+    g.fillStyle = (accStr && e > 0.15 ? accStr : INK) + (0.72 + 0.28 * e).toFixed(3) + ')';
     g.fillText(txt, Math.round(x), Math.round(y));
   }
 
@@ -829,6 +829,37 @@
       }
       etch(g, c.x, y + h + u * 0.24, 'COMMONS', Math.max(5, u * 0.18), pulse, null, A2k(c));
 
+    } else if (c.kind === 'loop'){
+      /* THE LOOP — a closed track. What goes around, compounds. */
+      var lr = c.w * 0.42;
+      g.beginPath(); g.arc(c.x, c.y, lr, 0, 6.29);
+      g.strokeStyle = TRC + (0.5 + 0.2 * pulse).toFixed(3) + ')';
+      g.lineWidth = 2.2; g.stroke();
+      if (e > 0.03){
+        g.save();
+        g.setLineDash([lr * 0.7, lr * 0.5]);
+        g.lineDashOffset = -t * 26;
+        g.shadowColor = A2k(c) + (0.85 * pulse).toFixed(3) + ')';
+        g.shadowBlur = 12 * pulse;
+        g.strokeStyle = A2k(c) + (0.6 * pulse).toFixed(3) + ')';
+        g.beginPath(); g.arc(c.x, c.y, lr, 0, 6.29); g.stroke();
+        g.restore();
+      }
+      for (i = 0; i < 4; i++){
+        var la2 = i * Math.PI / 2 + Math.PI / 4;
+        var nx = c.x + Math.cos(la2) * lr, ny2 = c.y + Math.sin(la2) * lr;
+        var ne = e > 0.03 ? (0.5 + 0.5 * Math.sin(t * 2.4 + i * 1.57)) * pulse : 0;
+        g.beginPath(); g.arc(nx, ny2, 3, 0, 6.29);
+        g.fillStyle = 'rgba(96,190,250,' + (0.4 + 0.5 * ne).toFixed(3) + ')';
+        g.fill();
+        g.beginPath(); g.arc(nx, ny2, 4.6, 0, 6.29);
+        g.strokeStyle = TRC + '0.5)'; g.lineWidth = 0.9; g.stroke();
+      }
+      g.beginPath(); g.arc(c.x, c.y, 2, 0, 6.29);
+      g.fillStyle = 'rgba(220,245,255,' + (0.3 + 0.6 * pulse).toFixed(3) + ')';
+      g.fill();
+      etch(g, c.x, c.y + lr + u * 0.3, 'THE LOOP', Math.max(5, u * 0.18), pulse, null, A2k(c));
+
     } else if (c.kind === 'phy'){
       drop(g, x, y, w, h, 2.5);
       qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11, pulse, A);
@@ -882,7 +913,8 @@
       {id: 'guide', x: CW * 0.60, y: WH * 0.245, hw: u * 0.78, hh: u * 0.5},
       {id: 'seats', x: CW * 0.14, y: WH * 0.55, hw: u * 1.0, hh: u * 0.5},
       {id: 'models', x: CW * 0.24, y: WH * 0.665, hw: u * 0.85, hh: u * 0.7},
-      {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65}
+      {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65},
+      {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05}
     ];
     var margin = u * 0.62, it, a2, b2, i;
     for (it = 0; it < 160; it++){
@@ -973,6 +1005,7 @@
     var seats = comp('seats', P.seats.x, P.seats.y, u * 1.95, u * 0.95);
     var models = comp('models', P.models.x, P.models.y, u * 1.65, u * 1.35);
     var commons = comp('commons', P.commons.x, P.commons.y, u * 1.85, u * 1.25);
+    var loop = comp('loop', P.loop.x, P.loop.y, u * 2.0, u * 2.0);
 
     for (i = 0; i < 4; i++)
       net(chokes[i], cpu, [[chokes[i].x, chokes[i].y + u * 0.4],
@@ -1008,6 +1041,8 @@
                             cpu.x - cpu.w / 2, cpu.y + u * 0.6 + i * u * 0.4), 1);
     net(models, brg, route(models.x + models.w / 2, models.y, brg.x - u * 1.05, brg.y), 1);
     net(commons, phy, route(commons.x + commons.w / 2, commons.y, phy.x - phy.w / 2, phy.y + u * 0.2), 1);
+    net(loop, cpu, route(loop.x - loop.w / 2, loop.y, cpu.x + cpu.w / 2, cpu.y + u * 0.2), 1);
+    net(loop, scu, route(loop.x + loop.w / 2, loop.y, scu.x - scu.w / 2, scu.y - u * 0.3), 1);
     var fingersX = CW * 0.5, fingersW = u * 4;
     for (i = 0; i < 4; i++)
       net(phy, null, route(phy.x - u * 0.4 + i * u * 0.26, phy.y + phy.h / 2,
@@ -1279,6 +1314,21 @@
       var nCross = Object.keys(crossed).length;
       mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      /* the chips sing — notes rise while the energy runs */
+      comps.forEach(function(c){
+        if (c.e < 0.55) return;
+        for (var nk = 0; nk < 2; nk++){
+          var cyc = ((t * 0.5) + c.phase * 0.3 + nk * 0.7) % 1.4;
+          var na = Math.sin(Math.PI * cyc / 1.4) * 0.45 * c.e;
+          if (na < 0.04) continue;
+          wctx.font = '600 ' + Math.round(u * 0.44) + 'px ui-monospace, Consolas, monospace';
+          wctx.textAlign = 'center';
+          wctx.fillStyle = acc(c) + na.toFixed(3) + ')';
+          wctx.fillText(nk ? '♫' : '♪',
+            Math.round(c.x + Math.sin(cyc * 3.1 + c.phase) * u * 0.6 + (nk ? u * 0.5 : -u * 0.5)),
+            Math.round(c.y - c.h / 2 - u * 0.25 - cyc * u * 1.5));
+        }
+      });
       /* surges decay; the beam re-arms */
       if (typeof render.__lt !== 'number') render.__lt = 0;
       var dt2 = Math.max(0, Math.min(0.12, t - render.__lt));
@@ -1693,19 +1743,18 @@
     var qImg = new URLSearchParams(location.search).get('img');
     if (qImg) setImage(qImg);
 
-    var W, H, board, VH, WORLD_K = 2.2, worldMax = 0, ky = 1;
+    var W, H, board, VH, WORLD_K = 2.2, worldMax = 0, ky = 1, baseSize = 0.3;
     function fit(){
       var DPR = Math.min(devicePixelRatio || 1, 1.5);
       W = innerWidth; H = innerHeight;
       cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
       gl.viewport(0, 0, cv.width, cv.height);
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
-      var size = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault;
-      gl.uniform1f(U.uSize, size * 1.12);
+      baseSize = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault * 1.24;
       if (bgc){ bgc.width = W; bgc.height = H; }
-      VH = Math.round(H / 2);
+      VH = H;
       var WHW = Math.round(VH * WORLD_K);
-      board = makeBoard(Math.round(W / 2), WHW, VH);
+      board = makeBoard(W, WHW, VH);
       worldMax = WHW - VH;
       ky = VH / WHW;
       board.render(0, null, 0);
@@ -1718,7 +1767,7 @@
     var HOME = {x: 0, y: -0.05};
     var mouse = {x: HOME.x, y: HOME.y}, m1 = {x: HOME.x, y: HOME.y}, m2 = {x: HOME.x, y: HOME.y};
     var lerp1 = C.lerp1, lerp2 = C.lerp2, scrolling = false, scrollT = 0;
-    var lastMouseT = -1e9, wanderT = 0, wLast = null;
+    var lastMouseT = -1e9, wanderT = 0, wLast = null, wRecent = [], wVisits = {};
 
     addEventListener('mousemove', function(e){
       if (scrolling) return;
@@ -1748,7 +1797,8 @@
     }, {passive: true});
 
     function orbPx(){
-      return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H, r: Math.min(W, H) * 0.27};
+      return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H,
+              r: Math.min(W, H) * (0.15 + 0.17 * sFrac)};
     }
     /* scroll couples the window to the world: the board pans beneath the page */
     var sFrac = 0;
@@ -1762,7 +1812,7 @@
       for (var i = 0; i < board.comps.length; i++){
         var c = board.comps[i];
         if (c.noWater) continue;
-        var d = Math.hypot(c.x * 2 - o.x, (c.y - top) * 2 - o.y);
+        var d = Math.hypot(c.x - o.x, (c.y - top) - o.y);
         var e0 = c.e;
         if (d < o.r * 1.05) c.e = Math.min(1, c.e + (1 - c.e) * (c === focus ? 1.5 : 0.9) * dt);
         else c.e = Math.max(0, c.e - c.e * 0.28 * dt);
@@ -1771,7 +1821,7 @@
       return changed;
     }
 
-    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1;
+    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0;
     function draw(now){
       var t = (now - t0) / 1000 * C.displacementSpeed;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -1785,26 +1835,34 @@
           var topW = worldTop();
           var cands = board.comps.filter(function(c){
             if (c.kind === 'choke' || c.noWater || c === wLast) return false;
-            var sy2 = (c.y - topW) * 2;
+            var sy2 = c.y - topW;
             return sy2 > H * 0.12 && sy2 < H * 0.88; });
           if (!cands.length) cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater; });
           var tw = 0, wts = cands.map(function(c){
-            var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h); tw += wt; return wt; });
+            var key = c.kind + Math.round(c.x);
+            var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h);
+            wt /= (1 + 0.7 * (wVisits[key] || 0));
+            if (wRecent.indexOf(key) >= 0) wt *= 0.12;
+            tw += wt; return wt; });
           var pick = cands[0], rw = Math.random() * tw;
           for (var wi = 0; wi < cands.length; wi++){
             rw -= wts[wi]; if (rw <= 0){ pick = cands[wi]; break; } }
           wLast = pick;
-          mouse.x = Math.max(-0.55, Math.min(0.55, ((pick.x * 2) / W - 0.5) / 0.6));
-          mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - ((pick.y - worldTop()) * 2) / H) / 0.6));
-          wanderT = now + 3800 + Math.random() * 3400;
+          var pkey = pick.kind + Math.round(pick.x);
+          wVisits[pkey] = (wVisits[pkey] || 0) + 1;
+          wRecent.push(pkey);
+          if (wRecent.length > 4) wRecent.shift();
+          mouse.x = Math.max(-0.55, Math.min(0.55, (pick.x / W - 0.5) / 0.6));
+          mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - (pick.y - worldTop()) / H) / 0.6));
+          wanderT = now + 3000 + Math.random() * 5000;
         }
       }
       var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
       var f2 = 1 - Math.pow(1 - lerp2, dt * 60);
       if (focus2){
         var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
-        f1 = Math.min(1, f1 * (1 + 2.2 * Math.max(0, 1 - dLock * 6)));
+        f1 = Math.min(1, f1 * (1 + 3.0 * Math.max(0, 1 - dLock * 6)));
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
@@ -1814,10 +1872,12 @@
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
       var top2 = worldTop();
       gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
+      gl.uniform1f(U.uSize, baseSize * (0.55 + 0.85 * sFrac));
       if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
         var ob = orbPx();
-        board.render((now - t0) / 1000, {x: ob.x / 2, y: top2 + ob.y / 2, r: ob.r / 2}, top2, focus2);
-        E.uploadWorld(board.work);
+        board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2);
+        frameN++;
+        if ((frameN & 1) === 0 || !worldDirty) E.uploadWorld(board.work);
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
       }
