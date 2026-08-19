@@ -37,14 +37,28 @@ button{border:0;background:none;cursor:pointer;-webkit-appearance:none;appearanc
   text-align:inherit;padding:0}
 ::selection{background:rgba(92,225,255,.26)}
 
-.atmos{position:fixed;inset:0;z-index:-2;pointer-events:none;
+.atmos{position:fixed;inset:0;z-index:-3;pointer-events:none;
   background:
     radial-gradient(58% 40% at 18% 4%, rgba(0,168,216,.20), transparent 68%),
     radial-gradient(46% 36% at 88% 22%, rgba(92,225,255,.10), transparent 70%),
     radial-gradient(62% 46% at 50% 104%, rgba(255,207,138,.055), transparent 72%),
     linear-gradient(180deg,var(--void) 0%, var(--void-2) 52%, var(--void) 100%)}
-.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;
+/* THE FILM — the lifelike grain lives HERE, over the field, at real size on
+   every screen. It is never magnified, so it can afford to be present. */
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.075;
+  background-size:170px 170px;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>")}
+/* with the field lit, the atmosphere becomes a VEIL: it keeps the type
+   readable over live silicon instead of sealing the page in flat black */
+html.has-field .atmos{opacity:.72}
+html.has-field body{background:#01030a}
+/* THE SCRIM — darkness where the reading happens, and only there. The edges
+   stay lit so the circuit frames the page; the centre goes quiet so the words
+   can be read. Dimming the whole field would have cost the effect entirely. */
+html.has-field .atmos::after{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(64% 52% at 50% 40%,
+    rgba(1,4,10,.80) 0%, rgba(1,4,10,.52) 46%, rgba(1,4,10,.16) 72%, transparent 88%)}
+@media (min-width:1000px){ .grain{opacity:.085} }
 
 .wrap{width:100%;max-width:1060px;margin:0 auto;padding:0 22px}
 .wrap--narrow{max-width:790px}
@@ -328,8 +342,11 @@ h1, h2, .word{text-shadow:0 0 34px rgba(92,225,255,.12)}
              0 8px 22px -14px rgba(92,225,255,.7) !important;
   color:#eafaff}
 
-/* ── the grain sits over everything so no gradient ever bands ── */
-.grain{opacity:.5}
+/* ── THE FILM ── it exists to stop gradients banding and to give the ground
+   a photographic surface. Over a flat gradient .5 was right; over the live
+   field it would be a grey veil, so it goes back to being a film. ── */
+.grain{opacity:.075}
+@media (min-width:1000px){ .grain{opacity:.085} }
 
 /* ── scrollbar, because every surface is designed ── */
 *::-webkit-scrollbar{width:10px;height:10px}

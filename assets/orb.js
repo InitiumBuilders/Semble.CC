@@ -1996,10 +1996,11 @@
       g.fillStyle = lightG;
       g.fillRect(0, 0, CW, WH);
       /* the grain — what makes a render a photograph */
-      /* the tile is sized in COMPONENT units, not pixels — otherwise the same
-         grain reads as heavy film on a phone and as nothing on a desktop */
-      var gt = u * 8.6;
-      g.globalAlpha = 0.62;
+      /* fine and faint. The lens magnifies this texture three or four times,
+         so anything heavier arrives inside the orb as grey mush. The LIFELIKE
+         grain belongs on the page layer above, where nothing magnifies it. */
+      var gt = u * 2.7;
+      g.globalAlpha = 0.3;
       for (var gy2 = 0; gy2 < WH; gy2 += gt)
         for (var gx2 = 0; gx2 < CW; gx2 += gt)
           g.drawImage(grain, gx2, gy2, gt, gt);
@@ -2129,30 +2130,31 @@
       }
       comps.forEach(function(c){
         if (c.e < 0.4 || !seen(c)) return;
-        var loud = (mv && mv.focus === c) ? 1.9 : 0.95;
-        var voices = (mv && mv.focus === c) ? 4 : 2;
+        /* the part in focus SINGS: more voices, held longer, carrying higher */
+        var loud = (mv && mv.focus === c) ? 2.5 : 1.1;
+        var voices = (mv && mv.focus === c) ? 6 : 3;
         for (var nk = 0; nk < voices; nk++){
-          var cyc = ((t * 0.42) + c.phase * 0.3 + nk * 0.55) % 1.6;
-          var na = Math.sin(Math.PI * cyc / 1.6) * 0.62 * c.e * loud;
+          var cyc = ((t * 0.30) + c.phase * 0.3 + nk * 0.42) % 2.1;
+          var na = Math.sin(Math.PI * cyc / 2.1) * 0.78 * c.e * loud;
           var gl = GLYPH[(nk + Math.floor(c.phase * 3)) % GLYPH.length];
-          note(c.x + Math.sin(cyc * 2.6 + c.phase + nk) * u * 0.8 + (nk - 1) * u * 0.62,
-               c.y - c.h / 2 - u * 0.3 - cyc * u * 2.0,
-               u * (0.52 + 0.22 * Math.sin(cyc * 3.0 + nk)) * loud,
+          note(c.x + Math.sin(cyc * 2.2 + c.phase + nk) * u * 0.95 + (nk - 2.5) * u * 0.52,
+               c.y - c.h / 2 - u * 0.3 - cyc * u * 2.6,
+               u * (0.62 + 0.26 * Math.sin(cyc * 3.0 + nk)) * loud,
                na, acc(c), gl, Math.sin(cyc * 2.0 + nk) * 0.24);
         }
       });
       /* THE CHORD — the surge is heard, not only seen */
       if (mv && mv.phase === 'SURGE' && mv.focus){
-        var ck = Math.min(1, mv.k / 0.95);
+        var ck = Math.min(1, mv.k / 1.5);
         var cf = mv.focus;
-        for (var ci = 0; ci < 7; ci++){
-          var ang = -Math.PI / 2 + (ci - 3) * 0.36;
-          var rad = u * (0.7 + ck * 3.4);
+        for (var ci = 0; ci < 11; ci++){
+          var ang = -Math.PI / 2 + (ci - 5) * 0.30;
+          var rad = u * (0.7 + ck * 4.6);
           note(cf.x + Math.cos(ang) * rad * (0.7 + 0.5 * (ci % 2)),
                cf.y + Math.sin(ang) * rad,
-               u * (0.75 + 0.3 * Math.sin(ci)) * (1 - ck * 0.25),
-               (1 - ck) * 0.9,
-               acc(cf), GLYPH[ci % GLYPH.length], (ci - 3) * 0.16);
+               u * (0.95 + 0.34 * Math.sin(ci)) * (1 - ck * 0.22),
+               (1 - ck) * 1,
+               acc(cf), GLYPH[ci % GLYPH.length], (ci - 5) * 0.14);
         }
         /* the resonance — a ring that rings */
         wctx.save();
@@ -2797,24 +2799,24 @@
     var MOB = !matchMedia('(min-width: 1000px)').matches;
     if (MOB && document.querySelector('.tabs')) return null;  /* the app has its orblet */
     var C = {
-      displacementSpeed: 0.18,   /* steadier surface               */
+      displacementSpeed: 0.10,   /* the surface barely stirs       */
       sizeDefault: 0.275,
-      lerp1: 0.011, lerp2: 0.018,
-      scrollLerp1: 0.042, scrollLerp2: 0.032,
+      lerp1: 0.0052, lerp2: 0.0086,   /* it moves like it has mass   */
+      scrollLerp1: 0.029, scrollLerp2: 0.022,
       reach: 0.3,                /* shorter leash — it holds place */
       sideDrift: 0.16, yClamp: 0.22,
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
-    C.dwell = 9000; C.dwellVar = 7500;
+    C.dwell = 15000; C.dwellVar = 9000;   /* it stays, and considers */
     C.bright = 1.14;
     DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 2400;        /* it settles before it begins to move     */
       C.reach = 0.34;
-      C.lerp1 = 0.0029; C.lerp2 = 0.0049;      /* moves like it has mass    */
-      C.scrollLerp1 = 0.028; C.scrollLerp2 = 0.021;
-      C.displacementSpeed = 0.085;              /* the surface barely stirs  */
-      C.dwell = 13000; C.dwellVar = 9000;       /* it stays, and considers   */
+      C.lerp1 = 0.0024; C.lerp2 = 0.0041;      /* heavier still on a phone  */
+      C.scrollLerp1 = 0.024; C.scrollLerp2 = 0.018;
+      C.displacementSpeed = 0.072;              /* the surface barely stirs  */
+      C.dwell = 17000; C.dwellVar = 10000;      /* it stays, and considers   */
       C.bright = 1.55;                          /* the world through it, lifted */
     }
     var cv = document.createElement('canvas');
@@ -2824,12 +2826,20 @@
     var E = makeEngine(cv);
     if (!E){ cv.remove(); return null; }
     var gl = E.gl, U = E.U;
-    var bgc = null, bgx = null;
-    if (new URLSearchParams(location.search).get('board') === '1'){
+    /* ═══ THE FIELD ═══ the board IS the ground of the page. It sits above
+       the atmosphere and below the film grain, and the orb is a lens over it
+       rather than a window into somewhere else. ?board=0 turns it off. */
+    var bgc = null, bgx = null, bgA = 0;
+    var BG_A = MOB ? 0.74 : 0.66;
+    if (new URLSearchParams(location.search).get('board') !== '0'){
       bgc = document.createElement('canvas');
-      bgc.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:-1';
+      /* no CSS transition: it would not advance in a tab that is not
+         rendering, and the field would sit invisible over a live board */
+      bgc.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:-2;' +
+        'pointer-events:none';
       document.body.insertBefore(bgc, document.body.firstChild);
       bgx = bgc.getContext('2d');
+      document.documentElement.classList.add('has-field');
     }
 
     /* the glass lives BEHIND the words — always, on every page, forever */
@@ -2915,7 +2925,9 @@
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
       baseSize = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault
                  * (MOB ? 2.05 : 1.24);
-      if (bgc){ bgc.width = W; bgc.height = H; }
+      /* the field renders at 0.7 scale — the grain and the scrim sit over it,
+         and neither has ever needed the ground to be sharp */
+      if (bgc){ bgc.width = Math.round(W * 0.7); bgc.height = Math.round(H * 0.7); }
       VH = H;
       var WHW = Math.round(worldHeight(W, VH, MOB));
       board = makeBoard(W, WHW, VH, Math.min(DPR * 1.5, 3));
@@ -3175,13 +3187,13 @@
         var dNow = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
         var held = now - mvT;
         if (mvPhase === 'ARRIVAL' && held > 2200){ mvPhase = 'APPROACH'; mvT = now; }
-        else if (mvPhase === 'APPROACH' && dNow < 0.03){ mvPhase = 'LOCK'; mvT = now; }
-        else if (mvPhase === 'LOCK'    && held > 900){ mvPhase = 'SCAN';    mvT = now; }
-        else if (mvPhase === 'SCAN'    && held > (MOB ? 5200 : 4200)){ mvPhase = 'FEED'; mvT = now; }
-        else if (mvPhase === 'FEED'    && held > (MOB ? 5600 : 4600)){
+        else if (mvPhase === 'APPROACH' && dNow < 0.02){ mvPhase = 'LOCK'; mvT = now; }
+        else if (mvPhase === 'LOCK'    && held > 1500){ mvPhase = 'SCAN';   mvT = now; }
+        else if (mvPhase === 'SCAN'    && held > (MOB ? 6400 : 5800)){ mvPhase = 'FEED'; mvT = now; }
+        else if (mvPhase === 'FEED'    && held > (MOB ? 7000 : 6400)){
           mvPhase = 'SURGE'; mvT = now; focus2.surge = 1; }
-        else if (mvPhase === 'SURGE'   && held > 1400){ mvPhase = 'CASCADE'; mvT = now; }
-        else if (mvPhase === 'CASCADE' && held > 2200){ mvPhase = 'REST';   mvT = now; }
+        else if (mvPhase === 'SURGE'   && held > 1900){ mvPhase = 'CASCADE'; mvT = now; }
+        else if (mvPhase === 'CASCADE' && held > 3000){ mvPhase = 'REST';   mvT = now; }
       } else mvPhase = 'REST';
       var MV = {phase: mvPhase, k: (now - mvT) / 1000, focus: focus2};
       if (summonWanted){
@@ -3250,10 +3262,17 @@
             wanderT = now + C.dwell * 0.5 + Math.random() * C.dwellVar * 0.4;
           }
         } else if (wLast){
-          /* the breathing hold — locked, but alive */
-          /* clamped: a frozen clock must never let the breath run away */
-          mouse.x = Math.max(-0.83, Math.min(0.83, mouse.x + Math.sin(now * 0.00047) * 0.00022));
-          mouse.y = Math.max(-0.83, Math.min(0.83, mouse.y + Math.cos(now * 0.00039) * 0.00019));
+          /* THE SETTLE — for the first beat after landing the breath is held
+             completely. A hold that never stops arriving never reads as a
+             decision; the stillness is what makes the lock legible. */
+          var stillFor = (mvPhase === 'LOCK') ? (now - mvT) : 1e9;
+          if (stillFor > 850){
+            /* the breathing hold — locked, but alive */
+            /* clamped: a frozen clock must never let the breath run away */
+            var br = Math.min(1, (stillFor - 850) / 1400);
+            mouse.x = Math.max(-0.83, Math.min(0.83, mouse.x + Math.sin(now * 0.00047) * 0.00022 * br));
+            mouse.y = Math.max(-0.83, Math.min(0.83, mouse.y + Math.cos(now * 0.00039) * 0.00019 * br));
+          }
         }
       }
       launch += (1 - launch) * (1 - Math.pow(MOB ? 0.9955 : 0.988, dt * 60));
@@ -3263,8 +3282,8 @@
       if (focus2){
         var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
         /* tighten as it closes, then finish the last hair so it truly lands */
-        f1 = Math.min(1, f1 * (1 + (MOB ? 2.2 : 3.4) * Math.max(0, 1 - dLock * 6)));
-        if (dLock < 0.004){ m1.x = mouse.x; m1.y = mouse.y; }
+        f1 = Math.min(1, f1 * (1 + (MOB ? 3.0 : 3.6) * Math.max(0, 1 - dLock * 7)));
+        if (dLock < 0.0022){ m1.x = mouse.x; m1.y = mouse.y; }
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
@@ -3315,7 +3334,23 @@
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
       }
-      if (bgx) bgx.drawImage(board.work, 0, 0, board.work.width, board.work.height, 0, 0, W, H);
+      if (bgx){
+        /* the field arrives on the frame clock, not on a stylesheet's promise */
+        bgA += (BG_A - bgA) * (1 - Math.pow(0.972, dt * 60));
+        var bw = bgc.width, bh = bgc.height;
+        bgx.clearRect(0, 0, bw, bh);
+        bgx.globalAlpha = bgA;
+        bgx.drawImage(board.work, 0, 0, board.work.width, board.work.height, 0, 0, bw, bh);
+        /* THE DARK ENERGY PASS — 'lighter' ADDS, so it lifts only what is
+           already lit: the traces and the silicon glow, and the void stays
+           void. Raising plain alpha would have greyed the darkness, which is
+           the one thing the darkness is for. */
+        bgx.globalCompositeOperation = 'lighter';
+        bgx.globalAlpha = bgA * 0.5;
+        bgx.drawImage(board.work, 0, 0, board.work.width, board.work.height, 0, 0, bw, bh);
+        bgx.globalCompositeOperation = 'source-over';
+        bgx.globalAlpha = 1;
+      }
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uOpacity, opacity);
       gl.uniform2f(U.uMouse1, m1.x, m1.y);
