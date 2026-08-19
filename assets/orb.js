@@ -39,6 +39,7 @@
   'uniform float uBright;\n' +
   'uniform samplerCube tMap;uniform sampler2D tRender;uniform sampler2D tImage;uniform float uImageOpacity;\n' +
   '#define DISTANCE 2.0\n' +
+  (matchMedia('(min-width: 1000px)').matches ? '#define MARCH 40\n' : '#define MARCH 26\n') +
   'vec2 wuv(vec2 u){return u*uWorld.xy+uWorld.zw;}\n' +
   'vec3 screenB(vec3 a,vec3 b){return 1.-(1.-a)*(1.-b);}\n' +
   'vec3 sat3(vec3 rgb,float adj){const vec3 W=vec3(0.2125,0.7154,0.0721);return mix(vec3(dot(rgb,W)),rgb,adj);}\n' +
@@ -90,7 +91,7 @@
   '  vec3 camPos=vec3(0.0,0.0,DISTANCE);' +
   '  vec3 ray=normalize(vec3((vUv-vec2(0.5))*uResolution.zw,-1.0));' +
   '  float t=0.0;float tMax=2.15;' +
-  '  for(int i=0;i<40;++i){vec3 pos=camPos+t*ray;float h=sdfD(pos);if(h<0.0006||t>(tMax+uGlow))break;t+=h;}' +
+  '  for(int i=0;i<MARCH;++i){vec3 pos=camPos+t*ray;float h=sdfD(pos);if(h<0.0006||t>(tMax+uGlow))break;t+=h;}' +
   '  vec2 screenUv=vUv;' +
   '  if(t<tMax){' +
   '    vec3 pos=camPos+t*ray;' +
@@ -1270,11 +1271,13 @@
     BQ = Math.round(BQ * 10) / 10;
     var base = document.createElement('canvas');
     var work = document.createElement('canvas');
-    base.width = work.width = Math.round(CW * BQ);
-    base.height = work.height = Math.round(WH * BQ);
+    base.width = Math.round(CW * BQ);
+    base.height = Math.round(WH * BQ);
+    /* the work canvas is only what can be SEEN — a third of the world, or less */
+    work.width = Math.round(CW * BQ);
+    work.height = Math.round(VH * BQ);
     var bctx = base.getContext('2d'), wctx = work.getContext('2d');
     bctx.setTransform(BQ, 0, 0, BQ, 0, 0);
-    wctx.setTransform(BQ, 0, 0, BQ, 0, 0);
     bctx.imageSmoothingQuality = wctx.imageSmoothingQuality = 'high';
     var comps = [], nets = [], crossed = {};
     var u = Math.min(CW, VH) / 12.6;
@@ -1766,9 +1769,12 @@
 
     function render(t, o, top, focus, mv){
       top = top || 0;
-      wctx.setTransform(1, 0, 0, 1, 0, 0);
-      wctx.drawImage(base, 0, 0);
-      wctx.setTransform(BQ, 0, 0, BQ, 0, 0);
+      /* draw in world coordinates, into a window that shows one viewport */
+      wctx.setTransform(BQ, 0, 0, BQ, 0, -top * BQ);
+      wctx.drawImage(base, 0, 0, base.width, base.height, 0, 0, CW, WH);
+      /* nothing outside the window is worth a single instruction */
+      var visTop = top - u * 2, visBot = top + VH + u * 2;
+      function seen(c){ return c.y + c.h > visTop && c.y - c.h < visBot; }
       if (o){
         var avg = 0, nn = 0;
         comps.forEach(function(c){
@@ -1783,13 +1789,15 @@
         wctx.fillStyle = fg;
         wctx.fillRect(o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
       }
-      drawFlow(wctx, t);
+      drawFlow(wctx, t, visTop, visBot);
       drawMoves(wctx, t);
       drawPanel(wctx, t, top);
       nets.forEach(function(n, ni){
         var ea = n.a ? n.a.e : 0, eb = n.b ? n.b.e : 0;
         var e = Math.max(ea, eb);
         if (e < 0.04) return;
+        if (n.pts[0][1] < visTop && n.pts[n.pts.length - 1][1] < visTop) return;
+        if (n.pts[0][1] > visBot && n.pts[n.pts.length - 1][1] > visBot) return;
         wctx.beginPath();
         n.pts.forEach(function(p, j2){ j2 ? wctx.lineTo(p[0], p[1]) : wctx.moveTo(p[0], p[1]); });
         wctx.save();
@@ -1832,7 +1840,7 @@
           wctx.stroke();
         }
       });
-      comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
+      comps.forEach(function(c){ if (c.e > 0.02 && seen(c)) drawComp(wctx, c, c.e, t); });
       /* the finale: at journey's end the board itself answers */
       if (typeof window !== 'undefined' && isFinite(window.__sembleFinale)
           && window.__sembleFinale > 0.9 && isFinite(top) && VH > 0){
@@ -1880,7 +1888,7 @@
         wctx.restore();
       }
       comps.forEach(function(c){
-        if (c.e < 0.4) return;
+        if (c.e < 0.4 || !seen(c)) return;
         var loud = (mv && mv.focus === c) ? 1.9 : 0.95;
         var voices = (mv && mv.focus === c) ? 4 : 2;
         for (var nk = 0; nk < voices; nk++){
@@ -2161,11 +2169,13 @@
     }
 
     /* ═══ THE FLOW OF COMPUTE ═══ it never stops; it only quickens */
-    function drawFlow(g, t){
+    function drawFlow(g, t, visTop, visBot){
       nets.forEach(function(n, ni){
         var hot = Math.max(n.a ? n.a.e : 0, n.b ? n.b.e : 0);
         var base2 = 0.13 + hot * 0.5;
         if (base2 < 0.14) return;
+        var ny0 = n.pts[0][1], ny1 = n.pts[n.pts.length - 1][1];
+        if (Math.max(ny0, ny1) < visTop || Math.min(ny0, ny1) > visBot) return;
         var speed = 0.055 + hot * 0.16;
         for (var k = 0; k < 2; k++){
           var f = ((t * speed) + k * 0.5 + ni * 0.291) % 1;
@@ -2592,7 +2602,7 @@
     var launch = 0;
     function fit(){
       /* render at the screen's real density — this is what kills the pixels */
-      var DPR = Math.min(devicePixelRatio || 1, MOB ? 2 : 2);
+      var DPR = Math.min(devicePixelRatio || 1, MOB ? 1.75 : 2);
       W = innerWidth; H = innerHeight;
       cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
       gl.viewport(0, 0, cv.width, cv.height);
@@ -2661,7 +2671,8 @@
       fetch('/api/pledge').then(function(r){ return r.json(); })
         .then(function(j){
           if (board && board.setStatus)
-            board.setStatus({store: j && typeof j.total === 'number' ? 'LIVE' : 'PENDING'});
+            /* the error body also carries total:0 — only "no error" means live */
+            board.setStatus({store: (j && !j.error) ? 'LIVE' : 'PENDING'});
           tellStatus();
         }).catch(function(){ tellStatus(); });
       setInterval(tellStatus, 4000);
@@ -2959,7 +2970,7 @@
       /* a negative frac (rubber-band) would make pow() NaN and kill the frame */
       if (!(sFrac >= 0)) sFrac = 0; else if (sFrac > 1) sFrac = 1;
       var top2 = worldTop();
-      gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
+      gl.uniform4f(U.uWorld, 1, 1, 0, 0);
       /* growth: an organic curve + a breath + a surge from the reader's own motion */
       var sv = Math.abs(sFrac - lastSF); lastSF = sFrac;
       energy += (Math.min(1, sv * 26) - energy) * (1 - Math.pow(0.93, dt * 60));
@@ -2998,8 +3009,7 @@
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
       }
-      if (bgx) bgx.drawImage(board.work, 0, top2 * board.BQ,
-                             board.work.width, VH * board.BQ, 0, 0, W, H);
+      if (bgx) bgx.drawImage(board.work, 0, 0, board.work.width, board.work.height, 0, 0, W, H);
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uOpacity, opacity);
       gl.uniform2f(U.uMouse1, m1.x, m1.y);
@@ -3048,6 +3058,31 @@
                 top: Math.round(worldTop()), worldMax: worldMax};
       },
       board: function(){ board.render(1, null, worldTop()); return board.work.toDataURL('image/png'); },
+      /* honest timings: what each frame actually costs */
+      perf: function(n){
+        n = n || 20;
+        var top = worldTop(), ob = orbPx();
+        var o = {x: ob.x, y: top + ob.y, r: ob.r};
+        var t1 = performance.now();
+        for (var i = 0; i < n; i++) board.render(i / 10, o, top, wLast, null);
+        var render = (performance.now() - t1) / n;
+        var t2 = performance.now();
+        for (i = 0; i < n; i++) E.uploadWorld(board.work);
+        gl.finish && gl.finish();
+        var upload = (performance.now() - t2) / n;
+        var t3 = performance.now();
+        for (i = 0; i < n; i++){
+          gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+        gl.finish && gl.finish();
+        var shade = (performance.now() - t3) / n;
+        return {renderMs: +render.toFixed(2), uploadMs: +upload.toFixed(2),
+                shadeMs: +shade.toFixed(2),
+                texture: board.work.width + 'x' + board.work.height,
+                megapixels: +(board.work.width * board.work.height / 1e6).toFixed(1),
+                comps: board.comps.length};
+      },
       /* prove the summons: pretend the community just posted something */
       summonTest: function(){
         var chip = board.comps.filter(function(c){ return c.kind === 'motus'; })[0];
@@ -3159,6 +3194,7 @@
     state: full ? full.state : function(){ return null; },
     board: full ? full.board : function(){ return null; },
     shot: full ? full.shot : function(){ return null; },
+    perf: full ? full.perf : function(){ return null; },
     summonTest: full ? full.summonTest : function(){ return null; },
     mini: initMini
   };
