@@ -48,6 +48,29 @@
 .err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:14px;
   background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
 .livecta{margin-top:34px;text-align:center}
+/* ── THE LADDER, said in one line under the meters ── */
+.ladderline{margin:-6px 0 4px;font:400 14px/1.6 ui-monospace,Consolas,monospace;
+  color:rgba(178,224,255,.82);letter-spacing:.02em}
+.ladderline b{color:#dff4ff;font-weight:650}
+
+/* ── who is standing here ── */
+.builders{margin:30px 0 6px}
+.builders .kick{margin:0 0 10px}
+.builders ul{list-style:none;margin:0;padding:0;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.builders li{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:11px 15px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(22,40,62,.55),rgba(10,20,34,.55));
+  border:1px solid rgba(120,190,240,.16);
+  box-shadow:inset 0 1px 0 rgba(190,230,255,.07)}
+.builders .who{font:600 14px/1.3 inherit;color:#e6f4ff;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.builders .amt{font:600 12px/1.3 ui-monospace,Consolas,monospace;
+  color:rgba(150,215,250,.9);white-space:nowrap}
+
+/* a core forming is the moment worth marking — gold, and only then */
+.thanks.ignited{border-color:rgba(226,200,143,.6);color:#f4e3ba;
+  box-shadow:0 0 0 1px rgba(226,200,143,.18),0 18px 60px -22px rgba(226,200,143,.5)}
 </style>
 </head>
 <body>
@@ -84,12 +107,18 @@
   </div>
 
   <div class="meterwrap">
-    <div class="meterline"><span class="lab">THE POOL · SCU PLEDGED</span>
+    <div class="meterline"><span class="lab">SCU PLEDGED · TOWARD THE NEXT CORE</span>
       <span class="val" id="poolVal">—</span></div>
     <div class="bar"><i id="poolBar"></i></div>
     <div class="meterline"><span class="lab" style="color:#ecd396">MCC · MOTUS LEVEL</span>
-      <span class="val" id="mccVal">ignites at 1,000</span></div>
+      <span class="val" id="mccVal">—</span></div>
     <div class="bar gold"><i id="mccBar"></i></div>
+    <div class="ladderline" id="ladderLine">Reading the rail…</div>
+  </div>
+
+  <div class="builders" id="builders" hidden>
+    <p class="kick">Who is standing here</p>
+    <ul id="builderList"></ul>
   </div>
 
   <form class="pform" id="pf" autocomplete="off">
@@ -117,46 +146,111 @@
 <script src="/assets/orb.js"></script>
 <script>
 (function(){
-  var GOAL = 1000;
-  function paint(total){
-    var frac = Math.min(1, total / GOAL);
-    document.getElementById('poolVal').textContent = total + ' / ' + GOAL;
-    document.getElementById('poolBar').style.width = (frac * 100).toFixed(1) + '%';
-    var mcc = total >= GOAL ? 1 : 0;
-    document.getElementById('mccBar').style.width = (frac >= 1 ? 100 : frac * 100 * 0.999) + '%';
-    if (mcc) document.getElementById('mccVal').textContent = 'IGNITED';
-    /* the mainboard is the meter: the orb's SCC bar follows the real pool */
-    window.__semblePool = { scc: frac, mcc: mcc ? 1 : frac * 0.9 };
-  }
-  function load(){
-    fetch('/api/pledge').then(function(r){ return r.json(); })
-      .then(function(j){ paint(j.total || 0); })
-      .catch(function(){ paint(0); });
-  }
-  load(); setInterval(load, 8000);
+  /* Semble has no store of its own yet; MotusMoves does, and the two are one
+     ecosystem. The rail lives there until Semble gets its own. */
+  var RAIL = 'https://www.motusmoves.us/api/semble-compute';
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); };
 
-  document.getElementById('pf').addEventListener('submit', function(e){
+  function paint(d){
+    if (!d || !d.ladder) return;
+    var L = d.ladder, T = d.totals;
+
+    $('poolVal').textContent = fmt(L.scu) + ' SCU · ' + fmt(L.toNextCore) + ' to core ' + (L.scc + 1);
+    $('poolBar').style.width = (L.coreFill * 100).toFixed(1) + '%';
+
+    $('mccVal').textContent = L.mcc > 0
+      ? fmt(L.mcc) + ' IGNITED'
+      : 'ignites at ' + fmt(L.coresPerMcc) + ' cores';
+    $('mccBar').style.width = (L.mccFill * 100).toFixed(1) + '%';
+
+    $('ladderLine').innerHTML =
+      '<b>' + fmt(L.scu) + '</b> units linked into <b>' + fmt(L.scc) + '</b> ' +
+      (L.scc === 1 ? 'core' : 'cores') +
+      (L.mcc > 0 ? ', and <b>' + fmt(L.mcc) + '</b> Motus ' + (L.mcc === 1 ? 'core' : 'cores') + ' ignited' : '') +
+      ' \u00b7 ' + fmt(T.builders) + ' ' + (T.builders === 1 ? 'builder' : 'builders');
+
+    /* THE LOOP CLOSES: the mainboard's own SCC and MCC meters read this, so a
+       pledge made on this page lights the silicon running behind it. */
+    window.__semblePool = { scc: L.coreFill, mcc: L.mccFill };
+
+    var list = $('builderList');
+    if (d.recent && d.recent.length){
+      $('builders').hidden = false;
+      list.innerHTML = '';
+      d.recent.slice(0, 12).forEach(function(r){
+        var li = document.createElement('li');
+        var who = document.createElement('span'); who.className = 'who';
+        who.textContent = r.name;                       /* textContent, never innerHTML */
+        var amt = document.createElement('span'); amt.className = 'amt';
+        amt.textContent = fmt(r.scus) + ' SCU';
+        li.appendChild(who); li.appendChild(amt);
+        list.appendChild(li);
+      });
+    } else {
+      $('builders').hidden = true;
+    }
+  }
+
+  var timer = null;
+  function load(){
+    fetch(RAIL, { cache: 'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j && j.ok) paint(j); })
+      .catch(function(){});
+  }
+  load();
+  /* only poll while someone is actually looking at it */
+  function pace(){
+    clearInterval(timer);
+    if (!document.hidden) timer = setInterval(load, 12000);
+  }
+  pace();
+  document.addEventListener('visibilitychange', function(){ pace(); if (!document.hidden) load(); });
+
+  /* one key per attempt: a double-click, a flaky network or an impatient
+     retry must never count the same pledge twice */
+  var pendingKey = null;
+
+  $('pf').addEventListener('submit', function(e){
     e.preventDefault();
-    var err = document.getElementById('perr'); err.style.display = 'none';
-    var b = document.getElementById('pbtn');
-    b.disabled = true; b.textContent = 'Counting…';
-    fetch('/api/pledge', {
+    var err = $('perr'); err.style.display = 'none';
+    var b = $('pbtn');
+    b.disabled = true; b.textContent = 'Counting\u2026';
+    if (!pendingKey) pendingKey = 'p' + Date.now().toString(36) +
+      Math.random().toString(36).slice(2, 8);
+
+    fetch(RAIL, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        name: document.getElementById('pname').value,
-        contact: document.getElementById('pcontact').value,
-        scus: document.getElementById('pscus').value
+        action: 'pledge',
+        key: pendingKey,
+        name: $('pname').value,
+        contact: $('pcontact').value,
+        scus: $('pscus').value
       })
     }).then(function(r){ return r.json(); }).then(function(j){
-      if (typeof j.total !== 'number') throw new Error(j.error || 'not counted');
-      paint(j.total);
-      document.getElementById('thanks').style.display = 'block';
+      if (!j || !j.ok) throw new Error((j && j.error) || 'not counted');
+      paint(j);
+      pendingKey = null;
+      var th = $('thanks');
+      if (j.ignited && j.ignited.length){
+        var made = j.ignited.map(function(g){
+          return g.kind === 'MCC' ? 'MOTUS CORE ' + g.n : 'CORE ' + g.n;
+        }).join(' \u00b7 ');
+        th.textContent = 'Your units formed ' + made + '.';
+        th.classList.add('ignited');
+      } else {
+        th.textContent = j.already
+          ? 'Already counted \u2014 you are in the pool.'
+          : 'Counted. ' + fmt(j.ladder.toNextCore) + ' units to the next core.';
+        th.classList.remove('ignited');
+      }
+      th.style.display = 'block';
       b.disabled = false; b.textContent = 'Pledge compute';
     }).catch(function(ex){
-      err.textContent = ex.message === 'store not connected yet'
-        ? 'The store is not connected yet. Pledges open the moment it is.'
-        : 'Not counted: ' + ex.message;
+      err.textContent = 'Not counted: ' + ex.message;
       err.style.display = 'block';
       b.disabled = false; b.textContent = 'Pledge compute';
     });

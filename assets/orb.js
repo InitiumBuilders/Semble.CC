@@ -1037,35 +1037,63 @@
       etch(g, c.x, y + h + u * 0.24, 'COMMONS', Math.max(5, u * 0.18), pulse, null, A2k(c));
 
     } else if (c.kind === 'loop'){
-      /* THE LOOP — a closed track. What goes around, compounds. */
-      var lr = c.w * 0.42;
-      g.beginPath(); g.arc(c.x, c.y, lr, 0, 6.29);
-      g.strokeStyle = TRC + (0.5 + 0.2 * pulse).toFixed(3) + ')';
-      g.lineWidth = 2.2; g.stroke();
-      if (e > 0.03){
-        g.save();
-        g.setLineDash([lr * 0.7, lr * 0.5]);
-        g.lineDashOffset = -t * 26;
-        g.shadowColor = A2k(c) + (0.85 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 12 * pulse;
-        g.strokeStyle = A2k(c) + (0.6 * pulse).toFixed(3) + ')';
-        g.beginPath(); g.arc(c.x, c.y, lr, 0, 6.29); g.stroke();
-        g.restore();
+      /* ═══ THE LOOP ═══ the flywheel, and the only part of the board whose
+         whole meaning is motion. It is silicon like everything else, it turns
+         in ONE direction you can see, and every turn it completes leaves a
+         ring behind. What goes around compounds — drawn, not asserted. */
+      breakout(g, x, y, w, h, Math.max(3.2, u * 0.15), u * 0.1);
+      drop(g, x, y, w, h, 3);
+      substrate(g, x, y, w, h, pulse);
+      pkg(g, x, y, w, h, pulse, 3, seed, A2k(c));
+      pin1(g, x + u * 0.12, y + u * 0.12, pulse);
+      var lr = c.w * 0.29;
+      /* the turns already taken — the compounding, as rings inside rings */
+      var turns = 1 + Math.floor(e * 4.4);
+      for (i = 1; i < turns; i++){
+        g.beginPath(); g.arc(c.x, c.y, lr * (1 - i * 0.17), 0, 6.29);
+        g.strokeStyle = A2k(c) + (0.08 + 0.06 * i).toFixed(3) + ')';
+        g.lineWidth = 1; g.stroke();
       }
+      /* the track itself */
+      g.beginPath(); g.arc(c.x, c.y, lr, 0, 6.29);
+      g.strokeStyle = TRC + (0.45 + 0.25 * pulse).toFixed(3) + ')';
+      g.lineWidth = 2.4; g.stroke();
+      /* four stages, fixed — the beat the wheel keeps */
       for (i = 0; i < 4; i++){
-        var la2 = i * Math.PI / 2 + Math.PI / 4;
+        var la2 = i * Math.PI / 2 - Math.PI / 2;
         var nx = c.x + Math.cos(la2) * lr, ny2 = c.y + Math.sin(la2) * lr;
         var ne = e > 0.03 ? (0.5 + 0.5 * Math.sin(t * 2.4 + i * 1.57)) * pulse : 0;
-        g.beginPath(); g.arc(nx, ny2, 3, 0, 6.29);
+        g.beginPath(); g.arc(nx, ny2, 2.6, 0, 6.29);
         g.fillStyle = 'rgba(96,190,250,' + (0.4 + 0.5 * ne).toFixed(3) + ')';
         g.fill();
-        g.beginPath(); g.arc(nx, ny2, 4.6, 0, 6.29);
-        g.strokeStyle = TRC + '0.5)'; g.lineWidth = 0.9; g.stroke();
+        g.beginPath(); g.arc(nx, ny2, 4.4, 0, 6.29);
+        g.strokeStyle = TRC + '0.45)'; g.lineWidth = 0.9; g.stroke();
+      }
+      /* the charge, and the direction it goes — one arrowhead is enough */
+      if (e > 0.03){
+        var lf = (t * 0.21) % 1, lang = lf * 6.2832 - Math.PI / 2;
+        var lx2 = c.x + Math.cos(lang) * lr, ly2 = c.y + Math.sin(lang) * lr;
+        g.save();
+        g.shadowColor = A2k(c) + (0.9 * pulse).toFixed(3) + ')';
+        g.shadowBlur = 14 * pulse;
+        /* the arc it has just travelled, fading behind it */
+        g.beginPath();
+        g.arc(c.x, c.y, lr, lang - 1.15, lang);
+        g.strokeStyle = A2k(c) + (0.55 * pulse).toFixed(3) + ')';
+        g.lineWidth = 2.4; g.stroke();
+        /* the head */
+        g.translate(lx2, ly2); g.rotate(lang + Math.PI / 2);
+        g.beginPath();
+        g.moveTo(0, -4.4); g.lineTo(3.1, 2.4); g.lineTo(-3.1, 2.4);
+        g.closePath();
+        g.fillStyle = 'rgba(226,248,255,' + (0.55 + 0.45 * pulse).toFixed(3) + ')';
+        g.fill();
+        g.restore();
       }
       g.beginPath(); g.arc(c.x, c.y, 2, 0, 6.29);
       g.fillStyle = 'rgba(220,245,255,' + (0.3 + 0.6 * pulse).toFixed(3) + ')';
       g.fill();
-      etch(g, c.x, c.y + lr + u * 0.3, 'THE LOOP', Math.max(5, u * 0.18), pulse, null, A2k(c));
+      etch(g, c.x, y + h + u * 0.24, 'THE LOOP', Math.max(5, u * 0.18), pulse, null, A2k(c));
 
     } else if (c.kind === 'motus'){
       /* A LIVE MOTUSMODEL — one real model from the community, as silicon.
@@ -1328,23 +1356,16 @@
      screen; a gap expressed in u stays the same distance from the chips it
      separates, on every device. The world is then sized to fit the stack. */
   function boardUnit(CW, VH){ return Math.min(CW, VH) / 12.6; }
-  /* a board is NARROW when it is small measured in its own components — the
-     honest test, and the same answer for a phone and a narrow desktop pane */
-  function isNarrow(CW, VH){ return CW / boardUnit(CW, VH) < 14; }
   /* control · →compute · →cortex · →family · →edge · foot.
-     A narrow board splits its crowded tiers into more rows, so it needs the
-     room for them: the stack itself is part of the layout, not a constant. */
-  function boardStack(CW, VH){
-    return isNarrow(CW, VH) ? [6.4, 11.6, 14.6, 8.6, 7.4, 7.0]
-                            : [6.4, 11.0,  9.5, 8.2, 7.0, 4.6];
-  }
+     ONE stack, every screen. There is no wide variant to get wrong. */
+  function boardStack(){ return [6.4, 11.6, 15.2, 8.8, 7.4, 7.0]; }
   function stackTotal(st){
     var i, n = 0;
     for (i = 0; i < st.length; i++) n += st[i];
     return n;
   }
   function worldHeight(CW, VH, mobile){
-    return Math.max(boardUnit(CW, VH) * stackTotal(boardStack(CW, VH)),
+    return Math.max(boardUnit(CW, VH) * stackTotal(boardStack()),
                     VH * (mobile ? 1.9 : 2.4));
   }
 
@@ -1396,12 +1417,15 @@
     var COLS = 12;
     var MARG = u * 1.6;                       /* the quiet at the edges */
     var GRID = (CW - MARG * 2) / COLS;
+    /* the whole board is two columns and a spine. Nothing else. */
+    var LX = MARG + GRID * 2.9;
+    var RX = MARG + GRID * 9.1;
+    var MX = MARG + GRID * 6;
     function col(c){ return MARG + GRID * c; }         /* left edge of column c */
     function span(c, n){ return MARG + GRID * c + GRID * n / 2; }  /* centre of a span */
     /* five bands, each with room to breathe; y is the band's centre line */
     /* one stretch factor takes up the slack, so the tiers keep their ratios */
-    var NARROW = isNarrow(CW, VH);
-    var STACK = boardStack(CW, VH);
+    var STACK = boardStack();
     var K = WH / (u * stackTotal(STACK));
     var BAND = {
       control: u * K * STACK[0],
@@ -1420,13 +1444,14 @@
       seats:  {x: span(4, 3),  y: BAND.control + u * 3.1},
       models: {x: span(8, 2),  y: BAND.control + u * 3.1},
 
-      /* II · COMPUTE — the fabric in the centre, cores left, neural right */
-      sccs:   {x: span(0.6, 3), y: BAND.compute},
-      scu:    {x: span(4.5, 3), y: BAND.compute},
-      npu:    {x: span(8.4, 3), y: BAND.compute},
-      loop:   {x: span(0.6, 3), y: BAND.compute + u * 2.6},
-      mcc:    {x: span(8.4, 3), y: BAND.compute + u * 2.6},
-      brg:    {x: span(4.5, 3), y: BAND.compute + u * 2.6},
+      /* II · COMPUTE — three pairs, descending. Left is what the many do
+         together; right is what it becomes. The eye reads one pair at a time. */
+      sccs:   {x: LX, y: BAND.compute},
+      scu:    {x: RX, y: BAND.compute},
+      loop:   {x: LX, y: BAND.compute + u * 3.1},
+      npu:    {x: RX, y: BAND.compute + u * 3.1},
+      brg:    {x: LX, y: BAND.compute + u * 6.0},
+      mcc:    {x: RX, y: BAND.compute + u * 6.0},
 
       /* III · CORTEX — dead centre. Everything above flows into it. */
       cortex: {x: span(3.5, 5), y: BAND.cortex},
@@ -1444,29 +1469,14 @@
       dom7: {x: span(9.1, 2.4), y: BAND.family + u * 1.35},
 
       /* V · THE EDGE — what the community is running, and the way out */
-      motus0: {x: span(0.4, 3.2), y: BAND.edge},
-      motus1: {x: span(4.4, 3.2), y: BAND.edge},
-      motus2: {x: span(8.4, 3.2), y: BAND.edge},
-      gpu:    {x: span(2, 4),   y: BAND.edge + u * 2.8},
-      phy:    {x: span(8.5, 2), y: BAND.edge + u * 2.8}
+      /* three live models are a RANK, never a 2+1 — each gets its own row */
+      motus0: {x: MX, y: BAND.edge - u * 1.55},
+      motus1: {x: MX, y: BAND.edge},
+      motus2: {x: MX, y: BAND.edge + u * 1.55},
+      gpu:    {x: MX, y: BAND.edge + u * 4.0},
+      phy:    {x: MX, y: BAND.edge + u * 6.0}
     };
 
-    /* ═══ THE NARROW LAW ═══ three groups never fit one phone row; they only
-       ever touch. Two per row, and the stack grows to hold them. */
-    if (NARROW){
-      P.sccs = {x: span(0.3, 5.2),  y: BAND.compute};
-      P.scu  = {x: span(6.5, 5.2),  y: BAND.compute};
-      P.npu  = {x: span(6.5, 5.2),  y: BAND.compute + u * 3.1};
-      P.loop = {x: span(0.3, 5.2),  y: BAND.compute + u * 3.1};
-      P.brg  = {x: span(0.3, 5.2),  y: BAND.compute + u * 6.0};
-      P.mcc  = {x: span(6.5, 5.2),  y: BAND.compute + u * 6.0};
-      /* three live models become a RANK, not a 2+1 — each gets its own row */
-      P.motus0 = {x: span(1.4, 9.2), y: BAND.edge - u * 1.55};
-      P.motus1 = {x: span(1.4, 9.2), y: BAND.edge};
-      P.motus2 = {x: span(1.4, 9.2), y: BAND.edge + u * 1.55};
-      P.gpu    = {x: span(1.4, 9.2), y: BAND.edge + u * 4.0};
-      P.phy    = {x: span(1.4, 9.2), y: BAND.edge + u * 6.0};
-    }
 
 
     /* ═════════════ THE PROCESS ═════════════
@@ -1709,8 +1719,11 @@
         scc = window.__semblePool.scc || 0;
         mcc2 = window.__semblePool.mcc || 0;
       }
-      var y0 = top + VH - u * 1.05, seg = u * 0.3, gap = u * 0.1, x0 = u * 0.6, k;
-      etch(g, x0, y0 - u * 0.35, 'SCC', Math.max(5, u * 0.18), scc > 0 ? 1 : 0, 'left');
+      /* the meters keep clear of the process rails and the tier names: a
+         viewport-anchored readout that touches the lattice is the same bug
+         the state panel had, one lane over */
+      var y0 = top + VH - u * 1.05, seg = u * 0.3, gap = u * 0.1, x0 = u * 2.3, k;
+      etch(g, x0, y0 - u * 0.35, 'SCC · SEMBLE COMPUTE', Math.max(5, u * 0.18), scc > 0 ? 1 : 0, 'left');
       for (k = 0; k < 12; k++){
         var on = k < Math.round(scc * 12);
         g.fillStyle = on ? LIT + '0.8)' : 'rgba(60,100,140,0.25)';
@@ -1718,8 +1731,8 @@
           g.fillRect(x0 + k * (seg + gap), y0, seg, u * 0.26); g.restore(); }
         else g.fillRect(x0 + k * (seg + gap), y0, seg, u * 0.26);
       }
-      var x1 = CW - u * 0.6 - 6 * (seg + gap);
-      etch(g, CW - u * 0.6, y0 - u * 0.35, 'MCC · MOTUS LEVEL', Math.max(5, u * 0.18), mcc2 > 0 ? 1 : 0, 'right');
+      var x1 = CW - u * 2.3 - 6 * (seg + gap);
+      etch(g, CW - u * 2.3, y0 - u * 0.35, 'MCC · MOTUS LEVEL', Math.max(5, u * 0.18), mcc2 > 0 ? 1 : 0, 'right');
       for (k = 0; k < 6; k++){
         var on2 = k < Math.round(mcc2 * 6);
         g.fillStyle = on2 ? 'rgba(232,207,150,0.9)' : 'rgba(120,100,60,0.22)';
@@ -1732,8 +1745,12 @@
     function worldRepaint(){ paintBase(); }
     function paintBase(){
       var g = bctx;
+      /* the void goes deeper and colder — light only reads as energy when
+         there is real dark for it to sit in */
       var bgr = g.createLinearGradient(0, 0, 0, WH);
-      bgr.addColorStop(0, '#050b14'); bgr.addColorStop(1, '#040810');
+      bgr.addColorStop(0, '#03070f');
+      bgr.addColorStop(0.5, '#040713');
+      bgr.addColorStop(1, '#02040c');
       g.fillStyle = bgr; g.fillRect(0, 0, CW, WH);
       var sheen = g.createLinearGradient(0, 0, CW, 0);
       sheen.addColorStop(0, 'rgba(120,170,220,0.02)');
@@ -1780,30 +1797,31 @@
         g.beginPath(); g.arc(vr() * CW, vr() * WH, 0.7 + vr() * 0.8, 0, 6.29);
         g.fillStyle = 'rgba(90,150,200,' + (0.08 + vr() * 0.1).toFixed(3) + ')'; g.fill();
       }
-      /* background trace bundles — the highways between tiers */
-      /* ONE trunk down the spine — the convergence, drawn as a road */
-      var bnd = [[0.50, 0.06, 0.50, 0.96, 5]];
-      bnd.forEach(function(bb, b3){
-        var ax2 = CW * bb[0], ay2 = WH * bb[1], bx3 = CW * bb[2], by3 = WH * bb[3];
-        for (var li = 0; li < bb[4]; li++){
-          var off = (li - bb[4] / 2) * 3.2;
-          var ddx = bx3 - ax2, ddy = by3 - ay2;
-          var mid = Math.min(Math.abs(ddx), Math.abs(ddy));
-          g.beginPath();
-          if (Math.abs(ddx) >= Math.abs(ddy)){
-            g.moveTo(ax2, ay2 + off);
-            g.lineTo(bx3 - Math.sign(ddx) * mid, ay2 + off);
-            g.lineTo(bx3 + off * 0.3, by3 + off);
-          } else {
-            g.moveTo(ax2 + off, ay2);
-            g.lineTo(ax2 + off, by3 - Math.sign(ddy) * mid);
-            g.lineTo(bx3 + off, by3 + off * 0.3);
-          }
-          g.strokeStyle = 'rgba(46,96,142,' + (0.10 + (li % 3) * 0.025).toFixed(3) + ')';
-          g.lineWidth = 0.9;
-          g.stroke();
-        }
-      });
+      /* ═══ THE DELTA ═══ nine feeds enter across the whole width of the
+         board, narrow as they descend, and arrive at the Cortex as ONE trunk
+         that continues to the edge. The convergence is the argument this board
+         makes, so it is drawn in geometry rather than said in a label. */
+      var cvY = BAND.cortex - u * 1.9;
+      for (i = 0; i < 9; i++){
+        var f0 = (i - 4) / 4;
+        var x0 = CW * 0.5 + f0 * (CW * 0.40);
+        var xn = CW * 0.5 + f0 * u * 0.34;
+        g.beginPath();
+        g.moveTo(x0, WH * 0.045);
+        g.bezierCurveTo(x0, BAND.compute * 0.92,
+                        xn + (x0 - xn) * 0.16, BAND.compute + u * 3.4,
+                        xn, cvY);
+        g.strokeStyle = 'rgba(52,108,158,' + (0.055 + (i % 3) * 0.022).toFixed(3) + ')';
+        g.lineWidth = i === 4 ? 1.5 : 1;
+        g.stroke();
+      }
+      /* and out the other side, as one */
+      g.beginPath();
+      g.moveTo(CW * 0.5, BAND.cortex + u * 1.6);
+      g.lineTo(CW * 0.5, WH * 0.975);
+      g.strokeStyle = 'rgba(52,108,158,0.13)';
+      g.lineWidth = 2.2;
+      g.stroke();
       /* flux ghosts — the residue of assembly */
       var fr = lcg(9911);
       for (i = 0; i < 0; i++){
@@ -1935,16 +1953,24 @@
         g.restore();
       });
       /* the five tiers, named down the left margin */
-      [['I \u00b7 CONTROL', BAND.control / WH], ['II \u00b7 COMPUTE', BAND.compute / WH],
-       ['III \u00b7 CORTEX', BAND.cortex / WH], ['IV \u00b7 THE CONSTELLATION', BAND.family / WH],
-       ['V \u00b7 THE LIVING EDGE', BAND.edge / WH]].forEach(function(tt){
+      /* the five tiers say what they are FOR — the descent is a progression,
+         not five bands that happen to be stacked */
+      [['I \u00b7 CONTROL', BAND.control / WH, 'a room opens'],
+       ['II \u00b7 COMPUTE', BAND.compute / WH, 'the many do the work'],
+       ['III \u00b7 CORTEX', BAND.cortex / WH, 'everything arrives here'],
+       ['IV \u00b7 THE CONSTELLATION', BAND.family / WH, 'the family it belongs to'],
+       ['V \u00b7 THE LIVING EDGE', BAND.edge / WH, 'what is running right now']
+      ].forEach(function(tt){
         g.save();
         g.translate(u * 0.52, WH * tt[1]);
         g.rotate(-Math.PI / 2);
-        g.font = '600 ' + Math.max(6, u * 0.2) + 'px ui-monospace, Consolas, monospace';
         g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillStyle = INK + '0.30)';
-        g.fillText(tt[0], 0, 0);
+        g.font = '600 ' + Math.max(6, u * 0.2) + 'px ui-monospace, Consolas, monospace';
+        g.fillStyle = INK + '0.34)';
+        g.fillText(tt[0], 0, -u * 0.17);
+        g.font = '400 ' + Math.max(5, u * 0.155) + 'px ui-monospace, Consolas, monospace';
+        g.fillStyle = INK + '0.19)';
+        g.fillText(tt[2], 0, u * 0.16);
         g.restore();
       });
       etch(g, chokes[3].x + u * 1.15, chokes[0].y, '!MOTUS PWR', Math.max(6, u * 0.2), 0, 'left');
@@ -1970,10 +1996,13 @@
       g.fillStyle = lightG;
       g.fillRect(0, 0, CW, WH);
       /* the grain — what makes a render a photograph */
-      g.globalAlpha = 0.5;
-      for (var gy2 = 0; gy2 < WH; gy2 += 256)
-        for (var gx2 = 0; gx2 < CW; gx2 += 256)
-          g.drawImage(grain, gx2, gy2);
+      /* the tile is sized in COMPONENT units, not pixels — otherwise the same
+         grain reads as heavy film on a phone and as nothing on a desktop */
+      var gt = u * 8.6;
+      g.globalAlpha = 0.62;
+      for (var gy2 = 0; gy2 < WH; gy2 += gt)
+        for (var gx2 = 0; gx2 < CW; gx2 += gt)
+          g.drawImage(grain, gx2, gy2, gt, gt);
       g.globalAlpha = 1;
     }
     paintBase();
@@ -2385,6 +2414,35 @@
 
     /* ═══ THE FLOW OF COMPUTE ═══ it never stops; it only quickens */
     function drawFlow(g, t, visTop, visBot){
+      /* ═══ THE CONVERGENCE ═══ a charge gathers at the wide top of the delta,
+         accelerates as the feeds narrow, and arrives at the Cortex — which
+         answers. Three of them, spaced, so the descent never stops. */
+      var cvY2 = BAND.cortex - u * 1.9, cvTop = WH * 0.045, q4, cph, ease, cy4, cx4, lane;
+      for (q4 = 0; q4 < 3; q4++){
+        cph = ((t * 0.085) + q4 * 0.3333) % 1;
+        ease = cph * cph;                       /* it falls faster as it nears */
+        cy4 = cvTop + (cvY2 - cvTop) * ease;
+        if (cy4 > visTop && cy4 < visBot){
+          lane = (q4 - 1) * 2;                  /* three of the nine feeds */
+          cx4 = CW * 0.5 + (lane / 4) * (CW * 0.40) * (1 - ease * 0.97);
+          g.save();
+          g.shadowColor = 'rgba(120,215,255,0.75)';
+          g.shadowBlur = 13;
+          g.beginPath(); g.arc(cx4, cy4, 1.7 + ease * 1.5, 0, 6.29);
+          g.fillStyle = 'rgba(226,248,255,' + (0.35 + 0.6 * ease).toFixed(3) + ')';
+          g.fill();
+          g.restore();
+        }
+        /* the Cortex answers what arrives */
+        if (cph > 0.93 && cvY2 > visTop - u * 3 && cvY2 < visBot + u * 3){
+          var ans = (cph - 0.93) / 0.07;
+          g.beginPath();
+          g.arc(CW * 0.5, BAND.cortex, u * (0.5 + ans * 2.6), 0, 6.29);
+          g.strokeStyle = 'rgba(140,225,255,' + (0.30 * (1 - ans)).toFixed(3) + ')';
+          g.lineWidth = 1.6;
+          g.stroke();
+        }
+      }
       /* the charge that never stops going round — and each station answers */
       var rf = (t * 0.038) % 1, q2, q3, pr2, dd, near2, lit2;
       for (q2 = 0; q2 < 2; q2++){
