@@ -194,13 +194,13 @@
   function drop(g, x, y, w, h, r){
     g.save();
     g.shadowColor = 'rgba(0,0,0,0.38)';
-    g.shadowBlur = 24; g.shadowOffsetY = 7;
+    g.shadowBlur = Math.min(14, 24); g.shadowOffsetY = 7;
     g.fillStyle = 'rgba(4,7,12,0.85)';
     rr(g, x, y, w, h, r); g.fill();
     g.restore();
     g.save();
     g.shadowColor = 'rgba(0,0,0,0.6)';
-    g.shadowBlur = 9; g.shadowOffsetY = 3;
+    g.shadowBlur = Math.min(14, 9); g.shadowOffsetY = 3;
     g.fillStyle = 'rgba(5,9,15,0.92)';
     rr(g, x, y, w, h, r); g.fill();
     g.restore();
@@ -291,7 +291,7 @@
     if (e > 0.03){
       g.save();
       g.shadowColor = (accStr || LIT) + (0.8 * e).toFixed(3) + ')';
-      g.shadowBlur = 26 * e;
+      g.shadowBlur = Math.min(14, 26 * e);
       g.fillStyle = '#0d1826';
       rr(g, x, y, w, h, r || 3); g.fill();
       g.restore();
@@ -361,7 +361,7 @@
     if (glow && e > 0.03){
       g.save();
       g.shadowColor = A + (0.85 * e).toFixed(3) + ')';
-      g.shadowBlur = 14 * e;
+      g.shadowBlur = Math.min(14, 14 * e);
       g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
       g.restore();
     }
@@ -383,7 +383,7 @@
 
   function polyCap(g, x, y, r, e){
     g.save();
-    g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 5; g.shadowOffsetY = 2;
+    g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = Math.min(14, 5); g.shadowOffsetY = 2;
     g.beginPath(); g.arc(x, y, r, 0, 6.29);
     g.fillStyle = 'rgba(30,52,76,0.95)'; g.fill();
     g.restore();
@@ -451,7 +451,7 @@
       var byy = y + band * (h - lh);
       g.save();
       g.shadowColor = 'rgba(120,225,255,' + (0.8 * e).toFixed(3) + ')';
-      g.shadowBlur = 9 * e;
+      g.shadowBlur = Math.min(14, 9 * e);
       g.fillStyle = 'rgba(150,235,255,' + (0.34 * e).toFixed(3) + ')';
       g.fillRect(x, byy, w, lh * 0.55);
       g.restore();
@@ -498,7 +498,7 @@
     if (e > 0.03){
       g.save();
       g.shadowColor = 'rgba(120,225,255,' + (0.55 * e).toFixed(3) + ')';
-      g.shadowBlur = 16 * e;
+      g.shadowBlur = Math.min(14, 16 * e);
       g.strokeStyle = 'rgba(150,235,255,' + (0.35 * e).toFixed(3) + ')';
       g.lineWidth = 1.2;
       rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 2.5); g.stroke();
@@ -589,7 +589,7 @@
       g.fillStyle = hal;
       g.fillRect(c.x - w * 2, c.y - h * 2, w * 4, h * 4);
       g.shadowColor = acc(c) + (0.9 * surge).toFixed(3) + ')';
-      g.shadowBlur = (34 + 26 * DR) * surge;
+      g.shadowBlur = Math.min(14, (34 + 26 * DR) * surge);
       g.fillStyle = acc(c) + (0.14 * surge).toFixed(3) + ')';
       rr(g, x - 3, y - 3, w + 6, h + 6, 6);
       g.fill();
@@ -667,7 +667,7 @@
         g.setLineDash([300]);
         g.lineDashOffset = 300 * (1 - Math.min(1, e * 1.15));
         g.shadowColor = A + (0.9 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 10 * pulse;
+        g.shadowBlur = Math.min(14, 10 * pulse);
         g.stroke();
         g.restore();
       } else g.stroke();
@@ -709,7 +709,7 @@
       if (e > 0.03){
         g.save();
         g.shadowColor = A + (0.9 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 12 * pulse;
+        g.shadowBlur = Math.min(14, 12 * pulse);
         g.beginPath(); g.arc(c.x, c.y, w * 0.3, 0, 6.29); g.stroke();
         g.restore();
       }
@@ -732,7 +732,7 @@
       if (e > 0.03){
         g.save();
         g.shadowColor = A + (0.8 * e * tick).toFixed(3) + ')';
-        g.shadowBlur = 14 * e;
+        g.shadowBlur = Math.min(14, 14 * e);
         g.strokeStyle = 'rgba(230,240,250,' + (0.6 * e * tick).toFixed(3) + ')';
         rr(g, x, y, w, h, h / 2); g.stroke();
         g.restore();
@@ -783,13 +783,13 @@
         g.lineTo(x, y + chm); g.closePath();
       };
       g.save();
-      g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 10; g.shadowOffsetY = 3;
+      g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = Math.min(14, 10); g.shadowOffsetY = 3;
       oct(); g.fillStyle = '#0a1524'; g.fill();
       g.restore();
       if (e > 0.03){
         g.save();
         g.shadowColor = A + (0.8 * e).toFixed(3) + ')';
-        g.shadowBlur = 24 * e;
+        g.shadowBlur = Math.min(14, 24 * e);
         oct(); g.fillStyle = '#0c1a2c'; g.fill();
         g.restore();
       }
@@ -842,7 +842,7 @@
         if (te > 0.25){
           g.save();
           g.shadowColor = A + (0.8 * te).toFixed(3) + ')';
-          g.shadowBlur = 9 * te;
+          g.shadowBlur = Math.min(14, 9 * te);
           g.stroke();
           g.restore();
           g.beginPath(); g.arc(hx, hy, 1.1, 0, 6.29);
@@ -884,7 +884,7 @@
         if (qt > 0.25){
           g.save();
           g.shadowColor = A + (0.8 * qt).toFixed(3) + ')';
-          g.shadowBlur = 8 * qt;
+          g.shadowBlur = Math.min(14, 8 * qt);
           g.stroke(); g.restore();
         } else g.stroke();
       }
@@ -913,7 +913,7 @@
       if (e > 0.03){
         g.save();
         g.shadowColor = A + (0.9 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 20 * pulse;
+        g.shadowBlur = Math.min(14, 20 * pulse);
         g.fillStyle = 'rgba(60,48,26,0.9)';
         g.fillRect(mdx, mdy, mdw, mdh);
         g.restore();
@@ -971,7 +971,7 @@
             g.fillStyle = 'rgba(210,245,255,' + (0.4 + 0.55 * scp).toFixed(3) + ')';
             g.save();
             g.shadowColor = A2k(c) + (0.85 * scp).toFixed(3) + ')';
-            g.shadowBlur = 7;
+            g.shadowBlur = Math.min(14, 7);
             g.fill();
             g.restore();
           }
@@ -1029,7 +1029,7 @@
       if (e > 0.03){
         g.save();
         g.shadowColor = A2k(c) + (0.7 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 16 * pulse;
+        g.shadowBlur = Math.min(14, 16 * pulse);
         g.strokeStyle = A2k(c) + (0.5 * pulse).toFixed(3) + ')';
         rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 3); g.stroke();
         g.restore();
@@ -1075,7 +1075,7 @@
         var lx2 = c.x + Math.cos(lang) * lr, ly2 = c.y + Math.sin(lang) * lr;
         g.save();
         g.shadowColor = A2k(c) + (0.9 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 14 * pulse;
+        g.shadowBlur = Math.min(14, 14 * pulse);
         /* the arc it has just travelled, fading behind it */
         g.beginPath();
         g.arc(c.x, c.y, lr, lang - 1.15, lang);
@@ -1153,7 +1153,7 @@
       var glow2 = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * 0.9 + c.phase)) * Math.max(0.35, e);
       g.save();
       g.shadowColor = A2k(c) + (0.95 * glow2).toFixed(3) + ')';
-      g.shadowBlur = 22 * glow2;
+      g.shadowBlur = Math.min(14, 22 * glow2);
       g.strokeStyle = A2k(c) + (0.5 + 0.5 * glow2).toFixed(3) + ')';
       g.lineWidth = 1.6;
       g.beginPath();
@@ -1228,7 +1228,7 @@
       if (e > 0.03){
         g.save();
         g.shadowColor = A2k(c) + (0.9 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 13 * pulse;
+        g.shadowBlur = Math.min(14, 13 * pulse);
         g.stroke();
         g.restore();
       } else g.stroke();
@@ -1281,7 +1281,7 @@
           g.beginPath(); g.arc(pn.x, pn.y, u * (0.075 + 0.05 * lact), 0, 6.29);
           g.fillStyle = A2k(c) + (0.22 + 0.7 * lact).toFixed(3) + ')';
           if (lact > 0.25){
-            g.save(); g.shadowColor = A2k(c) + '0.95)'; g.shadowBlur = 10 * lact;
+            g.save(); g.shadowColor = A2k(c) + '0.95)'; g.shadowBlur = Math.min(14, 10 * lact);
             g.fill(); g.restore();
           } else g.fill();
         }
@@ -1307,7 +1307,7 @@
         g.lineWidth = 1; g.stroke();
         g.beginPath(); g.arc(ax3, ay3, 2.6, 0, 6.29);
         g.fillStyle = A2k(c) + (0.3 + 0.6 * at2).toFixed(3) + ')';
-        if (at2 > 0.3){ g.save(); g.shadowColor = A2k(c) + '0.9)'; g.shadowBlur = 8 * at2;
+        if (at2 > 0.3){ g.save(); g.shadowColor = A2k(c) + '0.9)'; g.shadowBlur = Math.min(14, 8 * at2);
           g.fill(); g.restore(); } else g.fill();
       }
       g.beginPath(); g.arc(c.x, c.y, 3.2, 0, 6.29);
@@ -1330,7 +1330,7 @@
              g.lineTo(c.x - sr * 0.88, c.y + sr * 0.6); g.closePath(); }
       if (e > 0.03){
         g.save(); g.shadowColor = A2k(c) + (0.85 * pulse).toFixed(3) + ')';
-        g.shadowBlur = 12 * pulse; g.stroke(); g.restore();
+        g.shadowBlur = Math.min(14, 12 * pulse); g.stroke(); g.restore();
       } else g.stroke();
       etch(g, c.x, y + h + u * 0.2, (c.label || 'CC').toUpperCase(),
            Math.max(4.4, u * 0.14), pulse, null, A2k(c));
@@ -1358,7 +1358,7 @@
   function boardUnit(CW, VH){ return Math.min(CW, VH) / 12.6; }
   /* control · →compute · →cortex · →family · →edge · foot.
      ONE stack, every screen. There is no wide variant to get wrong. */
-  function boardStack(){ return [6.4, 11.6, 15.2, 8.8, 7.4, 7.0]; }
+  function boardStack(){ return [7.2, 13.8, 17.4, 10.4, 8.6, 7.6]; }
   function stackTotal(st){
     var i, n = 0;
     for (i = 0; i < st.length; i++) n += st[i];
@@ -1448,10 +1448,10 @@
          together; right is what it becomes. The eye reads one pair at a time. */
       sccs:   {x: LX, y: BAND.compute},
       scu:    {x: RX, y: BAND.compute},
-      loop:   {x: LX, y: BAND.compute + u * 3.1},
-      npu:    {x: RX, y: BAND.compute + u * 3.1},
-      brg:    {x: LX, y: BAND.compute + u * 6.0},
-      mcc:    {x: RX, y: BAND.compute + u * 6.0},
+      loop:   {x: LX, y: BAND.compute + u * 3.7},
+      npu:    {x: RX, y: BAND.compute + u * 3.7},
+      brg:    {x: LX, y: BAND.compute + u * 7.2},
+      mcc:    {x: RX, y: BAND.compute + u * 7.2},
 
       /* III · CORTEX — dead centre. Everything above flows into it. */
       cortex: {x: span(3.5, 5), y: BAND.cortex},
@@ -1470,11 +1470,11 @@
 
       /* V · THE EDGE — what the community is running, and the way out */
       /* three live models are a RANK, never a 2+1 — each gets its own row */
-      motus0: {x: MX, y: BAND.edge - u * 1.55},
+      motus0: {x: MX, y: BAND.edge - u * 1.85},
       motus1: {x: MX, y: BAND.edge},
-      motus2: {x: MX, y: BAND.edge + u * 1.55},
-      gpu:    {x: MX, y: BAND.edge + u * 4.0},
-      phy:    {x: MX, y: BAND.edge + u * 6.0}
+      motus2: {x: MX, y: BAND.edge + u * 1.85},
+      gpu:    {x: MX, y: BAND.edge + u * 4.8},
+      phy:    {x: MX, y: BAND.edge + u * 7.0}
     };
 
 
@@ -1545,8 +1545,17 @@
       st.f = best;
     });
 
+    /* a machine places parts to a tolerance, and lids come from batches.
+       Seeded from position, so a repaint never shuffles the board. */
+    function placeErr(cx, cy){
+      var n = Math.sin(cx * 12.9898 + cy * 78.233) * 43758.5453;
+      return (n - Math.floor(n)) - 0.5;                     /* -0.5 .. 0.5 */
+    }
     function comp(kind, cx, cy, w, h, extra){
+      var pe = placeErr(cx, cy);
       var c = {kind: kind, x: cx, y: cy, w: w, h: h, u: u, e: 0,
+               rot: pe * 0.021,              /* up to ~0.6 degrees, either way */
+               batch: 0.86 + Math.abs(pe) * 0.28,   /* how this lid takes light */
                phase: (cx * 7 + cy * 13) % 6.28};
       if (extra) for (var k2 in extra) c[k2] = extra[k2];
       comps.push(c);
@@ -1727,7 +1736,7 @@
       for (k = 0; k < 12; k++){
         var on = k < Math.round(scc * 12);
         g.fillStyle = on ? LIT + '0.8)' : 'rgba(60,100,140,0.25)';
-        if (on){ g.save(); g.shadowColor = LIT + '0.7)'; g.shadowBlur = 6;
+        if (on){ g.save(); g.shadowColor = LIT + '0.7)'; g.shadowBlur = Math.min(14, 6);
           g.fillRect(x0 + k * (seg + gap), y0, seg, u * 0.26); g.restore(); }
         else g.fillRect(x0 + k * (seg + gap), y0, seg, u * 0.26);
       }
@@ -1736,13 +1745,26 @@
       for (k = 0; k < 6; k++){
         var on2 = k < Math.round(mcc2 * 6);
         g.fillStyle = on2 ? 'rgba(232,207,150,0.9)' : 'rgba(120,100,60,0.22)';
-        if (on2){ g.save(); g.shadowColor = 'rgba(226,200,143,0.8)'; g.shadowBlur = 7;
+        if (on2){ g.save(); g.shadowColor = 'rgba(226,200,143,0.8)'; g.shadowBlur = Math.min(14, 7);
           g.fillRect(x1 + k * (seg + gap), y0, seg, u * 0.26); g.restore(); }
         else g.fillRect(x1 + k * (seg + gap), y0, seg, u * 0.26);
       }
     }
 
-    function worldRepaint(){ paintBase(); }
+    /* A base repaint is tens of milliseconds on a 14-megapixel board. Even
+       the legitimate ones — the first models arriving, the logos landing —
+       must not land in the middle of a frame, so they are handed to the
+       browser to run when it is idle. Coalesced, so three triggers in the
+       same breath cost one repaint. */
+    var rpQueued = false;
+    var idle = (typeof requestIdleCallback === "function")
+      ? function(fn){ requestIdleCallback(fn, {timeout: 400}); }
+      : function(fn){ setTimeout(fn, 32); };
+    function worldRepaint(){
+      if (rpQueued) return;
+      rpQueued = true;
+      idle(function(){ rpQueued = false; paintBase(); });
+    }
     function paintBase(){
       var g = bctx;
       /* the void goes deeper and colder — light only reads as energy when
@@ -1897,7 +1919,7 @@
         var sw2 = u * 1.7, sh2 = u * 0.6, sx3 = CW - u * 2.6, sy3 = WH * 0.47;
         g.save();
         g.translate(sx3, sy3); g.rotate(-0.06);
-        g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 5; g.shadowOffsetY = 2;
+        g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = Math.min(14, 5); g.shadowOffsetY = 2;
         g.fillStyle = 'rgba(225,232,238,0.85)';
         rr(g, 0, 0, sw2, sh2, 2); g.fill();
         g.shadowColor = 'transparent';
@@ -1987,7 +2009,14 @@
          (motusChips[2].y - motusChips[0].y) + u * 2.05, 6);
       g.stroke();
       g.setLineDash([]);
-      comps.forEach(function(c){ drawComp(g, c, 0, 0); });
+      comps.forEach(function(c){
+        g.save();
+        g.translate(c.x, c.y); g.rotate(c.rot); g.translate(-c.x, -c.y);
+        g.globalAlpha = c.batch;
+        drawComp(g, c, 0, 0);
+        g.globalAlpha = 1;
+        g.restore();
+      });
       /* one light across the whole board — uniformity is what reads digital */
       var lightG = g.createLinearGradient(0, 0, CW, WH);
       lightG.addColorStop(0, 'rgba(190,225,255,0.05)');
@@ -2043,7 +2072,7 @@
         n.pts.forEach(function(p, j2){ j2 ? wctx.lineTo(p[0], p[1]) : wctx.moveTo(p[0], p[1]); });
         wctx.save();
         wctx.shadowColor = LIT + (0.7 * e).toFixed(3) + ')';
-        wctx.shadowBlur = 7 * e;
+        wctx.shadowBlur = Math.min(14, 7 * e);
         wctx.strokeStyle = LIT + (0.55 * e).toFixed(3) + ')';
         wctx.lineWidth = n.w;
         wctx.stroke();
@@ -2055,7 +2084,7 @@
             var pt = along(n, ph);
             wctx.save();
             wctx.shadowColor = LIT + (0.9 * e).toFixed(3) + ')';
-            wctx.shadowBlur = 9;
+            wctx.shadowBlur = Math.min(14, 9);
             wctx.beginPath(); wctx.arc(pt.x, pt.y, 1.7, 0, 6.29);
             wctx.fillStyle = 'rgba(215,248,255,' + (0.85 * e).toFixed(3) + ')';
             wctx.fill();
@@ -2081,6 +2110,11 @@
           wctx.stroke();
         }
       });
+      /* the placement error is baked into the BASE, which is drawn once. It is
+         deliberately NOT applied here: a rotated transform drops shadowed
+         canvas drawing off Chrome fast path and cost 34ms a frame. At 0.6
+         degrees the lit overlay sits within a pixel of the part underneath,
+         and it is a glow, not a hard edge — nothing to see, everything to gain. */
       comps.forEach(function(c){ if (c.e > 0.02 && seen(c)) drawComp(wctx, c, c.e, t); });
       /* the finale: at journey's end the board itself answers */
       if (typeof window !== 'undefined' && isFinite(window.__sembleFinale)
@@ -2107,7 +2141,7 @@
         wctx.font = '600 ' + Math.round(size) + 'px ui-monospace, Consolas, monospace';
         wctx.textAlign = 'center';
         wctx.shadowColor = colour + Math.min(1, alpha * 1.5).toFixed(3) + ')';
-        wctx.shadowBlur = size * 0.55;
+        wctx.shadowBlur = Math.min(14, size * 0.9);   /* glow, never a hard mark */
         wctx.fillStyle = colour + alpha.toFixed(3) + ')';
         wctx.fillText(glyph, 0, 0);
         wctx.restore();
@@ -2130,31 +2164,32 @@
       }
       comps.forEach(function(c){
         if (c.e < 0.4 || !seen(c)) return;
-        /* the part in focus SINGS: more voices, held longer, carrying higher */
-        var loud = (mv && mv.focus === c) ? 2.5 : 1.1;
-        var voices = (mv && mv.focus === c) ? 6 : 3;
+        /* a VOICE, not a banner. Notes larger than the part they rise from
+           read as clip-art; small, few and slow reads as music. */
+        var loud = (mv && mv.focus === c) ? 1 : 0.62;
+        var voices = (mv && mv.focus === c) ? 3 : 2;
         for (var nk = 0; nk < voices; nk++){
-          var cyc = ((t * 0.30) + c.phase * 0.3 + nk * 0.42) % 2.1;
-          var na = Math.sin(Math.PI * cyc / 2.1) * 0.78 * c.e * loud;
+          var cyc = ((t * 0.24) + c.phase * 0.3 + nk * 0.52) % 2.4;
+          var na = Math.sin(Math.PI * cyc / 2.4) * 0.5 * c.e * loud;
           var gl = GLYPH[(nk + Math.floor(c.phase * 3)) % GLYPH.length];
-          note(c.x + Math.sin(cyc * 2.2 + c.phase + nk) * u * 0.95 + (nk - 2.5) * u * 0.52,
-               c.y - c.h / 2 - u * 0.3 - cyc * u * 2.6,
-               u * (0.62 + 0.26 * Math.sin(cyc * 3.0 + nk)) * loud,
-               na, acc(c), gl, Math.sin(cyc * 2.0 + nk) * 0.24);
+          note(c.x + Math.sin(cyc * 2.2 + c.phase + nk) * u * 0.62 + (nk - 1) * u * 0.44,
+               c.y - c.h / 2 - u * 0.28 - cyc * u * 2.2,
+               u * (0.22 + 0.07 * Math.sin(cyc * 3.0 + nk)) * (1 + loud * 0.35),
+               na, acc(c), gl, Math.sin(cyc * 2.0 + nk) * 0.2);
         }
       });
       /* THE CHORD — the surge is heard, not only seen */
       if (mv && mv.phase === 'SURGE' && mv.focus){
-        var ck = Math.min(1, mv.k / 1.5);
+        var ck = Math.min(1, mv.k / 1.7);
         var cf = mv.focus;
-        for (var ci = 0; ci < 11; ci++){
-          var ang = -Math.PI / 2 + (ci - 5) * 0.30;
-          var rad = u * (0.7 + ck * 4.6);
+        for (var ci = 0; ci < 7; ci++){
+          var ang = -Math.PI / 2 + (ci - 3) * 0.30;
+          var rad = u * (0.6 + ck * 3.9);
           note(cf.x + Math.cos(ang) * rad * (0.7 + 0.5 * (ci % 2)),
                cf.y + Math.sin(ang) * rad,
-               u * (0.95 + 0.34 * Math.sin(ci)) * (1 - ck * 0.22),
-               (1 - ck) * 1,
-               acc(cf), GLYPH[ci % GLYPH.length], (ci - 5) * 0.14);
+               u * (0.30 + 0.10 * Math.sin(ci)) * (1 - ck * 0.2),
+               (1 - ck) * 0.6,
+               acc(cf), GLYPH[ci % GLYPH.length], (ci - 3) * 0.12);
         }
         /* the resonance — a ring that rings */
         wctx.save();
@@ -2186,7 +2221,7 @@
           ex += dxn / dl * perp; ey += dyn / dl * perp;
           wctx.save();
           wctx.shadowColor = acc(focus) + '0.9)';
-          wctx.shadowBlur = 10;
+          wctx.shadowBlur = Math.min(14, 10);
           wctx.beginPath(); wctx.arc(ex, ey, 2.6 * (1 - mp * 0.55), 0, 6.29);
           wctx.fillStyle = 'rgba(230,250,255,' + (0.5 + 0.4 * (1 - mp)).toFixed(3) + ')';
           wctx.fill();
@@ -2215,7 +2250,7 @@
           wctx.strokeStyle = bg2;
           wctx.lineWidth = 2.6 * ba;
           wctx.shadowColor = acc(focus) + (0.8 * ba).toFixed(3) + ')';
-          wctx.shadowBlur = 14 * ba;
+          wctx.shadowBlur = Math.min(14, 14 * ba);
           wctx.beginPath();
           wctx.moveTo(o.x, o.y); wctx.lineTo(focus.x, focus.y);
           wctx.stroke();
@@ -2274,7 +2309,7 @@
         wctx.strokeStyle = 'rgba(190,240,255,' + (0.18 * hh).toFixed(3) + ')';
         wctx.lineWidth = 1.2;
         wctx.shadowColor = 'rgba(150,230,255,' + (0.5 * hh).toFixed(3) + ')';
-        wctx.shadowBlur = 10;
+        wctx.shadowBlur = Math.min(14, 10);
         wctx.stroke();
         wctx.restore();
       });
@@ -2287,7 +2322,7 @@
           var pt2 = along(n, fwd ? ck2 : 1 - ck2);
           wctx.save();
           wctx.shadowColor = acc(src) + '0.9)';
-          wctx.shadowBlur = 14 * (1 - ck2);
+          wctx.shadowBlur = Math.min(14, 14 * (1 - ck2));
           wctx.beginPath(); wctx.arc(pt2.x, pt2.y, 3.2 * (1 - ck2 * 0.6), 0, 6.29);
           wctx.fillStyle = 'rgba(235,252,255,' + (0.9 * (1 - ck2)).toFixed(3) + ')';
           wctx.fill();
@@ -2309,7 +2344,7 @@
         wctx.strokeStyle = acc(focus) + '0.55)';
         wctx.lineWidth = 1.2;
         wctx.shadowColor = acc(focus) + '0.6)';
-        wctx.shadowBlur = 8;
+        wctx.shadowBlur = Math.min(14, 8);
         hexPath(wctx, focus.x, focus.y, fr2);
         wctx.stroke();
         wctx.restore();
@@ -2401,7 +2436,7 @@
         if (fade < 0.05) continue;
         g.save();
         g.shadowColor = 'rgba(120,225,255,' + (0.8 * fade).toFixed(3) + ')';
-        g.shadowBlur = 12 * fade;
+        g.shadowBlur = Math.min(14, 12 * fade);
         g.beginPath(); g.arc(px5, py5, 2.6 + fade, 0, 6.29);
         g.fillStyle = 'rgba(225,248,255,' + (0.85 * fade).toFixed(3) + ')';
         g.fill();
@@ -2429,7 +2464,7 @@
           cx4 = CW * 0.5 + (lane / 4) * (CW * 0.40) * (1 - ease * 0.97);
           g.save();
           g.shadowColor = 'rgba(120,215,255,0.75)';
-          g.shadowBlur = 13;
+          g.shadowBlur = Math.min(14, 13);
           g.beginPath(); g.arc(cx4, cy4, 1.7 + ease * 1.5, 0, 6.29);
           g.fillStyle = 'rgba(226,248,255,' + (0.35 + 0.6 * ease).toFixed(3) + ')';
           g.fill();
@@ -2451,7 +2486,7 @@
         pr2 = ringAt(rf + q2 * 0.5);
         if (pr2.y < visTop || pr2.y > visBot) continue;
         g.save();
-        g.shadowColor = 'rgba(120,215,255,0.85)'; g.shadowBlur = 11;
+        g.shadowColor = 'rgba(120,215,255,0.85)'; g.shadowBlur = Math.min(14, 11);
         g.beginPath(); g.arc(pr2.x, pr2.y, 1.9, 0, 6.29);
         g.fillStyle = 'rgba(232,250,255,0.95)'; g.fill();
         g.restore();
@@ -2468,7 +2503,7 @@
         if (lit2 <= 0.02) return;
         g.save();
         g.shadowColor = 'rgba(120,215,255,' + (0.9 * lit2).toFixed(3) + ')';
-        g.shadowBlur = 15 * lit2;
+        g.shadowBlur = Math.min(14, 15 * lit2);
         g.beginPath(); g.arc(st.x, st.y, u * 0.19, 0, 6.29);
         g.strokeStyle = 'rgba(196,240,255,' + (0.85 * lit2).toFixed(3) + ')';
         g.lineWidth = 1.7; g.stroke();
@@ -2496,9 +2531,20 @@
     }
 
     /* the community posts a model; the board grows it */
-    var knownModels = {};
+    var knownModels = {}, modelSig = '';
     function setModels(list){
       if (!list || !list.length) return null;
+      /* a poll that carries the same models must NOT repaint the board: the
+         base is ~14 megapixels and redrawing it is tens of milliseconds on the
+         main thread. Once a minute, for nothing, is a visible stutter. */
+      var sig = '';
+      for (var q = 0; q < motusChips.length; q++){
+        var mm = list[q % list.length];
+        sig += (mm.id || mm.name || '') + '|' + (mm.runs || 0) + '|' +
+               (mm.emoji || '') + '|' + (mm.isLive ? 1 : 0) + '||';
+      }
+      if (sig === modelSig) return null;
+      modelSig = sig;
       var fresh = null;
       for (var i = 0; i < motusChips.length; i++){
         var m = list[i % list.length];
@@ -2582,7 +2628,7 @@
           g.setLineDash([400]);
           g.lineDashOffset = 400 * (1 - Math.min(1, e * 1.12));
           g.shadowColor = glow + (0.95 * pulse).toFixed(3) + ')';
-          g.shadowBlur = 16 * Math.max(0.35, pulse);
+          g.shadowBlur = Math.min(14, 16 * Math.max(0.35, pulse));
           g.stroke();
           g.restore();
         } else g.stroke();
@@ -2620,7 +2666,7 @@
           }
         }
         g.save();
-        g.shadowColor = glow + '0.95)'; g.shadowBlur = 10;
+        g.shadowColor = glow + '0.95)'; g.shadowBlur = Math.min(14, 10);
         g.beginPath(); g.arc(c.x, c.y, 3.4 + 1.4 * pulse, 0, 6.29);
         g.fillStyle = 'rgba(235,252,255,' + (0.6 + 0.4 * pulse).toFixed(3) + ')';
         g.fill();
@@ -2645,7 +2691,7 @@
           if (ct > 0.25){
             g.save();
             g.shadowColor = glow + (0.9 * ct).toFixed(3) + ')';
-            g.shadowBlur = 11 * ct;
+            g.shadowBlur = Math.min(14, 11 * ct);
             g.strokeStyle = glow + (0.5 + 0.5 * ct).toFixed(3) + ')';
             g.lineWidth = 1.2; g.stroke();
             g.restore();
@@ -2661,7 +2707,7 @@
       } else if (c.sym === 'time'){
         /* NEXT SESH — the keeper of time; the countdown arc closes */
         g.save();
-        if (e > 0.02){ g.shadowColor = glow + (0.7 * pulse).toFixed(3) + ')'; g.shadowBlur = 12 * pulse; }
+        if (e > 0.02){ g.shadowColor = glow + (0.7 * pulse).toFixed(3) + ')'; g.shadowBlur = Math.min(14, 12 * pulse); }
         g.beginPath(); g.arc(c.x, c.y, R * 0.5, 0, 6.29);
         g.strokeStyle = 'rgba(170,200,225,' + (0.35 + 0.4 * pulse).toFixed(3) + ')';
         g.lineWidth = 2; g.stroke();
@@ -2800,8 +2846,8 @@
     if (MOB && document.querySelector('.tabs')) return null;  /* the app has its orblet */
     var C = {
       displacementSpeed: 0.10,   /* the surface barely stirs       */
-      sizeDefault: 0.275,
-      lerp1: 0.0052, lerp2: 0.0086,   /* it moves like it has mass   */
+      sizeDefault: 0.235,        /* it begins smaller than it ends */
+      lerp1: 0.0038, lerp2: 0.0063,   /* it moves like it has mass   */
       scrollLerp1: 0.029, scrollLerp2: 0.022,
       reach: 0.3,                /* shorter leash — it holds place */
       sideDrift: 0.16, yClamp: 0.22,
@@ -2813,7 +2859,7 @@
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 2400;        /* it settles before it begins to move     */
       C.reach = 0.34;
-      C.lerp1 = 0.0024; C.lerp2 = 0.0041;      /* heavier still on a phone  */
+      C.lerp1 = 0.0018; C.lerp2 = 0.0031;      /* heavier still on a phone  */
       C.scrollLerp1 = 0.024; C.scrollLerp2 = 0.018;
       C.displacementSpeed = 0.072;              /* the surface barely stirs  */
       C.dwell = 17000; C.dwellVar = 10000;      /* it stays, and considers   */
@@ -2908,8 +2954,8 @@
     var W, H, board, VH, worldMax = 0, ky = 1, baseSize = 0.3;
     /* this visit's growth personality — no two loads bloom alike */
     var GR = {
-      a: 0.22 + Math.random() * 0.12,      /* how small it starts        */
-      b: 0.92 + Math.random() * 0.52,      /* how large it ends          */
+      a: 0.13 + Math.random() * 0.07,      /* how small it starts        */
+      b: 1.06 + Math.random() * 0.58,      /* how large it ends          */
       curve: 0.72 + Math.random() * 0.95,  /* early bloom vs late surge  */
       wob: 0.03 + Math.random() * 0.05,    /* the breath in its size     */
       ph: Math.random() * 6.28
@@ -3174,7 +3220,7 @@
       return changed;
     }
 
-    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3, lastPaint = -1e9, paintMs = -1;
+    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.16, lastPaint = -1e9, paintMs = -1;
     function draw(now){
       var t = (now - t0) / 1000 * C.displacementSpeed;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -3276,7 +3322,7 @@
           }
         }
       }
-      launch += (1 - launch) * (1 - Math.pow(MOB ? 0.9955 : 0.988, dt * 60));
+      launch += (1 - launch) * (1 - Math.pow(MOB ? 0.9971 : 0.9946, dt * 60));
       var LAU = 0.22 + 0.78 * launch;      /* starts at a fifth of its ease */
       var f1 = (1 - Math.pow(1 - lerp1, dt * 60)) * LAU;
       var f2 = (1 - Math.pow(1 - lerp2, dt * 60)) * LAU;

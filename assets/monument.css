@@ -50,7 +50,10 @@ h1{font-size:clamp(4rem,11vw,9.5rem);font-weight:700;text-transform:uppercase;
 h2{font-size:clamp(2.6rem,5.6vw,4.6rem);font-weight:700;text-transform:uppercase;
   letter-spacing:-.04em;line-height:.98}
 h3{font-weight:600}
-.kick{color:#4c4c4c;letter-spacing:.3em}
+/* the kicker is a LABEL, not a whisper. #4c4c4c on this ground measured a
+   contrast ratio of 2.35 — unreadable, and it was set here, in the last
+   stylesheet, so every readable value declared upstream lost silently. */
+.kick{color:var(--signal);opacity:.95;letter-spacing:.3em}
 p{color:#cccccc}
 p.lede{color:#fff}
 
