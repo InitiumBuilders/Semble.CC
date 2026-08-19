@@ -2826,12 +2826,13 @@
     var E = makeEngine(cv);
     if (!E){ cv.remove(); return null; }
     var gl = E.gl, U = E.U;
-    /* ═══ THE FIELD ═══ the board IS the ground of the page. It sits above
-       the atmosphere and below the film grain, and the orb is a lens over it
-       rather than a window into somewhere else. ?board=0 turns it off. */
+    /* ═══ THE FIELD ═══ off by default, and that is the point: the cover is
+       unbroken and THE ORB IS THE ONLY WAY THROUGH IT. Showing the circuit
+       everywhere makes the looking glass decorative. ?board=1 opens it up,
+       which is what the broadcast overlay wants. */
     var bgc = null, bgx = null, bgA = 0;
     var BG_A = MOB ? 0.74 : 0.66;
-    if (new URLSearchParams(location.search).get('board') !== '0'){
+    if (new URLSearchParams(location.search).get('board') === '1'){
       bgc = document.createElement('canvas');
       /* no CSS transition: it would not advance in a tab that is not
          rendering, and the field would sit invisible over a live board */
