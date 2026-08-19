@@ -507,6 +507,32 @@
     });
   }
 
+  /* ═══ THE REAL MARKS ═══ each platform's own logo, from its own site.
+     All six serve `access-control-allow-origin: *`, so the canvas stays
+     untainted and WebGL can still upload it. If one fails, the drawn mark
+     stands in — the board never waits on the network. */
+  var MARKS = {};
+  function loadMark(key, url, onready){
+    if (MARKS[key] !== undefined) return;
+    MARKS[key] = null;
+    var im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = function(){ MARKS[key] = im; if (onready) onready(); };
+    im.onerror = function(){ MARKS[key] = false; };
+    im.src = url;
+  }
+  function drawMark(g, key, cx, cy, size, alpha){
+    var im = MARKS[key];
+    if (!im) return false;
+    var sc = size / Math.max(im.width, im.height);
+    var w2 = im.width * sc, h2 = im.height * sc;
+    g.save();
+    g.globalAlpha = alpha;
+    g.drawImage(im, cx - w2 / 2, cy - h2 / 2, w2, h2);
+    g.restore();
+    return true;
+  }
+
   function hexPath(g, cx, cy, r){
     g.beginPath();
     for (var i = 0; i < 6; i++){
@@ -1099,6 +1125,13 @@
       qfpLeads(g, x, y, w, h, Math.max(3, u * 0.15), u * 0.09, pulse, A2k(c));
       pin1(g, x + u * 0.11, y + u * 0.11, pulse);
       var mr = Math.min(w, h) * 0.24, mkx = c.x, mky = c.y - u * 0.06;
+      /* the real thing, if the site gave it to us */
+      if (c.logo && drawMark(g, c.mark, mkx, mky, Math.min(w, h) * 0.52,
+                             0.55 + 0.45 * pulse)){
+        etch(g, c.x, y + h + u * 0.2, (c.label || '').toUpperCase().slice(0, 15),
+             Math.max(4.6, u * 0.15), pulse, null, A2k(c));
+        return;
+      }
       g.strokeStyle = A2k(c) + (0.4 + 0.55 * pulse).toFixed(3) + ')';
       g.lineWidth = 1.4;
       g.lineCap = 'round';
@@ -1429,25 +1462,35 @@
     /* ═══ THE CONSTELLATION ═══ every platform in the family, in silicon.
        The order is drawn fresh on every load — this board is never twice
        the same board. */
+    /* The order is deliberate, and it is the same for everyone: the path a
+       thing takes through the ecosystem. Row one is where people move;
+       row two is what carries them. */
     var DOMAINS = [
-      {label: 'Motus.Market', mark: 'market'},
-      {label: 'Initium.Builders', mark: 'builders'},
-      {label: 'Motus.MOV', mark: 'mov'},
-      {label: 'Motus.Events', mark: 'events'},
-      {label: 'MotusMoves.US', mark: 'moves'},
-      {label: 'Votus Units', mark: 'votus'},
-      {label: 'DuoDrives', mark: 'duo'},
-      {label: 'MotusMax', mark: 'max'}
+      {label: 'MotusMoves.US',    mark: 'moves',    logo: 'https://www.motusmoves.us/assets/img/logo.png'},
+      {label: 'Motus.Events',     mark: 'events',   logo: 'https://www.motus.events/icon.png'},
+      {label: 'Motus.Market',     mark: 'market',   logo: 'https://www.motus.market/assets/logo.png'},
+      {label: 'Motus.MOV',        mark: 'mov',      logo: 'https://www.motus.mov/assets/img/logo.png'},
+      {label: 'Initium.Builders', mark: 'builders', logo: 'https://www.initium.builders/initium-logo.png'},
+      {label: 'Votus Units',      mark: 'votus'},
+      {label: 'DuoDrives',        mark: 'duo'},
+      {label: 'MotusMax',         mark: 'max'}
     ];
-    var shuffled = DOMAINS.slice();
-    for (i = shuffled.length - 1; i > 0; i--){
-      var jj = Math.floor(Math.random() * (i + 1));
-      var tmp = shuffled[i]; shuffled[i] = shuffled[jj]; shuffled[jj] = tmp;
-    }
     var domains = [];
     for (i = 0; i < 8; i++)
       domains.push(comp('domain', P['dom' + i].x, P['dom' + i].y, u * 1.15, u * 1.15,
-                        {label: shuffled[i].label, mark: shuffled[i].mark}));
+                        {label: DOMAINS[i].label, mark: DOMAINS[i].mark,
+                         logo: !!DOMAINS[i].logo}));
+    /* fetch each mark; repaint the static layer once they land */
+    (function(){
+      var rp = 0;
+      function coalesce(){        /* five marks land; the board repaints once */
+        clearTimeout(rp);
+        rp = setTimeout(function(){ worldRepaint(); }, 220);
+      }
+      DOMAINS.forEach(function(d){
+        if (d.logo) loadMark(d.mark, d.logo, coalesce);
+      });
+    })();
     var agents = comp('agents', P.agents.x, P.agents.y, u * 1.6, u * 1.6);
     var CCM = ['Coordination', 'Community', 'Commons', 'Core'];
     var ccms = [];
