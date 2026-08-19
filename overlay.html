@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Semble — Live Overlay</title>
+<meta name="robots" content="noindex"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#e8f4fc}
+*{box-sizing:border-box;margin:0}
+body{background:#000;min-height:100vh;overflow:hidden;font-family:Sora,sans-serif;color:var(--ink)}
+.hud{position:fixed;left:28px;bottom:24px;z-index:2;
+  padding:16px 20px;border-radius:20px;
+  background:rgba(4,8,14,.72);border:1px solid rgba(92,225,255,.22);
+  backdrop-filter:blur(10px);min-width:320px}
+.hud .t{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;
+  color:#9fdcf5;margin:0 0 8px}
+.hud .big{font-weight:800;font-size:26px;margin:0 0 10px}
+.bar{height:10px;border-radius:7px;background:rgba(60,100,140,.25);overflow:hidden;margin:0 0 8px}
+.bar i{display:block;height:100%;width:0%;border-radius:7px;
+  background:linear-gradient(90deg,rgba(92,225,255,.75),rgba(150,240,255,.95));
+  box-shadow:0 0 12px rgba(92,225,255,.5);transition:width 1.2s cubic-bezier(.22,.9,.24,1)}
+.bar.gold i{background:linear-gradient(90deg,rgba(200,168,100,.8),rgba(240,215,150,.95));
+  box-shadow:0 0 12px rgba(226,200,143,.6)}
+.cta{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;color:#bfeaff;opacity:.85}
+.ign{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:3;
+  pointer-events:none}
+.ign b{font-size:clamp(40px,7vw,84px);font-weight:800;color:#f4e3b2;
+  text-shadow:0 0 60px rgba(226,200,143,.8)}
+body.ignited .ign{display:flex}
+</style>
+</head>
+<body>
+<div class="hud">
+  <p class="t">MOTUS LIVE · CROWDFUNDED COMPUTE</p>
+  <p class="big"><span id="total">0</span> SCU</p>
+  <div class="bar"><i id="pool"></i></div>
+  <div class="bar gold"><i id="gold"></i></div>
+  <p class="cta">FUEL IT · SEMBLE.CC/COMPUTE</p>
+</div>
+<div class="ign"><b>MCC IGNITED</b></div>
+
+<script src="/assets/orb.js"></script>
+<script>
+(function(){
+  /* the mainboard is the broadcast graphic — orb.js in board mode paints it */
+  var GOAL = 1000, was = false;
+  function load(){
+    fetch('/api/pledge').then(function(r){ return r.json(); }).then(function(j){
+      var total = j.total || 0, frac = Math.min(1, total / GOAL);
+      document.getElementById('total').textContent = total;
+      document.getElementById('pool').style.width = (frac * 100).toFixed(1) + '%';
+      document.getElementById('gold').style.width = (frac * 100).toFixed(1) + '%';
+      window.__semblePool = { scc: frac, mcc: frac >= 1 ? 1 : frac * 0.9 };
+      if (frac >= 1 && !was){ document.body.classList.add('ignited'); was = true; }
+    }).catch(function(){});
+  }
+  load(); setInterval(load, 6000);
+})();
+</script>
+</body>
+</html>

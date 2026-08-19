@@ -1014,6 +1014,10 @@
                            fingersX + fingersW * 0.28 + i * u * 0.22, WH - u * 0.5), 1);
 
     function meters(g, scc, mcc2, top){
+      if (typeof window !== 'undefined' && window.__semblePool){
+        scc = window.__semblePool.scc || 0;
+        mcc2 = window.__semblePool.mcc || 0;
+      }
       var y0 = top + VH - u * 1.05, seg = u * 0.3, gap = u * 0.1, x0 = u * 0.6, k;
       etch(g, x0, y0 - u * 0.35, 'SCC', Math.max(5, u * 0.18), scc > 0 ? 1 : 0, 'left');
       for (k = 0; k < 12; k++){
@@ -1649,6 +1653,13 @@
     var E = makeEngine(cv);
     if (!E){ cv.remove(); return null; }
     var gl = E.gl, U = E.U;
+    var bgc = null, bgx = null;
+    if (new URLSearchParams(location.search).get('board') === '1'){
+      bgc = document.createElement('canvas');
+      bgc.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:-1';
+      document.body.insertBefore(bgc, document.body.firstChild);
+      bgx = bgc.getContext('2d');
+    }
 
     [].forEach.call(document.querySelectorAll('.wrap, .hero, nav.nav, footer, .app, .tabs, .cc'), function(el){
       var cs = getComputedStyle(el);
@@ -1691,6 +1702,7 @@
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
       var size = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault;
       gl.uniform1f(U.uSize, size * 1.12);
+      if (bgc){ bgc.width = W; bgc.height = H; }
       VH = Math.round(H / 2);
       var WHW = Math.round(VH * WORLD_K);
       board = makeBoard(Math.round(W / 2), WHW, VH);
@@ -1809,6 +1821,7 @@
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
       }
+      if (bgx) bgx.drawImage(board.work, 0, top2, board.work.width, VH, 0, 0, W, H);
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uOpacity, opacity);
       gl.uniform2f(U.uMouse1, m1.x, m1.y);

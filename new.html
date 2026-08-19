@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Init a Sesh</title>
+<meta name="description" content="Open a Semble Session. It becomes real when enough people commit."/>
+<meta name="theme-color" content="#05070e"/>
+<meta property="og:title" content="Semble — Init a Sesh"/>
+<meta property="og:image" content="/assets/mark-512.png"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css" media="(min-width:1000px)"/>
+<style>
+.initform{max-width:520px;margin:0 auto;padding:96px 20px 80px}
+.initform h1{font-family:Sora,sans-serif;font-weight:800;font-size:clamp(30px,7vw,44px);margin:0 0 6px}
+.initform .sub{color:var(--ink);opacity:.85;margin:0 0 26px}
+.f{margin:0 0 16px}
+.f label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px;color:var(--ink)}
+.f input{width:100%;padding:13px 14px;border-radius:16px;border:1px solid rgba(140,180,215,.22);
+  background:rgba(10,16,26,.72);color:var(--ink);font:500 16px Inter,sans-serif;outline:none}
+.f input:focus{border-color:rgba(92,225,255,.55);box-shadow:0 0 0 3px rgba(92,225,255,.12)}
+.models{display:flex;gap:8px;flex-wrap:wrap}
+.models button{padding:9px 14px;border-radius:14px;border:1px solid rgba(140,180,215,.22);
+  background:rgba(10,16,26,.6);color:var(--ink);font:600 13px Inter,sans-serif}
+.models button.on{border-color:rgba(92,225,255,.6);background:rgba(92,225,255,.1);color:#dff6ff}
+.trow{display:flex;align-items:center;gap:14px}
+.trow input{max-width:110px;text-align:center}
+.trow .hint{font-size:13px;opacity:.7}
+.go{margin-top:22px}
+.err{display:none;margin:14px 0 0;padding:12px 14px;border-radius:14px;
+  background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
+.made{display:none;text-align:center}
+.made h2{font-family:Sora,sans-serif;font-size:clamp(24px,6vw,34px);margin:0 0 10px}
+.made .lnk{font-family:"IBM Plex Mono",monospace;font-size:14px;padding:13px 14px;border-radius:16px;
+  background:rgba(10,16,26,.72);border:1px solid rgba(92,225,255,.35);word-break:break-all;margin:0 0 14px}
+body.made-on .initform form{display:none}
+body.made-on .made{display:block}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a>
+    <a href="/features">Features</a><a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<section class="initform">
+  <p class="kick">The first move</p>
+  <h1>Init a Sesh</h1>
+  <p class="sub">Open it. It becomes real when enough people commit.</p>
+
+  <form id="f" autocomplete="off">
+    <div class="f"><label for="what">The Semble</label>
+      <input id="what" maxlength="90" placeholder="What are we gathering around?" required/></div>
+    <div class="f"><label for="where">Where</label>
+      <input id="where" maxlength="90" placeholder="A real place" required/></div>
+    <div class="f"><label for="when">When</label>
+      <input id="when" type="datetime-local" required/></div>
+    <div class="f"><label>Model</label>
+      <div class="models" id="models">
+        <button type="button" class="on" data-m="Coordination Call">Coordination Call</button>
+        <button type="button" data-m="Community Call">Community Call</button>
+        <button type="button" data-m="Commons Circle">Commons Circle</button>
+        <button type="button" data-m="Core Call">Core Call</button>
+      </div></div>
+    <div class="f"><label for="threshold">Threshold</label>
+      <div class="trow"><input id="threshold" type="number" min="2" max="50" value="4" required/>
+      <span class="hint">people committed, counting you, before it is real</span></div></div>
+    <div class="f"><label for="name">Your name</label>
+      <input id="name" maxlength="40" placeholder="Who opens it" required/></div>
+    <button class="btn go" type="submit" id="goBtn">Init</button>
+    <div class="err" id="err"></div>
+  </form>
+
+  <div class="made" id="made">
+    <h2>It's open.</h2>
+    <p class="sub">Share the link. When the threshold fills — you're on it.</p>
+    <div class="lnk" id="lnk"></div>
+    <button class="btn" id="copy" type="button">Copy the link</button>
+    <a class="btn btn--ghost" id="view" href="#">Open the Sesh</a>
+  </div>
+</section>
+
+<script src="/assets/semble.js"></script>
+<script src="/assets/orb.js"></script>
+<script>
+(function(){
+  var model = 'Coordination Call';
+  var mb = document.getElementById('models');
+  mb.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    model = b.dataset.m;
+    [].forEach.call(mb.children, function(x){ x.classList.toggle('on', x === b); });
+  });
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('err');
+    err.style.display = 'none';
+    var go = document.getElementById('goBtn');
+    go.disabled = true; go.textContent = 'Opening…';
+    fetch('/api/sesh', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        what: document.getElementById('what').value,
+        where: document.getElementById('where').value,
+        when: document.getElementById('when').value,
+        model: model,
+        threshold: document.getElementById('threshold').value,
+        name: document.getElementById('name').value
+      })
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (!j.id){ throw new Error(j.error || 'could not open'); }
+      try { localStorage.setItem('semble.edit.' + j.id, j.editKey); } catch (_e) {}
+      var url = location.origin + '/s?i=' + j.id;
+      document.getElementById('lnk').textContent = url;
+      document.getElementById('view').href = url;
+      document.getElementById('copy').onclick = function(){
+        (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject())
+          .then(function(){ document.getElementById('copy').textContent = 'Copied.'; })
+          .catch(function(){});
+      };
+      document.body.classList.add('made-on');
+    }).catch(function(ex){
+      err.textContent = ex.message === 'store not connected yet'
+        ? 'The store is not connected yet. This goes live the moment it is.'
+        : 'Could not open it: ' + ex.message;
+      err.style.display = 'block';
+      go.disabled = false; go.textContent = 'Init';
+    });
+  });
+})();
+</script>
+</body>
+</html>

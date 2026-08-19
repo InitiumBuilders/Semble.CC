@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Sesh</title>
+<meta name="description" content="A Semble Session. It becomes real when the threshold fills."/>
+<meta name="theme-color" content="#05070e"/>
+<meta property="og:title" content="Semble — you're invited to a Sesh"/>
+<meta property="og:image" content="/assets/mark-512.png"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css" media="(min-width:1000px)"/>
+<style>
+.sesh{max-width:520px;margin:0 auto;padding:96px 20px 80px}
+.sesh .kick{margin-bottom:4px}
+.sesh h1{font-family:Sora,sans-serif;font-weight:800;font-size:clamp(28px,6.6vw,42px);margin:0 0 14px}
+.meta{display:flex;flex-direction:column;gap:6px;margin:0 0 22px;font-size:15px}
+.meta b{font-weight:600}
+.meta .mono{font-size:12.5px;opacity:.75}
+.seats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 8px}
+.seat{width:44px;height:44px;border-radius:16px;border:1px dashed rgba(140,180,215,.3);
+  display:flex;align-items:center;justify-content:center;
+  font:700 15px Sora,sans-serif;color:#dff6ff}
+.seat.filled{border:1px solid rgba(92,225,255,.5);background:rgba(92,225,255,.1);
+  box-shadow:0 0 14px rgba(92,225,255,.18)}
+.names{font-size:13.5px;opacity:.8;margin:0 0 22px;line-height:1.7}
+.jform{display:flex;gap:10px;margin:0 0 10px}
+.jform input{flex:1;padding:13px 14px;border-radius:16px;border:1px solid rgba(140,180,215,.22);
+  background:rgba(10,16,26,.72);color:var(--ink);font:500 16px Inter,sans-serif;outline:none}
+.jform input:focus{border-color:rgba(92,225,255,.55)}
+.onit{display:none;text-align:center;padding:26px 0 4px}
+.onit h2{font-family:Sora,sans-serif;font-weight:800;font-size:clamp(30px,8vw,44px);margin:0 0 8px;
+  color:#eafaff;text-shadow:0 0 26px rgba(92,225,255,.4)}
+.onit p{opacity:.85;margin:0 0 18px}
+body.certain .onit{display:block}
+body.certain .jform{display:none}
+.state{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;
+  text-transform:uppercase;opacity:.65;margin:0 0 18px}
+.err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:14px;
+  background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
+.share{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a>
+    <a href="/features">Features</a><a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<section class="sesh" id="page" style="display:none">
+  <p class="kick">A Semble Session</p>
+  <h1 id="what"></h1>
+  <div class="meta">
+    <span><b id="where"></b></span>
+    <span id="when"></span>
+    <span class="mono" id="modelLine"></span>
+  </div>
+  <p class="state" id="state"></p>
+  <div class="seats" id="seats"></div>
+  <p class="names" id="names"></p>
+
+  <form class="jform" id="join">
+    <input id="jname" maxlength="40" placeholder="Your name" required/>
+    <button class="btn" type="submit" id="jbtn">Commit</button>
+  </form>
+
+  <div class="onit">
+    <h2>You're on it.</h2>
+    <p>The threshold filled. It's real. Everyone is told once.</p>
+    <a class="btn" id="ccBtn" href="#">Open the CC</a>
+  </div>
+
+  <button class="btn btn--ghost share" id="share" type="button">Share the link</button>
+  <div class="err" id="err"></div>
+</section>
+
+<section class="sesh" id="missing" style="display:none">
+  <h1>No such Sesh.</h1>
+  <p class="sub">The link may be wrong, or the store is not connected yet.</p>
+  <a class="btn" href="/new">Init one</a>
+</section>
+
+<script src="/assets/semble.js"></script>
+<script src="/assets/orb.js"></script>
+<script>
+(function(){
+  var id = new URLSearchParams(location.search).get('i') || '';
+  if (!/^[a-z0-9-]{6,40}$/.test(id)){ show('missing'); return; }
+  var wasCertain = false;
+
+  function show(which){
+    document.getElementById('page').style.display = which === 'page' ? 'block' : 'none';
+    document.getElementById('missing').style.display = which === 'missing' ? 'block' : 'none';
+  }
+  function render(st){
+    show('page');
+    document.getElementById('what').textContent = st.what;
+    document.getElementById('where').textContent = st.where;
+    var d = new Date(st.when);
+    document.getElementById('when').textContent = isNaN(d) ? st.when
+      : d.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    document.getElementById('modelLine').textContent = st.model + ' · opened by ' + st.host;
+    var n = st.commits.length, left = Math.max(0, st.threshold - n);
+    document.getElementById('state').textContent = st.certain
+      ? 'CERTAIN · ' + n + ' ON IT'
+      : n + ' OF ' + st.threshold + ' · ' + left + ' TO GO';
+    var seats = document.getElementById('seats');
+    seats.innerHTML = '';
+    for (var i = 0; i < st.threshold; i++){
+      var s = document.createElement('div');
+      s.className = 'seat' + (i < n ? ' filled' : '');
+      s.textContent = i < n ? st.commits[i].name.slice(0, 1).toUpperCase() : '';
+      seats.appendChild(s);
+    }
+    document.getElementById('names').textContent =
+      st.commits.map(function(c){ return c.name; }).join(' · ');
+    if (st.certain){
+      document.body.classList.add('certain');
+      document.getElementById('ccBtn').href =
+        '/cc?room=sesh-' + st.id + '&cc=' + encodeURIComponent(st.what);
+      if (!wasCertain && window.SEMBLE && SEMBLE.cross){ /* the crossing, once */ }
+      wasCertain = true;
+    }
+  }
+  function load(){
+    fetch('/api/sesh?id=' + id).then(function(r){ return r.json(); })
+      .then(function(j){ j.id ? render(j) : show('missing'); })
+      .catch(function(){ show('missing'); });
+  }
+  load();
+  setInterval(load, 5000);
+
+  document.getElementById('join').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('err'); err.style.display = 'none';
+    var b = document.getElementById('jbtn');
+    b.disabled = true; b.textContent = 'Committing…';
+    fetch('/api/sesh', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'commit', id: id,
+        name: document.getElementById('jname').value })
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (!j.id) throw new Error(j.error || 'could not commit');
+      render(j);
+      b.disabled = false; b.textContent = 'Committed';
+    }).catch(function(ex){
+      err.textContent = 'Could not commit: ' + ex.message;
+      err.style.display = 'block';
+      b.disabled = false; b.textContent = 'Commit';
+    });
+  });
+  document.getElementById('share').addEventListener('click', function(){
+    var url = location.origin + '/s?i=' + id;
+    if (navigator.share) navigator.share({ title: 'Semble — a Sesh', url: url }).catch(function(){});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(function(){
+      document.getElementById('share').textContent = 'Copied.';
+    });
+  });
+})();
+</script>
+</body>
+</html>

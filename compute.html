@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Semble — Compute</title>
+<meta name="description" content="SCU · SCC · MCC. Computation flows from presence. Fuel a build; watch the gold ignite."/>
+<meta name="theme-color" content="#05070e"/>
+<meta property="og:title" content="Semble — Compute"/>
+<meta property="og:image" content="/assets/mark-512.png"/>
+<link rel="icon" href="/assets/mark-96.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/assets/semble.css"/>
+<link rel="stylesheet" href="/assets/monument.css" media="(min-width:1000px)"/>
+<style>
+.comp{max-width:560px;margin:0 auto;padding:96px 20px 80px}
+.comp h1{font-family:Sora,sans-serif;font-weight:800;font-size:clamp(30px,7vw,46px);margin:0 0 8px}
+.comp .sub{opacity:.85;margin:0 0 30px}
+.tier{padding:18px 18px 16px;border-radius:20px;border:1px solid rgba(140,180,215,.16);
+  background:rgba(10,16,26,.6);margin:0 0 14px}
+.tier h2{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.16em;margin:0 0 6px;color:#bfeaff}
+.tier.gold h2{color:#ecd396}
+.tier.gold{border-color:rgba(226,200,143,.3)}
+.tier p{margin:0;font-size:14.5px;line-height:1.65;opacity:.9}
+.meterwrap{margin:30px 0 8px}
+.meterline{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.meterline .lab{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em}
+.meterline .val{font-family:"IBM Plex Mono",monospace;font-size:12px;color:#dff6ff}
+.bar{height:12px;border-radius:8px;background:rgba(60,100,140,.2);overflow:hidden;margin:0 0 16px}
+.bar i{display:block;height:100%;width:0%;border-radius:8px;
+  background:linear-gradient(90deg,rgba(92,225,255,.75),rgba(150,240,255,.95));
+  box-shadow:0 0 14px rgba(92,225,255,.5);transition:width 1.1s var(--ease)}
+.bar.gold i{background:linear-gradient(90deg,rgba(200,168,100,.8),rgba(240,215,150,.95));
+  box-shadow:0 0 14px rgba(226,200,143,.55)}
+.pform .f{margin:0 0 14px}
+.pform label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px}
+.pform input{width:100%;padding:13px 14px;border-radius:16px;border:1px solid rgba(140,180,215,.22);
+  background:rgba(10,16,26,.72);color:var(--ink);font:500 16px Inter,sans-serif;outline:none}
+.pform input:focus{border-color:rgba(92,225,255,.55)}
+.prow{display:flex;gap:10px}
+.prow .f{flex:1}
+.note{font-size:12.5px;opacity:.6;margin:10px 0 0;line-height:1.6}
+.thanks{display:none;padding:16px;border-radius:16px;border:1px solid rgba(92,225,255,.35);
+  background:rgba(92,225,255,.07);margin:14px 0 0;font-size:14.5px}
+.err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:14px;
+  background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
+.livecta{margin-top:34px;text-align:center}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+
+<nav class="nav"><div class="nav__in">
+  <a class="brand" href="/">
+    <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
+  <div class="nav__links">
+    <a href="/">Home</a><a href="/init">Init</a>
+    <a href="/features">Features</a><a href="/app">App</a><a href="/spec">Spec</a>
+  </div>
+</div></nav>
+
+<section class="comp">
+  <p class="kick">The compute rail</p>
+  <h1>Computation flows from presence.</h1>
+  <p class="sub">Three tiers. One rule: the top one cannot be bought.</p>
+
+  <div class="tier">
+    <h2>SCU · SEMBLE COMPUTE UNITS</h2>
+    <p>The core building block: one unit of agent capacity, run while you are present.
+    SCUs link — a room's units join into one fabric, and fabrics network across rooms.</p>
+  </div>
+  <div class="tier">
+    <h2>SCC · SEMBLE COMPUTE CORES</h2>
+    <p>Cores made of linked SCUs — the working tier. A room runs on its cores;
+    !MOTUS meters what they burn.</p>
+  </div>
+  <div class="tier gold">
+    <h2>MCC · MOTUS COMPUTE CORES</h2>
+    <p>The highest tier. Motus-level compute for the magic moments and thresholds —
+    an MCC ignites when a threshold is crossed, not when it is paid for.</p>
+  </div>
+
+  <div class="meterwrap">
+    <div class="meterline"><span class="lab">THE POOL · SCU PLEDGED</span>
+      <span class="val" id="poolVal">—</span></div>
+    <div class="bar"><i id="poolBar"></i></div>
+    <div class="meterline"><span class="lab" style="color:#ecd396">MCC · MOTUS LEVEL</span>
+      <span class="val" id="mccVal">ignites at 1,000</span></div>
+    <div class="bar gold"><i id="mccBar"></i></div>
+  </div>
+
+  <form class="pform" id="pf" autocomplete="off">
+    <div class="prow">
+      <div class="f"><label for="pname">Name</label>
+        <input id="pname" maxlength="40" required/></div>
+      <div class="f"><label for="pscus">SCUs</label>
+        <input id="pscus" type="number" min="1" max="10000" value="60" required/></div>
+    </div>
+    <div class="f"><label for="pcontact">Contact · optional</label>
+      <input id="pcontact" maxlength="80" placeholder="So we can reach you when rails open"/></div>
+    <button class="btn" type="submit" id="pbtn">Pledge compute</button>
+    <p class="note">A pledge is a signal, not a payment — no money moves today.
+    When the pool crosses its threshold, the gold ignites, live.</p>
+    <div class="thanks" id="thanks">Counted. You're in the pool.</div>
+    <div class="err" id="perr"></div>
+  </form>
+
+  <div class="livecta">
+    <a class="btn btn--ghost" href="/live">Watch the build live</a>
+  </div>
+</section>
+
+<script src="/assets/semble.js"></script>
+<script src="/assets/orb.js"></script>
+<script>
+(function(){
+  var GOAL = 1000;
+  function paint(total){
+    var frac = Math.min(1, total / GOAL);
+    document.getElementById('poolVal').textContent = total + ' / ' + GOAL;
+    document.getElementById('poolBar').style.width = (frac * 100).toFixed(1) + '%';
+    var mcc = total >= GOAL ? 1 : 0;
+    document.getElementById('mccBar').style.width = (frac >= 1 ? 100 : frac * 100 * 0.999) + '%';
+    if (mcc) document.getElementById('mccVal').textContent = 'IGNITED';
+    /* the mainboard is the meter: the orb's SCC bar follows the real pool */
+    window.__semblePool = { scc: frac, mcc: mcc ? 1 : frac * 0.9 };
+  }
+  function load(){
+    fetch('/api/pledge').then(function(r){ return r.json(); })
+      .then(function(j){ paint(j.total || 0); })
+      .catch(function(){ paint(0); });
+  }
+  load(); setInterval(load, 8000);
+
+  document.getElementById('pf').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('perr'); err.style.display = 'none';
+    var b = document.getElementById('pbtn');
+    b.disabled = true; b.textContent = 'Counting…';
+    fetch('/api/pledge', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('pname').value,
+        contact: document.getElementById('pcontact').value,
+        scus: document.getElementById('pscus').value
+      })
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (typeof j.total !== 'number') throw new Error(j.error || 'not counted');
+      paint(j.total);
+      document.getElementById('thanks').style.display = 'block';
+      b.disabled = false; b.textContent = 'Pledge compute';
+    }).catch(function(ex){
+      err.textContent = ex.message === 'store not connected yet'
+        ? 'The store is not connected yet. Pledges open the moment it is.'
+        : 'Not counted: ' + ex.message;
+      err.style.display = 'block';
+      b.disabled = false; b.textContent = 'Pledge compute';
+    });
+  });
+})();
+</script>
+</body>
+</html>
