@@ -89,7 +89,7 @@
   '  vec3 camPos=vec3(0.0,0.0,DISTANCE);' +
   '  vec3 ray=normalize(vec3((vUv-vec2(0.5))*uResolution.zw,-1.0));' +
   '  float t=0.0;float tMax=2.15;' +
-  '  for(int i=0;i<24;++i){vec3 pos=camPos+t*ray;float h=sdfD(pos);if(h<0.001||t>(tMax+uGlow))break;t+=h;}' +
+  '  for(int i=0;i<40;++i){vec3 pos=camPos+t*ray;float h=sdfD(pos);if(h<0.0006||t>(tMax+uGlow))break;t+=h;}' +
   '  vec2 screenUv=vUv;' +
   '  if(t<tMax){' +
   '    vec3 pos=camPos+t*ray;' +
@@ -1027,11 +1027,21 @@
   }
 
   /* ════════ THE BOARD — a world taller than the window ════════ */
-  function makeBoard(CW, WH, VH){
+  function makeBoard(CW, WH, VH, BQ){
+    /* BQ = board quality: the silicon is drawn at the device's real pixel
+       density, in logical coordinates, so the lens magnifies detail — not
+       pixels. A budget keeps the texture inside sane memory. */
+    BQ = Math.max(1, Math.min(BQ || 1, 2));
+    while (CW * BQ * WH * BQ > 15.5e6 && BQ > 1) BQ -= 0.1;
+    BQ = Math.round(BQ * 10) / 10;
     var base = document.createElement('canvas');
     var work = document.createElement('canvas');
-    base.width = work.width = CW; base.height = work.height = WH;
+    base.width = work.width = Math.round(CW * BQ);
+    base.height = work.height = Math.round(WH * BQ);
     var bctx = base.getContext('2d'), wctx = work.getContext('2d');
+    bctx.setTransform(BQ, 0, 0, BQ, 0, 0);
+    wctx.setTransform(BQ, 0, 0, BQ, 0, 0);
+    bctx.imageSmoothingQuality = wctx.imageSmoothingQuality = 'high';
     var comps = [], nets = [], crossed = {};
     var u = Math.min(CW, VH) / 12.6;
 
@@ -1420,7 +1430,9 @@
 
     function render(t, o, top, focus){
       top = top || 0;
+      wctx.setTransform(1, 0, 0, 1, 0, 0);
       wctx.drawImage(base, 0, 0);
+      wctx.setTransform(BQ, 0, 0, BQ, 0, 0);
       if (o){
         var avg = 0, nn = 0;
         comps.forEach(function(c){
@@ -1581,7 +1593,7 @@
       meters(wctx, Math.min(1, sum / 5), Math.min(1, nCross / 6), top);
     }
 
-    return {work: work, comps: comps, render: render, u: u, WH: WH,
+    return {work: work, comps: comps, render: render, u: u, WH: WH, BQ: BQ,
             mcc: function(){ return Object.keys(crossed).length; }};
   }
 
@@ -1861,18 +1873,18 @@
     var C = {
       displacementSpeed: 0.18,   /* steadier surface               */
       sizeDefault: 0.275,
-      lerp1: 0.032, lerp2: 0.05,
-      scrollLerp1: 0.12, scrollLerp2: 0.09,
+      lerp1: 0.017, lerp2: 0.027,
+      scrollLerp1: 0.06, scrollLerp2: 0.045,
       reach: 0.3,                /* shorter leash — it holds place */
       sideDrift: 0.16, yClamp: 0.22,
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
-    C.dwell = 4200; C.dwellVar = 4200;
+    C.dwell = 6500; C.dwellVar = 6000;
     DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 2400;        /* it settles before it begins to move     */
       C.reach = 0.34;
-      C.lerp1 = 0.0065; C.lerp2 = 0.011;       /* moves like it has mass    */
+      C.lerp1 = 0.0042; C.lerp2 = 0.0072;      /* moves like it has mass    */
       C.scrollLerp1 = 0.028; C.scrollLerp2 = 0.021;
       C.displacementSpeed = 0.085;              /* the surface barely stirs  */
       C.dwell = 9500; C.dwellVar = 7000;        /* it stays, and considers   */
@@ -1967,7 +1979,8 @@
     /* it wakes under load: motion is heaviest at the start and eases in */
     var launch = 0;
     function fit(){
-      var DPR = Math.min(devicePixelRatio || 1, MOB ? 1.15 : 1.5);
+      /* render at the screen's real density — this is what kills the pixels */
+      var DPR = Math.min(devicePixelRatio || 1, MOB ? 2 : 2);
       W = innerWidth; H = innerHeight;
       cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
       gl.viewport(0, 0, cv.width, cv.height);
@@ -1977,7 +1990,8 @@
       if (bgc){ bgc.width = W; bgc.height = H; }
       VH = H;
       var WHW = Math.round(VH * WORLD_K);
-      board = makeBoard(W, WHW, VH);
+      board = makeBoard(W, WHW, VH, DPR);
+      paintMs = -1;
       worldMax = WHW - VH;
       ky = VH / WHW;
       board.render(0, null, 0);
@@ -2083,7 +2097,7 @@
       var pick = pool[0], rw = Math.random() * tw;
       for (var i = 0; i < pool.length; i++){
         rw -= wts[i]; if (rw <= 0){ pick = pool[i]; break; } }
-      if (Math.random() < 0.25) pick = pool[Math.floor(Math.random() * pool.length)];
+      if (Math.random() < 0.36) pick = pool[Math.floor(Math.random() * pool.length)];
       var key2 = pick.kind + Math.round(pick.x);
       wVisits[key2] = (wVisits[key2] || 0) + 1;
       wRecent.push(key2);
@@ -2144,7 +2158,7 @@
       return changed;
     }
 
-    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3, lastPaint = -1e9;
+    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3, lastPaint = -1e9, paintMs = -1;
     function draw(now){
       var t = (now - t0) / 1000 * C.displacementSpeed;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -2186,13 +2200,13 @@
                                  (c.y - topW) - (0.5 - m1.y * 0.6) * H);
             var dn = dpx / (Math.hypot(W, H) * 0.5);
             wt *= 0.30 + Math.exp(-Math.pow((dn - 0.42) / 0.34, 2));
-            wt *= 0.35 + Math.random() * 1.6;   /* no two tours alike */
+            wt *= 0.25 + Math.random() * 2.1;   /* no two tours alike */
             tw += wt; return Math.max(0, wt); });
           var pick = cands[0], rw = Math.random() * tw;
           for (var wi = 0; wi < cands.length; wi++){
             rw -= wts[wi]; if (rw <= 0){ pick = cands[wi]; break; } }
           /* one visit in four ignores every rule — structure cannot form */
-          if (Math.random() < 0.25) pick = cands[Math.floor(Math.random() * cands.length)];
+          if (Math.random() < 0.36) pick = cands[Math.floor(Math.random() * cands.length)];
           wLast = pick;
           var pkey = pick.kind + Math.round(pick.x);
           wVisits[pkey] = (wVisits[pkey] || 0) + 1;
@@ -2222,7 +2236,9 @@
       var f2 = (1 - Math.pow(1 - lerp2, dt * 60)) * LAU;
       if (focus2){
         var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
-        f1 = Math.min(1, f1 * (1 + (MOB ? 1.6 : 3.0) * Math.max(0, 1 - dLock * 6)));
+        /* tighten as it closes, then finish the last hair so it truly lands */
+        f1 = Math.min(1, f1 * (1 + (MOB ? 2.2 : 3.4) * Math.max(0, 1 - dLock * 6)));
+        if (dLock < 0.004){ m1.x = mouse.x; m1.y = mouse.y; }
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
@@ -2258,7 +2274,11 @@
       /* the board is a full-resolution canvas; repainting it every frame is
          what turns a phone into a hand-warmer. Paint it at a cadence instead —
          the energy still moves, the silicon just is not redrawn 60×/s. */
-      var due = now - lastPaint >= (MOB ? 52 : 22);
+      /* the finer the silicon, the dearer each upload — pay it less often */
+      if (paintMs < 0 && board)
+        paintMs = (MOB ? 52 : 22) *
+          (board.work.width * board.work.height > 4e6 ? 1.9 : 1);
+      var due = now - lastPaint >= paintMs;
       if ((changed || worldDirty || Math.abs(top2 - lastTop) > 0.75) && due){
         lastPaint = now;
         var ob = orbPx();
@@ -2268,7 +2288,8 @@
         lastTop = top2;
         worldDirty = board.comps.some(function(c){ return c.e > 0.02; });
       }
-      if (bgx) bgx.drawImage(board.work, 0, top2, board.work.width, VH, 0, 0, W, H);
+      if (bgx) bgx.drawImage(board.work, 0, top2 * board.BQ,
+                             board.work.width, VH * board.BQ, 0, 0, W, H);
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uOpacity, opacity);
       gl.uniform2f(U.uMouse1, m1.x, m1.y);
