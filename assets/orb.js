@@ -377,6 +377,106 @@
     g.stroke();
   }
 
+  /* the solder-ball array a package sits on — visible at its skirt */
+  function bga(g, x, y, w, h, e){
+    var p = Math.max(3.2, Math.min(w, h) * 0.055);
+    g.fillStyle = 'rgba(150,168,182,' + (0.30 + 0.25 * e).toFixed(3) + ')';
+    for (var bx = x + p; bx < x + w - p * 0.6; bx += p){
+      g.beginPath(); g.arc(bx, y + h + p * 0.42, p * 0.30, 0, 6.29); g.fill();
+      g.beginPath(); g.arc(bx, y - p * 0.42, p * 0.30, 0, 6.29); g.fill();
+    }
+    for (var by = y + p; by < y + h - p * 0.6; by += p){
+      g.beginPath(); g.arc(x - p * 0.42, by, p * 0.30, 0, 6.29); g.fill();
+      g.beginPath(); g.arc(x + w + p * 0.42, by, p * 0.30, 0, 6.29); g.fill();
+    }
+  }
+
+  /* the substrate the die assembly is mounted on */
+  function substrate(g, x, y, w, h, e){
+    var m = Math.min(w, h) * 0.085;
+    var sg = g.createLinearGradient(x - m, y - m, x + w + m, y + h + m);
+    sg.addColorStop(0, 'rgba(26,38,52,0.96)');
+    sg.addColorStop(0.5, 'rgba(18,28,40,0.96)');
+    sg.addColorStop(1, 'rgba(12,20,30,0.96)');
+    g.fillStyle = sg;
+    rr(g, x - m, y - m, w + m * 2, h + m * 2, 3); g.fill();
+    g.strokeStyle = 'rgba(150,180,205,' + (0.16 + 0.2 * e).toFixed(3) + ')';
+    g.lineWidth = 1;
+    rr(g, x - m + 0.5, y - m + 0.5, w + m * 2 - 1, h + m * 2 - 1, 3); g.stroke();
+    /* substrate decoupling caps around the assembly */
+    for (var cx2 = x - m * 0.4; cx2 < x + w + m * 0.4; cx2 += m * 0.85)
+      smdCap(g, cx2, y + h + m * 0.18, m * 0.4, m * 0.24, e);
+  }
+
+  /* an HBM stack — the tell of a real accelerator */
+  function hbm(g, x, y, w, h, e, t, ph){
+    var lay = 5, lh = h / lay;
+    for (var i = 0; i < lay; i++){
+      var lg = g.createLinearGradient(x, y + i * lh, x + w, y + i * lh + lh);
+      var li = 0.13 + 0.05 * (lay - i);
+      lg.addColorStop(0, 'rgba(' + Math.round(70 + 60 * li) + ',' +
+                          Math.round(90 + 70 * li) + ',' + Math.round(112 + 80 * li) + ',0.96)');
+      lg.addColorStop(1, 'rgba(30,42,56,0.96)');
+      g.fillStyle = lg;
+      g.fillRect(x, y + i * lh, w, lh - 0.7);
+      g.fillStyle = 'rgba(200,222,238,0.10)';
+      g.fillRect(x, y + i * lh, w, 0.7);
+    }
+    if (e > 0.03){
+      var band = (t * 0.5 + ph) % 1;
+      var byy = y + band * (h - lh);
+      g.save();
+      g.shadowColor = 'rgba(120,225,255,' + (0.8 * e).toFixed(3) + ')';
+      g.shadowBlur = 9 * e;
+      g.fillStyle = 'rgba(150,235,255,' + (0.34 * e).toFixed(3) + ')';
+      g.fillRect(x, byy, w, lh * 0.55);
+      g.restore();
+    }
+    g.strokeStyle = 'rgba(180,210,235,' + (0.24 + 0.4 * e).toFixed(3) + ')';
+    g.lineWidth = 0.9;
+    g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  }
+
+  /* the integrated heat spreader — brushed nickel, bevelled, notched */
+  function ihs(g, x, y, w, h, e){
+    var bev = Math.min(w, h) * 0.14;
+    var lg = g.createLinearGradient(x, y, x + w, y + h);
+    lg.addColorStop(0, 'rgba(196,210,222,0.95)');
+    lg.addColorStop(0.35, 'rgba(128,144,158,0.95)');
+    lg.addColorStop(0.62, 'rgba(168,184,198,0.95)');
+    lg.addColorStop(1, 'rgba(96,110,124,0.95)');
+    g.fillStyle = lg;
+    rr(g, x, y, w, h, 2.5); g.fill();
+    /* the bevel */
+    g.strokeStyle = 'rgba(226,238,248,0.55)';
+    g.lineWidth = 1.1;
+    rr(g, x + bev * 0.5, y + bev * 0.5, w - bev, h - bev, 2); g.stroke();
+    g.strokeStyle = 'rgba(30,40,50,0.55)';
+    rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 2.5); g.stroke();
+    /* brushed grain */
+    var br = lcg(Math.round(x * 13 + y * 7));
+    g.strokeStyle = 'rgba(255,255,255,0.045)';
+    g.lineWidth = 0.6;
+    for (var i = 0; i < 26; i++){
+      var gy2 = y + br() * h;
+      g.beginPath(); g.moveTo(x + 1, gy2); g.lineTo(x + w - 1, gy2); g.stroke();
+    }
+    /* the corner notch every lid has */
+    g.fillStyle = 'rgba(40,52,64,0.85)';
+    g.beginPath();
+    g.moveTo(x + w, y); g.lineTo(x + w - bev, y); g.lineTo(x + w, y + bev);
+    g.closePath(); g.fill();
+    if (e > 0.03){
+      g.save();
+      g.shadowColor = 'rgba(120,225,255,' + (0.55 * e).toFixed(3) + ')';
+      g.shadowBlur = 16 * e;
+      g.strokeStyle = 'rgba(150,235,255,' + (0.35 * e).toFixed(3) + ')';
+      g.lineWidth = 1.2;
+      rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 2.5); g.stroke();
+      g.restore();
+    }
+  }
+
   function stiffener(g, dx, dy, dw, dh){
     var m2 = 4.5;
     var sg = g.createLinearGradient(dx - m2, dy - m2, dx + dw + m2, dy + dh + m2);
@@ -433,6 +533,7 @@
       for (i = 0; i < 6; i++)
         smdCap(g, x + w * 0.18 + i * w * 0.115, y + h - u * 0.18, u * 0.09, u * 0.06, pulse);
       var dw = w * 0.62, dh = h * 0.56, dx = c.x - dw / 2, dy = c.y - dh / 2 - u * 0.06;
+      substrate(g, dx - u * 0.3, dy - u * 0.3, dw + u * 0.6, dh + u * 0.6, pulse);
       stiffener(g, dx, dy, dw, dh);
       die(g, dx, dy, dw, dh, pulse * 0.4, false, seed, A);
       var lit = Math.ceil(6 * Math.min(1, e * 1.1));
@@ -445,6 +546,17 @@
         die(g, cx2 - cw2 / 2, cy2 - ch2 / 2, cw2, ch2, cp, on, seed + k, A);
         k++;
       }
+      /* the lid closes over the cores until energy opens it */
+      if (e < 0.55){
+        var lidA = 1 - Math.max(0, (e - 0.2) / 0.35);
+        g.save();
+        g.globalAlpha = lidA;
+        ihs(g, dx - u * 0.34, dy - u * 0.34, dw + u * 0.68, dh + u * 0.68, pulse);
+        etch(g, c.x, c.y - u * 0.06, 'SEMBLE', Math.max(6, u * 0.24), 0);
+        etch(g, c.x, c.y + u * 0.24, 'CC-6C', Math.max(5, u * 0.17), 0);
+        g.restore();
+      }
+      bga(g, x, y, w, h, pulse);
       etch(g, c.x, y + h - u * 0.42, 'CC CORES', Math.max(6, u * 0.26), pulse, null, A);
       etch(g, c.x, y + h - u * 0.18, 'SMBL-6C-2643', Math.max(4.5, u * 0.13), 0);
       etch(g, x - u * 0.34, y - u * 0.3, 'U1', Math.max(5, u * 0.2), pulse);
@@ -480,12 +592,11 @@
         g.stroke();
         g.restore();
       } else g.stroke();
-      var ge = Math.max(0, (e - 0.7) / 0.3);
+      var ge = Math.max(0, (e - 0.55) / 0.45);
       for (i = 0; i < 4; i++){
-        var mx = i < 2 ? x + u * 0.24 : x + w - u * 0.24 - u * 0.52;
-        var my = y + h * 0.24 + (i % 2) * h * 0.4;
-        pkg(g, mx, my, u * 0.52, u * 0.4, ge * pulse, 2, seed + 40 + i, A);
-        pin1(g, mx + 3, my + 3, ge * pulse);
+        var mx = i < 2 ? x + u * 0.26 : x + w - u * 0.26 - u * 0.46;
+        var my = c.y - h * 0.26 + (i % 2) * h * 0.28;
+        hbm(g, mx, my, u * 0.46, h * 0.24, ge * pulse, t, i * 0.31);
       }
       etch(g, c.x, y + h - u * 0.3, 'TRAX GFX', Math.max(6, u * 0.24), pulse, null, A);
       etch(g, x - u * 0.34, y - u * 0.28, 'U2', Math.max(5, u * 0.2), pulse);
@@ -577,7 +688,11 @@
       etch(g, c.x, c.y + h * 0.85 + u * 0.2, 'CROSSING', Math.max(5, u * 0.19), pulse, null, A);
 
     } else if (c.kind === 'scu'){
-      /* SCU ARRAY — units of the fabric; charge radiates ring by ring */
+      /* SCU ARRAY — a real accelerator module: interposer, compute die
+         flanked by HBM stacks, all on substrate under a stiffener frame.
+         The fabric lattice is the die's own floorplan. */
+      substrate(g, x, y, w, h, pulse);
+      bga(g, x - w * 0.085, y - h * 0.085, w * 1.17, h * 1.17, pulse);
       var chm = w * 0.16;
       var oct = function(){
         g.beginPath();
@@ -612,7 +727,17 @@
       g.fillRect(x + 1.5, y + h - 1.5 - chm * 0.5, chm * 0.5, chm * 0.5);
       g.fillRect(x + w - 1.5 - chm * 0.5, y + h - 1.5 - chm * 0.5, chm * 0.5, chm * 0.5);
       dotCode(g, x + w - u * 0.52, y + u * 0.3, u * 0.05, seed + 21);
-      var hr = w * 0.088, cx3 = c.x, cy3 = c.y - u * 0.1;
+      /* the interposer: compute die centre, four HBM stacks flanking */
+      var ipw = w * 0.78, iph = h * 0.62;
+      var ipx = c.x - ipw / 2, ipy = c.y - iph / 2 - u * 0.08;
+      stiffener(g, ipx, ipy, ipw, iph);
+      var stw = ipw * 0.13, sth = iph * 0.66;
+      for (i = 0; i < 4; i++){
+        var sxx = i < 2 ? ipx + stw * (0.18 + i * 1.12)
+                        : ipx + ipw - stw * (1.3 + (i - 2) * 1.12);
+        hbm(g, sxx, c.y - sth / 2 - u * 0.08, stw, sth, pulse, t, i * 0.27);
+      }
+      var hr = w * 0.075, cx3 = c.x, cy3 = c.y - u * 0.08;
       var cells = [[0, 0, 0]];
       for (i = 0; i < 6; i++){
         var a1 = i * Math.PI / 3;
@@ -648,8 +773,10 @@
       etch(g, c.x, y + h - u * 0.3, 'SCU ARRAY', Math.max(6, u * 0.22), pulse, null, A);
 
     } else if (c.kind === 'scc'){
-      /* SCC — a Semble Compute Core: four SCUs, linked into one */
+      /* SCC — a Semble Compute Core: four SCUs linked, on real substrate */
       breakout(g, x, y, w, h, Math.max(3.5, u * 0.17), u * 0.11);
+      substrate(g, x, y, w, h, pulse);
+      bga(g, x, y, w, h, pulse);
       drop(g, x, y, w, h, 3);
       qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.17), u * 0.11, pulse, A);
       pkg(g, x, y, w, h, pulse, 3, seed, A);
@@ -1744,6 +1871,15 @@
     if (qImg) setImage(qImg);
 
     var W, H, board, VH, WORLD_K = 2.2, worldMax = 0, ky = 1, baseSize = 0.3;
+    /* this visit's growth personality — no two loads bloom alike */
+    var GR = {
+      a: 0.22 + Math.random() * 0.12,      /* how small it starts        */
+      b: 0.92 + Math.random() * 0.52,      /* how large it ends          */
+      curve: 0.72 + Math.random() * 0.95,  /* early bloom vs late surge  */
+      wob: 0.03 + Math.random() * 0.05,    /* the breath in its size     */
+      ph: Math.random() * 6.28
+    };
+    var energy = 0, lastSF = 0;
     function fit(){
       var DPR = Math.min(devicePixelRatio || 1, 1.5);
       W = innerWidth; H = innerHeight;
@@ -1798,7 +1934,7 @@
 
     function orbPx(){
       return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H,
-              r: Math.min(W, H) * (0.085 + 0.235 * sFrac)};
+              r: Math.min(W, H) * 0.30 * (isFinite(growNow) && growNow > 0 ? growNow : 0.3)};
     }
     /* scroll couples the window to the world: the board pans beneath the page */
     var sFrac = 0;
@@ -1821,7 +1957,7 @@
       return changed;
     }
 
-    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0;
+    var opacity = 0, t0 = performance.now(), last = t0, worldDirty = true, lastTop = -1, frameN = 0, growNow = 0.3;
     function draw(now){
       var t = (now - t0) / 1000 * C.displacementSpeed;
       var dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -1884,9 +2020,20 @@
       imgOpacity += (imgTarget - imgOpacity) * (1 - Math.pow(0.95, dt * 60));
 
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
+      /* a negative frac (rubber-band) would make pow() NaN and kill the frame */
+      if (!(sFrac >= 0)) sFrac = 0; else if (sFrac > 1) sFrac = 1;
       var top2 = worldTop();
       gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
-      gl.uniform1f(U.uSize, baseSize * (0.27 + 1.13 * sFrac));
+      /* growth: an organic curve + a breath + a surge from the reader's own motion */
+      var sv = Math.abs(sFrac - lastSF); lastSF = sFrac;
+      energy += (Math.min(1, sv * 26) - energy) * (1 - Math.pow(0.93, dt * 60));
+      var shaped = Math.pow(sFrac, GR.curve);
+      var breath = 1 + GR.wob * Math.sin(now * 0.00041 + GR.ph)
+                     + GR.wob * 0.6 * Math.sin(now * 0.00097 + GR.ph * 1.7);
+      var grow = (GR.a + GR.b * shaped) * breath * (1 + energy * 0.16);
+      if (!isFinite(grow) || grow <= 0) grow = GR.a;
+      gl.uniform1f(U.uSize, baseSize * grow);
+      growNow = grow;
       if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
         var ob = orbPx();
         board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2);

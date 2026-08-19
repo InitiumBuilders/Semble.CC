@@ -9,6 +9,7 @@ Live: [semble.cc](https://www.semble.cc)
 - `/app` — the app
 - `/cc` — Semble CCs · Community Cores. Live voice rooms.
 - `/spec` — the open baseline spec ([SEMBLE-SPEC.md](SEMBLE-SPEC.md))
+- The orb brief — [SEMBLE-ORB-BRIEF.md](SEMBLE-ORB-BRIEF.md): the standing contract for the backend world
 - The build prompt — [SEMBLE-BUILD.md](SEMBLE-BUILD.md): the first real loop, the F-sequence, the compute rail
 
 Compute: **SCU** — Semble Compute Units, the core building block · **SCC** — Semble
