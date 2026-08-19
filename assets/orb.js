@@ -36,6 +36,7 @@
   'precision highp float;\n' +
   'varying vec2 vUv;uniform vec4 uResolution;uniform float uTime;uniform float uOpacity;\n' +
   'uniform vec2 uMouse1;uniform vec2 uMouse2;uniform float uSize;uniform vec4 uWorld;\n' +
+  'uniform float uBright;\n' +
   'uniform samplerCube tMap;uniform sampler2D tRender;uniform sampler2D tImage;uniform float uImageOpacity;\n' +
   '#define DISTANCE 2.0\n' +
   'vec2 wuv(vec2 u){return u*uWorld.xy+uWorld.zw;}\n' +
@@ -123,7 +124,7 @@
   '    mixed=sat3(mixed,0.978);' +
   '    vec4 img=texture2D(tImage,vec2(screenUv.x,1.0-screenUv.y));' +
   '    vec3 windowTex=texture2D(tRender,wuv(screenUv)).rgb;' +
-  '    vec3 background=mix(screenB(refracted*0.55,windowTex*0.75),img.rgb,uImageOpacity*img.a);' +
+  '    vec3 background=mix(screenB(refracted*0.55*uBright,windowTex*0.75*uBright),img.rgb,uImageOpacity*img.a);' +
   '    vec3 extraFres=max(vec3((t-2.135)*30.0),vec3(0.0));' +
   '    finalColor.rgb=screenB(mixed+extraFres,background);finalColor.a=1.0;' +
   '    float hc=clamp(uResolution.x/64.0,9.0,34.0);' +
@@ -1031,7 +1032,7 @@
     /* BQ = board quality: the silicon is drawn at the device's real pixel
        density, in logical coordinates, so the lens magnifies detail — not
        pixels. A budget keeps the texture inside sane memory. */
-    BQ = Math.max(1, Math.min(BQ || 1, 2));
+    BQ = Math.max(1, Math.min(BQ || 1, 3));
     while (CW * BQ * WH * BQ > 15.5e6 && BQ > 1) BQ -= 0.1;
     BQ = Math.round(BQ * 10) / 10;
     var base = document.createElement('canvas');
@@ -1801,7 +1802,7 @@
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     var U = {};
-    ['uResolution','uTime','uOpacity','uMouse1','uMouse2','uSize','uWorld',
+    ['uResolution','uTime','uOpacity','uMouse1','uMouse2','uSize','uWorld','uBright',
      'tMap','tRender','tImage','uImageOpacity']
       .forEach(function(n){ U[n] = gl.getUniformLocation(prog, n); });
 
@@ -1853,6 +1854,7 @@
       gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, imgTex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); })();
     gl.uniform4f(U.uWorld, 1, 1, 0, 0);
+    gl.uniform1f(U.uBright, 1);
 
     /* the board reads right-way-up through the glass */
     function uploadWorld(canvas){
@@ -1880,6 +1882,7 @@
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
     C.dwell = 6500; C.dwellVar = 6000;
+    C.bright = 1.14;
     DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 2400;        /* it settles before it begins to move     */
@@ -1888,6 +1891,7 @@
       C.scrollLerp1 = 0.028; C.scrollLerp2 = 0.021;
       C.displacementSpeed = 0.085;              /* the surface barely stirs  */
       C.dwell = 9500; C.dwellVar = 7000;        /* it stays, and considers   */
+      C.bright = 1.55;                          /* the world through it, lifted */
     }
     var cv = document.createElement('canvas');
     cv.setAttribute('aria-hidden', 'true');
@@ -1925,7 +1929,7 @@
         'body.orb-on .step,body.orb-on .pane,body.orb-on .card,body.orb-on .tier,' +
         'body.orb-on .f,body.orb-on .meta,body.orb-on .seat,body.orb-on .cc,' +
         'body.orb-on .stg,body.orb-on .colo,body.orb-on .sig{' +
-        'background-color:rgba(7,11,19,.88)!important;' +
+        'background-color:rgba(7,11,19,.72)!important;' +
         'box-shadow:0 0 0 1px rgba(140,180,215,.10)}' +
         '@media(max-width:999px){' +
         'body.orb-on p,body.orb-on h1,body.orb-on h2,body.orb-on h3,body.orb-on h4,' +
@@ -1986,11 +1990,11 @@
       gl.viewport(0, 0, cv.width, cv.height);
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
       baseSize = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault
-                 * (MOB ? 1.55 : 1.24);
+                 * (MOB ? 2.05 : 1.24);
       if (bgc){ bgc.width = W; bgc.height = H; }
       VH = H;
       var WHW = Math.round(VH * WORLD_K);
-      board = makeBoard(W, WHW, VH, DPR);
+      board = makeBoard(W, WHW, VH, Math.min(DPR * 1.5, 3));
       paintMs = -1;
       worldMax = WHW - VH;
       ky = VH / WHW;
@@ -2243,7 +2247,7 @@
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
       /* it arrives slowly, and it is meant to be seen */
-      opacity += ((MOB ? 0.82 : 1) - opacity) * (1 - Math.pow(MOB ? 0.988 : 0.965, dt * 60));
+      opacity += (1 - opacity) * (1 - Math.pow(MOB ? 0.988 : 0.965, dt * 60));
       imgOpacity += (imgTarget - imgOpacity) * (1 - Math.pow(0.95, dt * 60));
 
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
@@ -2269,6 +2273,7 @@
       var grow = (GR.a + GR.b * shaped) * breath * (1 + energy * 0.16) * iris;
       if (!isFinite(grow) || grow <= 0) grow = GR.a;
       gl.uniform1f(U.uSize, baseSize * grow);
+      gl.uniform1f(U.uBright, C.bright);
       growNow = grow;
       var changed = water(dt, focus2);
       /* the board is a full-resolution canvas; repainting it every frame is
