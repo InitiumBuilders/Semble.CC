@@ -53,7 +53,7 @@ body.certain .jform{display:none}
     <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
   <div class="nav__links">
     <a href="/">Home</a><a href="/init">Init</a>
-    <a href="/features">Features</a><a href="/app">App</a><a href="/spec">Spec</a>
+    <a href="/features">Features</a><a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
   </div>
 </div></nav>
 
@@ -75,6 +75,14 @@ body.certain .jform{display:none}
   </form>
 
   <div class="onit">
+    <div class="ringx" aria-hidden="true" style="margin:0 auto 6px;max-width:150px">
+      <svg class="cross cross--gold" id="seshcross" viewBox="0 0 100 100">
+        <circle class="cxh" cx="50" cy="50" r="26"/>
+        <path class="cx cx--a" d="M70 16C40 20 36 40 50 50"/>
+        <path class="cx cx--b" d="M30 84C60 80 64 60 50 50"/>
+        <circle class="cxc" cx="50" cy="50" r="4.6"/>
+      </svg>
+    </div>
     <h2>You're on it.</h2>
     <p>The threshold filled. It's real. Everyone is told once.</p>
     <a class="btn" id="ccBtn" href="#">Open the CC</a>
@@ -94,7 +102,23 @@ body.certain .jform{display:none}
 <script src="/assets/orb.js"></script>
 <script>
 (function(){
-  var id = new URLSearchParams(location.search).get('i') || '';
+  var q = new URLSearchParams(location.search);
+  var id = q.get('i') || '';
+  var packed = q.get('p') || '';
+  if (!id && packed){
+    /* a Sesh carried entirely in its own link — readable before any store exists */
+    try {
+      var raw = packed.replace(/-/g, '+').replace(/_/g, '/');
+      var st0 = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      st0.id = 'link'; st0.commits = [{name: st0.host, at: Date.now()}];
+      st0.certain = false;
+      render(st0);
+      var j = document.getElementById('join');
+      j.innerHTML = '<p class="sub" style="margin:0">Commits open the moment the ' +
+        'store is connected. Share this link — it already holds the Sesh.</p>';
+      return;
+    } catch (e){ show('missing'); return; }
+  }
   if (!/^[a-z0-9-]{6,40}$/.test(id)){ show('missing'); return; }
   var wasCertain = false;
 
@@ -128,7 +152,9 @@ body.certain .jform{display:none}
       document.body.classList.add('certain');
       document.getElementById('ccBtn').href =
         '/cc?room=sesh-' + st.id + '&cc=' + encodeURIComponent(st.what);
-      if (!wasCertain && window.SEMBLE && SEMBLE.cross){ /* the crossing, once */ }
+      /* the crossing — the moment it becomes real, played once */
+      if (!wasCertain && window.SEMBLE && SEMBLE.cross)
+        SEMBLE.cross(document.getElementById('seshcross'));
       wasCertain = true;
     }
   }
