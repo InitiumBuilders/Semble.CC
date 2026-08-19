@@ -163,6 +163,20 @@
   var A2k = acc;
 
   function rr(g, x, y, w, h, r){
+    /* a degenerate rect must not be able to kill the board: arcTo throws on a
+       negative radius, and every surface here is drawn through this one door */
+    if (!(w > 0) || !(h > 0) || !(r >= 0)){
+      try {
+        if (typeof window !== 'undefined'){
+          window.__rrBad = window.__rrBad || [];
+          if (window.__rrBad.length < 6)
+            window.__rrBad.push([w, h, r, (new Error()).stack.split('\n')[2] || '']);
+        }
+      } catch (e0){}
+    }
+    if (!(w > 0)) w = 0.01;
+    if (!(h > 0)) h = 0.01;
+    r = Math.max(0, Math.min(r || 0, Math.min(w, h) / 2));
     g.beginPath();
     g.moveTo(x + r, y);
     g.arcTo(x + w, y, x + w, y + h, r);
@@ -270,7 +284,7 @@
 
   /* Apple-grade: a continuous (squircle-ish) corner, not a rounded box */
   function sq(g, x, y, w, h, k){
-    var r = Math.min(w, h) * (k || 0.16);
+    var r = Math.max(0, Math.min(w, h)) * (k || 0.16);
     rr(g, x, y, w, h, r);
   }
   function pkg(g, x, y, w, h, e, r, seed, accStr){
@@ -520,6 +534,18 @@
     im.onload = function(){ MARKS[key] = im; if (onready) onready(); };
     im.onerror = function(){ MARKS[key] = false; };
     im.src = url;
+  }
+  /* a label wider than the part it names WILL land on its neighbour */
+  function fitText(g, txt, maxW, fs){
+    g.font = '600 ' + fs + 'px ui-monospace, Consolas, monospace';
+    if (g.measureText(txt).width <= maxW) return txt;
+    var lo = 1, hi = txt.length, mid, best = '';
+    while (lo <= hi){
+      mid = (lo + hi) >> 1;
+      if (g.measureText(txt.slice(0, mid)).width <= maxW){ best = txt.slice(0, mid); lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return best;
   }
   function drawMark(g, key, cx, cy, size, alpha){
     var im = MARKS[key];
@@ -1069,7 +1095,9 @@
         g.fillStyle = A2k(c) + (0.5 + 0.5 * pulse).toFixed(3) + ')';
         g.fillText(c.glyph, c.x, my0 - u * 0.28);
       }
-      etch(g, c.x, y + h + u * 0.2, (c.label || 'MODEL').toUpperCase().slice(0, 16),
+      var mfs = Math.max(5, u * 0.16);
+      etch(g, c.x, y + h + u * 0.2,
+           fitText(g, (c.label || 'MODEL').toUpperCase(), w * 1.32, mfs),
            Math.max(5, u * 0.17), pulse, null, A2k(c));
       if (c.by) etch(g, c.x, y + h + u * 0.42, 'BY ' + c.by.toUpperCase().slice(0, 14),
                      Math.max(4.2, u * 0.13), 0);
@@ -1295,6 +1323,31 @@
   }
 
   /* ════════ THE BOARD — a world taller than the window ════════ */
+  /* ═══ THE STACK ═══ the five tiers, spaced in COMPONENT units. A gap
+     expressed as a fraction of the world grows into a void on a tall narrow
+     screen; a gap expressed in u stays the same distance from the chips it
+     separates, on every device. The world is then sized to fit the stack. */
+  function boardUnit(CW, VH){ return Math.min(CW, VH) / 12.6; }
+  /* a board is NARROW when it is small measured in its own components — the
+     honest test, and the same answer for a phone and a narrow desktop pane */
+  function isNarrow(CW, VH){ return CW / boardUnit(CW, VH) < 14; }
+  /* control · →compute · →cortex · →family · →edge · foot.
+     A narrow board splits its crowded tiers into more rows, so it needs the
+     room for them: the stack itself is part of the layout, not a constant. */
+  function boardStack(CW, VH){
+    return isNarrow(CW, VH) ? [6.4, 11.6, 14.6, 8.6, 7.4, 7.0]
+                            : [6.4, 11.0,  9.5, 8.2, 7.0, 4.6];
+  }
+  function stackTotal(st){
+    var i, n = 0;
+    for (i = 0; i < st.length; i++) n += st[i];
+    return n;
+  }
+  function worldHeight(CW, VH, mobile){
+    return Math.max(boardUnit(CW, VH) * stackTotal(boardStack(CW, VH)),
+                    VH * (mobile ? 1.9 : 2.4));
+  }
+
   function makeBoard(CW, WH, VH, BQ){
     /* BQ = board quality: the silicon is drawn at the device's real pixel
        density, in logical coordinates, so the lens magnifies detail — not
@@ -1346,12 +1399,16 @@
     function col(c){ return MARG + GRID * c; }         /* left edge of column c */
     function span(c, n){ return MARG + GRID * c + GRID * n / 2; }  /* centre of a span */
     /* five bands, each with room to breathe; y is the band's centre line */
+    /* one stretch factor takes up the slack, so the tiers keep their ratios */
+    var NARROW = isNarrow(CW, VH);
+    var STACK = boardStack(CW, VH);
+    var K = WH / (u * stackTotal(STACK));
     var BAND = {
-      control: WH * 0.115,
-      compute: WH * 0.345,
-      cortex:  WH * 0.560,
-      family:  WH * 0.760,
-      edge:    WH * 0.930
+      control: u * K * STACK[0],
+      compute: u * K * (STACK[0] + STACK[1]),
+      cortex:  u * K * (STACK[0] + STACK[1] + STACK[2]),
+      family:  u * K * (STACK[0] + STACK[1] + STACK[2] + STACK[3]),
+      edge:    u * K * (STACK[0] + STACK[1] + STACK[2] + STACK[3] + STACK[4])
     };
     var P = {
       /* I · CONTROL — the opener, its power above it, its clock and ROM beside */
@@ -1377,26 +1434,106 @@
       commons:{x: span(0.5, 2.5), y: BAND.cortex},
 
       /* IV · THE CONSTELLATION — one clean rank of four, twice */
-      dom0: {x: span(0.4, 2.4), y: BAND.family - u * 1.15},
-      dom1: {x: span(3.3, 2.4), y: BAND.family - u * 1.15},
-      dom2: {x: span(6.2, 2.4), y: BAND.family - u * 1.15},
-      dom3: {x: span(9.1, 2.4), y: BAND.family - u * 1.15},
-      dom4: {x: span(0.4, 2.4), y: BAND.family + u * 1.15},
-      dom5: {x: span(3.3, 2.4), y: BAND.family + u * 1.15},
-      dom6: {x: span(6.2, 2.4), y: BAND.family + u * 1.15},
-      dom7: {x: span(9.1, 2.4), y: BAND.family + u * 1.15},
+      dom0: {x: span(0.4, 2.4), y: BAND.family - u * 1.35},
+      dom1: {x: span(3.3, 2.4), y: BAND.family - u * 1.35},
+      dom2: {x: span(6.2, 2.4), y: BAND.family - u * 1.35},
+      dom3: {x: span(9.1, 2.4), y: BAND.family - u * 1.35},
+      dom4: {x: span(0.4, 2.4), y: BAND.family + u * 1.35},
+      dom5: {x: span(3.3, 2.4), y: BAND.family + u * 1.35},
+      dom6: {x: span(6.2, 2.4), y: BAND.family + u * 1.35},
+      dom7: {x: span(9.1, 2.4), y: BAND.family + u * 1.35},
 
       /* V · THE EDGE — what the community is running, and the way out */
       motus0: {x: span(0.4, 3.2), y: BAND.edge},
       motus1: {x: span(4.4, 3.2), y: BAND.edge},
       motus2: {x: span(8.4, 3.2), y: BAND.edge},
-      gpu:    {x: span(2, 4),   y: BAND.edge + u * 2.2},
-      phy:    {x: span(8.5, 2), y: BAND.edge + u * 2.2},
-      ccm0:   {x: span(0.5, 1.4), y: BAND.edge - u * 1.9},
-      ccm1:   {x: span(2.2, 1.4), y: BAND.edge - u * 1.9},
-      ccm2:   {x: span(3.9, 1.4), y: BAND.edge - u * 1.9},
-      ccm3:   {x: span(5.6, 1.4), y: BAND.edge - u * 1.9}
+      gpu:    {x: span(2, 4),   y: BAND.edge + u * 2.8},
+      phy:    {x: span(8.5, 2), y: BAND.edge + u * 2.8}
     };
+
+    /* ═══ THE NARROW LAW ═══ three groups never fit one phone row; they only
+       ever touch. Two per row, and the stack grows to hold them. */
+    if (NARROW){
+      P.sccs = {x: span(0.3, 5.2),  y: BAND.compute};
+      P.scu  = {x: span(6.5, 5.2),  y: BAND.compute};
+      P.npu  = {x: span(6.5, 5.2),  y: BAND.compute + u * 3.1};
+      P.loop = {x: span(0.3, 5.2),  y: BAND.compute + u * 3.1};
+      P.brg  = {x: span(0.3, 5.2),  y: BAND.compute + u * 6.0};
+      P.mcc  = {x: span(6.5, 5.2),  y: BAND.compute + u * 6.0};
+      /* three live models become a RANK, not a 2+1 — each gets its own row */
+      P.motus0 = {x: span(1.4, 9.2), y: BAND.edge - u * 1.55};
+      P.motus1 = {x: span(1.4, 9.2), y: BAND.edge};
+      P.motus2 = {x: span(1.4, 9.2), y: BAND.edge + u * 1.55};
+      P.gpu    = {x: span(1.4, 9.2), y: BAND.edge + u * 4.0};
+      P.phy    = {x: span(1.4, 9.2), y: BAND.edge + u * 6.0};
+    }
+
+
+    /* ═════════════ THE PROCESS ═════════════
+       A board of chips is a noun. A platform is a verb. So one closed track
+       runs the whole perimeter, with five stations named for what actually
+       happens at that altitude: a room opens, people gather, the work is
+       stepped, the record becomes an asset, the value moves — and the motion
+       opens the next room. It has no end anywhere, which is the point of
+       drawing it as a ring. Painted once; only the charge moves. */
+    var RG = {lx: u * 1.15, rx: CW - u * 1.15,
+              ty: WH * 0.055, by: WH * 0.945, r: u * 0.85};
+    var RING = (function(){
+      var pts = [], k;
+      function arcPts(cx, cy, a0, a1){
+        for (k = 1; k <= 5; k++){
+          var a = a0 + (a1 - a0) * (k / 5);
+          pts.push([cx + Math.cos(a) * RG.r, cy + Math.sin(a) * RG.r]);
+        }
+      }
+      pts.push([RG.lx + RG.r, RG.ty]);
+      pts.push([RG.rx - RG.r, RG.ty]);
+      arcPts(RG.rx - RG.r, RG.ty + RG.r, -Math.PI / 2, 0);
+      pts.push([RG.rx, RG.by - RG.r]);
+      arcPts(RG.rx - RG.r, RG.by - RG.r, 0, Math.PI / 2);
+      pts.push([RG.lx + RG.r, RG.by]);
+      arcPts(RG.lx + RG.r, RG.by - RG.r, Math.PI / 2, Math.PI);
+      pts.push([RG.lx, RG.ty + RG.r]);
+      arcPts(RG.lx + RG.r, RG.ty + RG.r, Math.PI, Math.PI * 1.5);
+      pts.push([RG.lx + RG.r, RG.ty]);
+      var seg = [], tot = 0, k2;
+      for (k2 = 1; k2 < pts.length; k2++){
+        var d = Math.hypot(pts[k2][0] - pts[k2 - 1][0], pts[k2][1] - pts[k2 - 1][1]);
+        seg.push(d); tot += d;
+      }
+      return {pts: pts, seg: seg, len: tot};
+    })();
+    function ringAt(f){
+      f = ((f % 1) + 1) % 1;
+      var want = f * RING.len, run = 0, k3;
+      for (k3 = 0; k3 < RING.seg.length; k3++){
+        if (run + RING.seg[k3] >= want){
+          var q = RING.seg[k3] ? (want - run) / RING.seg[k3] : 0;
+          return {x: RING.pts[k3][0] + (RING.pts[k3 + 1][0] - RING.pts[k3][0]) * q,
+                  y: RING.pts[k3][1] + (RING.pts[k3 + 1][1] - RING.pts[k3][1]) * q};
+        }
+        run += RING.seg[k3];
+      }
+      return {x: RING.pts[0][0], y: RING.pts[0][1]};
+    }
+    /* the five stations — down the right rail as the work is done,
+       back up the left rail as the value returns */
+    var STATION = [
+      {name: 'INIT',   sub: 'a room opens',      y: BAND.control, side: 1},
+      {name: 'SESH',   sub: 'people gather',     y: BAND.compute, side: 1},
+      {name: 'STEPS',  sub: 'the work is done',  y: BAND.cortex,  side: 1},
+      {name: 'TRAX',   sub: 'it becomes a record', y: BAND.edge,  side: -1},
+      {name: '!MOTUS', sub: 'the value moves',   y: BAND.family,  side: -1}
+    ];
+    STATION.forEach(function(st){
+      st.x = st.side > 0 ? RG.rx : RG.lx;
+      var best = 0, bd = 1e9, f2, p5, d5;
+      for (f2 = 0; f2 < 1; f2 += 0.002){
+        p5 = ringAt(f2); d5 = Math.hypot(p5.x - st.x, p5.y - st.y);
+        if (d5 < bd){ bd = d5; best = f2; }
+      }
+      st.f = best;
+    });
 
     function comp(kind, cx, cy, w, h, extra){
       var c = {kind: kind, x: cx, y: cy, w: w, h: h, u: u, e: 0,
@@ -1443,8 +1580,8 @@
     var xtal = comp('xtal', P.xtal.x, P.xtal.y, u * 1.15, u * 0.6);
     var rom  = comp('rom',  P.rom.x, P.rom.y, u * 1.05, u * 0.8);
     var rams = [];
-    for (i = 0; i < 4; i++)
-      rams.push(comp('ram', P.rams.x, P.rams.y - u * 1.68 + i * u * 1.12, u * 3.1, u * 0.72,
+    for (i = 0; i < 3; i++)
+      rams.push(comp('ram', P.rams.x, P.rams.y - u * 1.3 + i * u * 1.3, u * 3.1, u * 0.72,
                      {label: 'M' + (i + 1)}));
     var scu = comp('scu', P.scu.x, P.scu.y, u * 2.9, u * 2.9);
     var sccs = [];
@@ -1497,11 +1634,9 @@
       });
     })();
     var agents = comp('agents', P.agents.x, P.agents.y, u * 1.6, u * 1.6);
-    var CCM = ['Coordination', 'Community', 'Commons', 'Core'];
+    /* the four CC Models are already carried by the MODELS die — one chip
+       says it better than four repeated ones */
     var ccms = [];
-    for (i = 0; i < 4; i++)
-      ccms.push(comp('ccm', P['ccm' + i].x, P['ccm' + i].y, u * 0.92, u * 0.92,
-                     {label: CCM[i], shape: i}));
     var motusChips = [];
     for (i = 0; i < 3; i++)
       motusChips.push(comp('motus', P['motus' + i].x, P['motus' + i].y, u * 1.9, u * 1.15,
@@ -1510,8 +1645,8 @@
     for (i = 0; i < 4; i++)
       net(chokes[i], cpu, [[chokes[i].x, chokes[i].y + u * 0.4],
                            [chokes[i].x, cpu.y - cpu.h / 2]], 2.5);
-    for (i = 0; i < 8; i++){
-      var sy = cpu.y - u * 1.3 + i * u * 0.36;
+    for (i = 0; i < 6; i++){
+      var sy = cpu.y - u * 1.1 + i * u * 0.38;
       var ram2 = rams[Math.floor(i / 2)];
       var ty = ram2.y + (i % 2 ? u * 0.14 : -u * 0.14);
       net(cpu, ram2, route(cpu.x + cpu.w / 2, sy, ram2.x - ram2.w / 2, ty), 1);
@@ -1522,7 +1657,7 @@
       net(scu, cpu, route(scu.x - u * 0.6 + i * u * 0.6, scu.y - scu.h / 2,
                           cpu.x + u * 0.4 + i * u * 0.5, cpu.y + cpu.h / 2), 1.2);
     for (i = 0; i < 3; i++)
-      net(scu, sccs[i], route(scu.x - scu.w / 2, scu.y - u * 0.5 + i * u * 0.5,
+      net(scu, sccs[i], route(scu.x - scu.w / 2, scu.y - u * 0.55 + i * u * 0.55,
                               sccs[i].x + sccs[i].w / 2, sccs[i].y), 1.2);
     for (i = 0; i < 2; i++)
       net(scu, mcc, route(scu.x + u * 0.4 + i * u * 0.5, scu.y + scu.h / 2,
@@ -1560,9 +1695,7 @@
     net(npu, agents, route(npu.x + u * 0.4, npu.y + npu.h / 2, agents.x, agents.y - agents.h / 2), 1);
     net(agents, scu, route(agents.x, agents.y - agents.h / 2, scu.x + u * 0.5, scu.y + scu.h / 2), 1.2);
     net(agents, mcc, route(agents.x + agents.w / 2, agents.y, mcc.x, mcc.y + mcc.h / 2), 1);
-    for (i = 0; i < 4; i++)
-      net(ccms[i], commons, route(ccms[i].x, ccms[i].y - ccms[i].h / 2,
-                                  commons.x - u * 0.6 + i * u * 0.4, commons.y + commons.h / 2), 1);
+
     for (i = 0; i < 3; i++)
       net(motusChips[i], agents, route(motusChips[i].x, motusChips[i].y - motusChips[i].h / 2,
                                        agents.x - u * 0.5 + i * u * 0.5, agents.y + agents.h / 2), 1);
@@ -1617,9 +1750,14 @@
         g.strokeStyle = 'rgba(201,168,106,0.45)';
         g.lineWidth = 1.5; g.stroke();
       });
-      var pours = [[0.05, 0.035, 0.90, 0.20], [0.05, 0.265, 0.90, 0.20],
-                   [0.05, 0.495, 0.90, 0.16], [0.05, 0.675, 0.90, 0.18],
-                   [0.05, 0.865, 0.90, 0.13]];
+      /* one ground pour per tier, cut to the tier it carries */
+      var pours = [
+        [0.05, (BAND.control - u * 4.0) / WH, 0.90, (u * 8.2) / WH],
+        [0.05, (BAND.compute - u * 2.0) / WH, 0.90, (u * 6.2) / WH],
+        [0.05, (BAND.cortex  - u * 1.6) / WH, 0.90, (u * 3.2) / WH],
+        [0.05, (BAND.family  - u * 2.1) / WH, 0.90, (u * 4.2) / WH],
+        [0.05, (BAND.edge    - u * 1.1) / WH, 0.90, (u * 4.9) / WH]
+      ];
       pours.forEach(function(pr){
         var px4 = CW * pr[0], py4 = WH * pr[1], pw = CW * pr[2], ph2 = WH * pr[3];
         g.fillStyle = 'rgba(20,42,66,0.2)';
@@ -1772,10 +1910,34 @@
       rr(g, sccs[0].x - u * 0.95, sccs[0].y - u * 1.05, (sccs[2].x - sccs[0].x) + u * 1.9, u * 2.35, 6);
       g.stroke();
       g.setLineDash([]);
-      /* the four tiers, named down the left margin */
-      [['I \u00b7 CONTROL', 0.12], ['II \u00b7 COMPUTE', 0.40],
-       ['III \u00b7 CORTEX', 0.60], ['IV \u00b7 THE CONSTELLATION', 0.79],
-       ['V \u00b7 THE LIVING EDGE', 0.95]].forEach(function(tt){
+      /* the process track: painted once, walked forever */
+      g.beginPath();
+      RING.pts.forEach(function(p7, k7){ k7 ? g.lineTo(p7[0], p7[1]) : g.moveTo(p7[0], p7[1]); });
+      g.strokeStyle = 'rgba(64,124,172,0.22)';
+      g.lineWidth = 1.7;
+      g.stroke();
+      g.strokeStyle = 'rgba(150,205,245,0.07)';
+      g.lineWidth = 4.5;
+      g.stroke();
+      STATION.forEach(function(st){
+        g.beginPath(); g.arc(st.x, st.y, u * 0.19, 0, 6.29);
+        g.fillStyle = '#02060c'; g.fill();
+        g.strokeStyle = 'rgba(120,190,240,0.5)'; g.lineWidth = 1.2; g.stroke();
+        g.beginPath(); g.arc(st.x, st.y, u * 0.07, 0, 6.29);
+        g.fillStyle = 'rgba(150,210,250,0.55)'; g.fill();
+        g.save();
+        g.translate(st.x - st.side * u * 0.44, st.y);
+        g.rotate(-Math.PI / 2);
+        g.font = '600 ' + Math.max(6, u * 0.2) + 'px ui-monospace, Consolas, monospace';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillStyle = 'rgba(158,210,248,0.62)';
+        g.fillText(st.name, 0, 0);
+        g.restore();
+      });
+      /* the five tiers, named down the left margin */
+      [['I \u00b7 CONTROL', BAND.control / WH], ['II \u00b7 COMPUTE', BAND.compute / WH],
+       ['III \u00b7 CORTEX', BAND.cortex / WH], ['IV \u00b7 THE CONSTELLATION', BAND.family / WH],
+       ['V \u00b7 THE LIVING EDGE', BAND.edge / WH]].forEach(function(tt){
         g.save();
         g.translate(u * 0.52, WH * tt[1]);
         g.rotate(-Math.PI / 2);
@@ -1788,14 +1950,15 @@
       etch(g, chokes[3].x + u * 1.15, chokes[0].y, '!MOTUS PWR', Math.max(6, u * 0.2), 0, 'left');
       etch(g, rams[0].x, rams[0].y - u * 0.85, 'STEPS', Math.max(6, u * 0.2), 0);
       etch(g, sccs[1].x, sccs[0].y - u * 1.32, 'SEMBLE COMPUTE CORES', Math.max(5.5, u * 0.18), 0);
-      etch(g, ccms[0].x - u * 0.75, ccms[0].y - u * 0.85, 'CC MODELS', Math.max(5.5, u * 0.18), 0, 'left');
+
       etch(g, domains[0].x - u * 0.85, domains[0].y - u * 0.95, 'THE CONSTELLATION',
            Math.max(5.5, u * 0.18), 0, 'left');
-      etch(g, motusChips[0].x - u * 1.1, motusChips[0].y - u * 0.95, 'LIVE MOTUSMODELS \u00b7 MOTUS.MARKET',
+      etch(g, u * 1.0, motusChips[0].y - u * 1.45, 'LIVE MOTUSMODELS \u00b7 MOTUS.MARKET',
            Math.max(5.5, u * 0.18), 0, 'left');
       g.setLineDash([4, 4]);
       g.strokeStyle = INK + '0.12)';
-      rr(g, u * 0.8, motusChips[0].y - u * 1.15, CW - u * 1.6, u * 2.05, 6);
+      rr(g, u * 0.8, motusChips[0].y - u * 1.15, CW - u * 1.6,
+         (motusChips[2].y - motusChips[0].y) + u * 2.05, 6);
       g.stroke();
       g.setLineDash([]);
       comps.forEach(function(c){ drawComp(g, c, 0, 0); });
@@ -2138,10 +2301,12 @@
     var status = {store: 'PENDING', models: 0, moves: 0, mcc: 0, pool: 0};
     function setStatus(o){ for (var k in o) status[k] = o[k]; }
     function drawPanel(g, t, top){
-      /* the readout has its OWN lane at the foot of the view — it never sits
-         on top of the silicon it is reporting on */
+      /* the readout lives in the LATTICE, not in the viewport: the empty lane
+         between CONTROL and COMPUTE, centred on the spine. Anchored to the
+         view it had to land on something; anchored to the grid it never can. */
       var pw = u * 6.4, ph = u * 3.5;
-      var px6 = CW - pw - u * 0.8, py6 = top + VH - ph - u * 1.9;
+      var px6 = (CW - pw) / 2;
+      var py6 = (BAND.control + u * 3.1 + BAND.compute) / 2 - ph / 2;
       g.save();
       g.fillStyle = 'rgba(5,9,16,0.82)';
       rr(g, px6, py6, pw, ph, 8); g.fill();
@@ -2220,6 +2385,39 @@
 
     /* ═══ THE FLOW OF COMPUTE ═══ it never stops; it only quickens */
     function drawFlow(g, t, visTop, visBot){
+      /* the charge that never stops going round — and each station answers */
+      var rf = (t * 0.038) % 1, q2, q3, pr2, dd, near2, lit2;
+      for (q2 = 0; q2 < 2; q2++){
+        pr2 = ringAt(rf + q2 * 0.5);
+        if (pr2.y < visTop || pr2.y > visBot) continue;
+        g.save();
+        g.shadowColor = 'rgba(120,215,255,0.85)'; g.shadowBlur = 11;
+        g.beginPath(); g.arc(pr2.x, pr2.y, 1.9, 0, 6.29);
+        g.fillStyle = 'rgba(232,250,255,0.95)'; g.fill();
+        g.restore();
+      }
+      STATION.forEach(function(st){
+        if (st.y < visTop || st.y > visBot) return;
+        near2 = 1;
+        for (q3 = 0; q3 < 2; q3++){
+          dd = Math.abs(((rf + q3 * 0.5) % 1) - st.f);
+          if (dd > 0.5) dd = 1 - dd;
+          if (dd < near2) near2 = dd;
+        }
+        lit2 = 1 - near2 / 0.05;
+        if (lit2 <= 0.02) return;
+        g.save();
+        g.shadowColor = 'rgba(120,215,255,' + (0.9 * lit2).toFixed(3) + ')';
+        g.shadowBlur = 15 * lit2;
+        g.beginPath(); g.arc(st.x, st.y, u * 0.19, 0, 6.29);
+        g.strokeStyle = 'rgba(196,240,255,' + (0.85 * lit2).toFixed(3) + ')';
+        g.lineWidth = 1.7; g.stroke();
+        g.restore();
+        g.beginPath();
+        g.arc(st.x, st.y, u * (0.19 + (1 - lit2) * 0.55), 0, 6.29);
+        g.strokeStyle = 'rgba(150,220,255,' + (0.28 * lit2).toFixed(3) + ')';
+        g.lineWidth = 1; g.stroke();
+      });
       nets.forEach(function(n, ni){
         var hot = Math.max(n.a ? n.a.e : 0, n.b ? n.b.e : 0);
         var base2 = 0.13 + hot * 0.5;
@@ -2638,7 +2836,7 @@
     var qImg = new URLSearchParams(location.search).get('img');
     if (qImg) setImage(qImg);
 
-    var W, H, board, VH, WORLD_K = MOB ? 3.6 : 3.15, worldMax = 0, ky = 1, baseSize = 0.3;
+    var W, H, board, VH, worldMax = 0, ky = 1, baseSize = 0.3;
     /* this visit's growth personality — no two loads bloom alike */
     var GR = {
       a: 0.22 + Math.random() * 0.12,      /* how small it starts        */
@@ -2661,7 +2859,7 @@
                  * (MOB ? 2.05 : 1.24);
       if (bgc){ bgc.width = W; bgc.height = H; }
       VH = H;
-      var WHW = Math.round(VH * WORLD_K);
+      var WHW = Math.round(worldHeight(W, VH, MOB));
       board = makeBoard(W, WHW, VH, Math.min(DPR * 1.5, 3));
       paintMs = -1;
       worldMax = WHW - VH;
