@@ -1914,7 +1914,7 @@
       wob: 0.03 + Math.random() * 0.05,    /* the breath in its size     */
       ph: Math.random() * 6.28
     };
-    var energy = 0, lastSF = 0;
+    var energy = 0, lastSF = 0, iris = 1, irisTo = 1;
     function fit(){
       var DPR = Math.min(devicePixelRatio || 1, MOB ? 1.15 : 1.5);
       W = innerWidth; H = innerHeight;
@@ -2019,7 +2019,7 @@
              a gate — the whole board competes, near things simply weigh more. */
           var cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater
-              && wRecent.slice(-2).indexOf(c.kind + Math.round(c.x)) < 0;
+              && wRecent.slice(-3).indexOf(c.kind + Math.round(c.x)) < 0;
           });
           if (!cands.length) cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater; });
@@ -2036,37 +2036,40 @@
             wt /= (1 + 0.55 * (wVisits[key] || 0));
             var ri = wRecent.indexOf(key);
             if (ri >= 0) wt *= 0.04 + 0.12 * (ri / Math.max(1, wRecent.length));
-            /* distance: it should travel, not twitch in place */
+            /* Travel, but never "always the farthest" — that IS the ping-pong.
+               A sweet spot: a real move, not a leap to the opposite edge. */
             var dpx = Math.hypot(c.x - (0.5 + m1.x * 0.6) * W,
                                  (c.y - topW) - (0.5 - m1.y * 0.6) * H);
-            wt *= 0.35 + Math.min(1.6, dpx / (W * 0.30));
-            wt *= 0.55 + Math.random() * 1.1;   /* no two tours alike */
+            var dn = dpx / (Math.hypot(W, H) * 0.5);
+            wt *= 0.30 + Math.exp(-Math.pow((dn - 0.42) / 0.34, 2));
+            wt *= 0.35 + Math.random() * 1.6;   /* no two tours alike */
             tw += wt; return Math.max(0, wt); });
           var pick = cands[0], rw = Math.random() * tw;
           for (var wi = 0; wi < cands.length; wi++){
             rw -= wts[wi]; if (rw <= 0){ pick = cands[wi]; break; } }
+          /* one visit in four ignores every rule — structure cannot form */
+          if (Math.random() < 0.25) pick = cands[Math.floor(Math.random() * cands.length)];
           wLast = pick;
           var pkey = pick.kind + Math.round(pick.x);
           wVisits[pkey] = (wVisits[pkey] || 0) + 1;
           wRecent.push(pkey);
           if (wRecent.length > 8) wRecent.shift();
-          /* land somewhere ON it, not always dead centre */
-          var jx = (Math.random() - 0.5) * pick.w * 0.34;
-          var jy = (Math.random() - 0.5) * pick.h * 0.34;
-          mouse.x = Math.max(-0.55, Math.min(0.55, ((pick.x + jx) / W - 0.5) / 0.6));
-          mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - (pick.y + jy - worldTop()) / H) / 0.6));
+          /* dead centre, every time. ±0.55 truncated anything past 83% of the
+             board — edge components were never reached, only approached. */
+          mouse.x = Math.max(-0.83, Math.min(0.83, (pick.x / W - 0.5) / 0.6));
+          mouse.y = Math.max(-0.83, Math.min(0.83, (0.5 - (pick.y - worldTop()) / H) / 0.6));
           wanderT = now + 3000 + Math.random() * 5000;
           if (Math.random() < 0.14){   /* sometimes it just drifts, looking */
             wLast = null;
-            mouse.x = (Math.random() - 0.5) * 0.9;
-            mouse.y = (Math.random() - 0.5) * 0.9;
+            mouse.x = (Math.random() - 0.5) * 1.2;
+            mouse.y = (Math.random() - 0.5) * 1.2;
             wanderT = now + 1600 + Math.random() * 1600;
           }
         } else if (wLast){
           /* the breathing hold — locked, but alive */
           /* clamped: a frozen clock must never let the breath run away */
-          mouse.x = Math.max(-0.55, Math.min(0.55, mouse.x + Math.sin(now * 0.00047) * 0.00022));
-          mouse.y = Math.max(-0.55, Math.min(0.55, mouse.y + Math.cos(now * 0.00039) * 0.00019));
+          mouse.x = Math.max(-0.83, Math.min(0.83, mouse.x + Math.sin(now * 0.00047) * 0.00022));
+          mouse.y = Math.max(-0.83, Math.min(0.83, mouse.y + Math.cos(now * 0.00039) * 0.00019));
         }
       }
       var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
@@ -2091,7 +2094,15 @@
       var shaped = Math.pow(sFrac, GR.curve);
       var breath = 1 + GR.wob * Math.sin(now * 0.00041 + GR.ph)
                      + GR.wob * 0.6 * Math.sin(now * 0.00097 + GR.ph * 1.7);
-      var grow = (GR.a + GR.b * shaped) * breath * (1 + energy * 0.16);
+      /* the iris: it contracts onto a small component and opens for a large
+         one, so the studied thing always fills the glass */
+      if (focus2 && board){
+        var want = Math.max(focus2.w, focus2.h) * 0.92;
+        var basePx = Math.min(W, H) * 0.30 * (GR.a + GR.b * shaped);
+        irisTo = Math.max(0.42, Math.min(1.45, want / Math.max(1, basePx)));
+      } else irisTo = 1;
+      iris += (irisTo - iris) * (1 - Math.pow(0.975, dt * 60));
+      var grow = (GR.a + GR.b * shaped) * breath * (1 + energy * 0.16) * iris;
       if (!isFinite(grow) || grow <= 0) grow = GR.a;
       gl.uniform1f(U.uSize, baseSize * grow);
       growNow = grow;
