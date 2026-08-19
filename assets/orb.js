@@ -1566,6 +1566,8 @@
         wctx.fillStyle = fg;
         wctx.fillRect(o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
       }
+      drawFlow(wctx, t);
+      drawMoves(wctx, t);
       nets.forEach(function(n, ni){
         var ea = n.a ? n.a.e : 0, eb = n.b ? n.b.e : 0;
         var e = Math.max(ea, eb);
@@ -1633,8 +1635,8 @@
       }
       comps.forEach(function(c){
         if (c.e < 0.4) return;
-        var loud = (mv && mv.focus === c) ? 1.55 : 0.85;
-        var voices = (mv && mv.focus === c) ? 3 : 2;
+        var loud = (mv && mv.focus === c) ? 1.9 : 0.95;
+        var voices = (mv && mv.focus === c) ? 4 : 2;
         for (var nk = 0; nk < voices; nk++){
           var cyc = ((t * 0.42) + c.phase * 0.3 + nk * 0.55) % 1.6;
           var na = Math.sin(Math.PI * cyc / 1.6) * 0.62 * c.e * loud;
@@ -1785,6 +1787,52 @@
       meters(wctx, Math.min(1, sum / 5), Math.min(1, nCross / 6), top);
     }
 
+    /* ═══ LIVE MOVES ═══ what people are actually doing, right now, carried
+       as named packets along the board's main artery. */
+    var moves = [];
+    function setMoves(list){ moves = (list || []).slice(0, 6); }
+    function drawMoves(g, t){
+      if (!moves.length) return;
+      var path = [[phy.x, phy.y], [cpu.x, cpu.y]];
+      for (var i = 0; i < moves.length; i++){
+        var mv2 = moves[i];
+        var f = ((t * 0.055) + i / moves.length) % 1;
+        var px5 = path[0][0] + (path[1][0] - path[0][0]) * f;
+        var py5 = path[0][1] + (path[1][1] - path[0][1]) * f;
+        var fade = Math.sin(Math.PI * f);
+        if (fade < 0.05) continue;
+        g.save();
+        g.shadowColor = 'rgba(120,225,255,' + (0.8 * fade).toFixed(3) + ')';
+        g.shadowBlur = 12 * fade;
+        g.beginPath(); g.arc(px5, py5, 2.6 + fade, 0, 6.29);
+        g.fillStyle = 'rgba(225,248,255,' + (0.85 * fade).toFixed(3) + ')';
+        g.fill();
+        g.restore();
+        g.font = '600 ' + Math.round(u * 0.17) + 'px ui-monospace, Consolas, monospace';
+        g.textAlign = 'left'; g.textBaseline = 'middle';
+        g.fillStyle = 'rgba(150,215,245,' + (0.5 * fade).toFixed(3) + ')';
+        g.fillText((mv2.name || '') + ' \u00b7 ' + (mv2.mantra || '').slice(0, 22),
+                   px5 + u * 0.2, py5 - u * 0.18);
+      }
+    }
+
+    /* ═══ THE FLOW OF COMPUTE ═══ it never stops; it only quickens */
+    function drawFlow(g, t){
+      nets.forEach(function(n, ni){
+        var hot = Math.max(n.a ? n.a.e : 0, n.b ? n.b.e : 0);
+        var base2 = 0.13 + hot * 0.5;
+        if (base2 < 0.14) return;
+        var speed = 0.055 + hot * 0.16;
+        for (var k = 0; k < 2; k++){
+          var f = ((t * speed) + k * 0.5 + ni * 0.291) % 1;
+          var pt3 = along(n, f);
+          g.beginPath(); g.arc(pt3.x, pt3.y, 1.1 + hot, 0, 6.29);
+          g.fillStyle = LIT + (base2 * (0.4 + 0.6 * Math.sin(Math.PI * f))).toFixed(3) + ')';
+          g.fill();
+        }
+      });
+    }
+
     /* the community posts a model; the board grows it */
     function setModels(list){
       if (!list || !list.length) return;
@@ -1799,7 +1847,8 @@
       worldRepaint();
     }
     return {work: work, comps: comps, render: render, u: u, WH: WH, BQ: BQ,
-            setModels: setModels,
+            setModels: setModels, setMoves: setMoves,
+            moveCount: function(){ return moves.length; },
             mcc: function(){ return Object.keys(crossed).length; }};
   }
 
@@ -2080,22 +2129,22 @@
     var C = {
       displacementSpeed: 0.18,   /* steadier surface               */
       sizeDefault: 0.275,
-      lerp1: 0.017, lerp2: 0.027,
-      scrollLerp1: 0.06, scrollLerp2: 0.045,
+      lerp1: 0.011, lerp2: 0.018,
+      scrollLerp1: 0.042, scrollLerp2: 0.032,
       reach: 0.3,                /* shorter leash — it holds place */
       sideDrift: 0.16, yClamp: 0.22,
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
-    C.dwell = 6500; C.dwellVar = 6000;
+    C.dwell = 9000; C.dwellVar = 7500;
     C.bright = 1.14;
     DRAMA = MOB ? 2.1 : 1;
     if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 2400;        /* it settles before it begins to move     */
       C.reach = 0.34;
-      C.lerp1 = 0.0042; C.lerp2 = 0.0072;      /* moves like it has mass    */
+      C.lerp1 = 0.0029; C.lerp2 = 0.0049;      /* moves like it has mass    */
       C.scrollLerp1 = 0.028; C.scrollLerp2 = 0.021;
       C.displacementSpeed = 0.085;              /* the surface barely stirs  */
-      C.dwell = 9500; C.dwellVar = 7000;        /* it stays, and considers   */
+      C.dwell = 13000; C.dwellVar = 9000;       /* it stays, and considers   */
       C.bright = 1.55;                          /* the world through it, lifted */
     }
     var cv = document.createElement('canvas');
@@ -2227,9 +2276,23 @@
           })
           .catch(function(){ /* offline: the board keeps its own names */ });
       }
-      pull();
+      function pullMoves(){
+        fetch('https://www.motusmoves.us/api/feed?limit=6', {cache: 'no-store'})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            var mv3 = (j && j.moves) || [];
+            if (mv3.length && board && board.setMoves){
+              board.setMoves(mv3.map(function(x){
+                return {name: x.name || x.handle || '', mantra: x.mantra || x.moveSlug || ''};
+              }));
+              worldDirty = true;
+            }
+          }).catch(function(){});
+      }
+      pull(); pullMoves();
       setInterval(pull, 90000);
-      window.SembleOrb && (window.SembleOrb.refreshModels = pull);
+      setInterval(pullMoves, 60000);
+      window.SembleOrb && (window.SembleOrb.refreshModels = function(){ pull(); pullMoves(); });
     })();
     var rsT;
     addEventListener('resize', function(){
@@ -2322,8 +2385,8 @@
       });
       if (!pool.length) pool = board.comps.filter(function(c){
         return c.kind !== 'choke' && !c.noWater; });
-      var KW = {scu: 1.7, scc: 1.55, loop: 1.5, cpu: 1.25, gpu: 1.2,
-                models: 1.15, guide: 1.1};
+      var KW = {motus: 2.2, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
+                cpu: 1.35, gpu: 1.25, models: 1.2, ccm: 1.15, guide: 1.1};
       var tw = 0, wts = pool.map(function(c){
         var key = c.kind + Math.round(c.x);
         var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h) * (KW[c.kind] || 1);
@@ -2414,12 +2477,12 @@
         var dNow = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
         var held = now - mvT;
         if (mvPhase === 'APPROACH' && dNow < 0.03){ mvPhase = 'LOCK'; mvT = now; }
-        else if (mvPhase === 'LOCK'    && held > 560){ mvPhase = 'SCAN';    mvT = now; }
-        else if (mvPhase === 'SCAN'    && held > (MOB ? 3400 : 2600)){ mvPhase = 'FEED'; mvT = now; }
-        else if (mvPhase === 'FEED'    && held > (MOB ? 3800 : 3000)){
+        else if (mvPhase === 'LOCK'    && held > 900){ mvPhase = 'SCAN';    mvT = now; }
+        else if (mvPhase === 'SCAN'    && held > (MOB ? 5200 : 4200)){ mvPhase = 'FEED'; mvT = now; }
+        else if (mvPhase === 'FEED'    && held > (MOB ? 5600 : 4600)){
           mvPhase = 'SURGE'; mvT = now; focus2.surge = 1; }
-        else if (mvPhase === 'SURGE'   && held > 950){ mvPhase = 'CASCADE'; mvT = now; }
-        else if (mvPhase === 'CASCADE' && held > 1550){ mvPhase = 'REST';   mvT = now; }
+        else if (mvPhase === 'SURGE'   && held > 1400){ mvPhase = 'CASCADE'; mvT = now; }
+        else if (mvPhase === 'CASCADE' && held > 2200){ mvPhase = 'REST';   mvT = now; }
       } else mvPhase = 'REST';
       var MV = {phase: mvPhase, k: (now - mvT) / 1000, focus: focus2};
       /* the wanderer: idle → visit a system, water it, move on */
@@ -2436,8 +2499,8 @@
           });
           if (!cands.length) cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater; });
-          var KW = {scu: 1.7, scc: 1.55, loop: 1.5, cpu: 1.25, gpu: 1.2,
-                    models: 1.15, mcc: 0, guide: 1.1};
+          var KW = {motus: 2.2, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
+                    cpu: 1.35, gpu: 1.25, models: 1.2, ccm: 1.15, mcc: 0, guide: 1.1};
           var tw = 0, wts = cands.map(function(c){
             var key = c.kind + Math.round(c.x);
             var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h);
@@ -2586,6 +2649,7 @@
                 target: wLast ? {kind: wLast.kind, x: Math.round(wLast.x),
                                  y: Math.round(wLast.y - worldTop())} : null,
                 aim: {x: +mouse.x.toFixed(3), y: +mouse.y.toFixed(3)},
+                moves: board.moveCount(),
                 models: board.comps.filter(function(c){ return c.kind === 'motus'; })
                           .map(function(c){ return c.label + (c.by ? ' / ' + c.by : ''); }),
                 movement: {phase: mvPhase, beat: +((performance.now() - mvT) / 1000).toFixed(2),
