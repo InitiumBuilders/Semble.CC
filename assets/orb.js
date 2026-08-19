@@ -264,6 +264,11 @@
     g.stroke();
   }
 
+  /* Apple-grade: a continuous (squircle-ish) corner, not a rounded box */
+  function sq(g, x, y, w, h, k){
+    var r = Math.min(w, h) * (k || 0.16);
+    rr(g, x, y, w, h, r);
+  }
   function pkg(g, x, y, w, h, e, r, seed, accStr){
     if (e > 0.03){
       g.save();
@@ -273,12 +278,12 @@
       rr(g, x, y, w, h, r || 3); g.fill();
       g.restore();
     }
-    var grd = g.createLinearGradient(x, y, x, y + h);
-    grd.addColorStop(0, e > 0.03 ? '#13233a' : '#101c2c');
-    grd.addColorStop(0.55, '#0b1422');
-    grd.addColorStop(1, '#070d16');
+    var grd = g.createLinearGradient(x, y, x + w * 0.35, y + h);
+    grd.addColorStop(0, e > 0.03 ? '#16283f' : '#121f31');
+    grd.addColorStop(0.5, '#0c1626');
+    grd.addColorStop(1, '#080f1a');
     g.fillStyle = grd;
-    rr(g, x, y, w, h, r || 3); g.fill();
+    sq(g, x, y, w, h, 0.14); g.fill();
     /* the studio light lives top-left — every body agrees */
     g.fillStyle = 'rgba(200,228,250,0.10)';
     g.fillRect(x + 2, y + 1, w - 4, 1);
@@ -286,10 +291,11 @@
     g.fillStyle = 'rgba(0,0,0,0.22)';
     g.fillRect(x + 2, y + h - 2, w - 4, 1);
     g.fillRect(x + w - 2, y + 2, 1, h - 4);
-    if (seed) speckle(g, x, y, w, h, seed);
-    g.strokeStyle = 'rgba(150,190,220,' + (0.22 + 0.5 * e).toFixed(3) + ')';
+    /* a whisper of grain — Apple finishes are near-flawless */
+    if (seed) { g.save(); g.globalAlpha = 0.34; speckle(g, x, y, w, h, seed); g.restore(); }
+    g.strokeStyle = 'rgba(186,214,235,' + (0.26 + 0.46 * e).toFixed(3) + ')';
     g.lineWidth = 1;
-    rr(g, x + 0.5, y + 0.5, w - 1, h - 1, r || 3); g.stroke();
+    sq(g, x + 0.5, y + 0.5, w - 1, h - 1, 0.14); g.stroke();
   }
 
   function pin1(g, x, y, e){
@@ -440,27 +446,32 @@
   /* the integrated heat spreader — brushed nickel, bevelled, notched */
   function ihs(g, x, y, w, h, e){
     var bev = Math.min(w, h) * 0.14;
-    var lg = g.createLinearGradient(x, y, x + w, y + h);
-    lg.addColorStop(0, 'rgba(196,210,222,0.95)');
-    lg.addColorStop(0.35, 'rgba(128,144,158,0.95)');
-    lg.addColorStop(0.62, 'rgba(168,184,198,0.95)');
-    lg.addColorStop(1, 'rgba(96,110,124,0.95)');
+    /* warm silver, the way anodised aluminium takes light */
+    var lg = g.createLinearGradient(x, y, x + w * 0.6, y + h);
+    lg.addColorStop(0, 'rgba(226,232,238,0.96)');
+    lg.addColorStop(0.28, 'rgba(174,184,194,0.96)');
+    lg.addColorStop(0.55, 'rgba(206,206,200,0.96)');
+    lg.addColorStop(0.78, 'rgba(150,158,168,0.96)');
+    lg.addColorStop(1, 'rgba(188,190,186,0.96)');
     g.fillStyle = lg;
-    rr(g, x, y, w, h, 2.5); g.fill();
-    /* the bevel */
-    g.strokeStyle = 'rgba(226,238,248,0.55)';
-    g.lineWidth = 1.1;
-    rr(g, x + bev * 0.5, y + bev * 0.5, w - bev, h - bev, 2); g.stroke();
-    g.strokeStyle = 'rgba(30,40,50,0.55)';
-    rr(g, x + 0.5, y + 0.5, w - 1, h - 1, 2.5); g.stroke();
-    /* brushed grain */
+    sq(g, x, y, w, h, 0.13); g.fill();
+    /* one hairline chamfer catching the light — the whole tell of the finish */
+    g.strokeStyle = 'rgba(255,255,255,0.62)';
+    g.lineWidth = 0.9;
+    sq(g, x + bev * 0.42, y + bev * 0.42, w - bev * 0.84, h - bev * 0.84, 0.13); g.stroke();
+    g.strokeStyle = 'rgba(22,30,38,0.5)';
+    sq(g, x + 0.5, y + 0.5, w - 1, h - 1, 0.13); g.stroke();
+    /* brushing: fine, even, restrained */
     var br = lcg(Math.round(x * 13 + y * 7));
-    g.strokeStyle = 'rgba(255,255,255,0.045)';
-    g.lineWidth = 0.6;
-    for (var i = 0; i < 26; i++){
+    g.save();
+    sq(g, x, y, w, h, 0.13); g.clip();
+    g.strokeStyle = 'rgba(255,255,255,0.028)';
+    g.lineWidth = 0.5;
+    for (var i = 0; i < 46; i++){
       var gy2 = y + br() * h;
       g.beginPath(); g.moveTo(x + 1, gy2); g.lineTo(x + w - 1, gy2); g.stroke();
     }
+    g.restore();
     /* the corner notch every lid has */
     g.fillStyle = 'rgba(40,52,64,0.85)';
     g.beginPath();
@@ -557,8 +568,11 @@
         g.restore();
       }
       bga(g, x, y, w, h, pulse);
-      etch(g, c.x, y + h - u * 0.42, 'CC CORES', Math.max(6, u * 0.26), pulse, null, A);
-      etch(g, c.x, y + h - u * 0.18, 'SMBL-6C-2643', Math.max(4.5, u * 0.13), 0);
+      /* restraint: while the lid is on, its own etching is the only mark */
+      if (e >= 0.55){
+        etch(g, c.x, y + h - u * 0.34, 'CC CORES', Math.max(6, u * 0.26), pulse, null, A);
+        etch(g, c.x, y + h - u * 0.10, 'SMBL-6C-2643', Math.max(4.5, u * 0.13), 0);
+      }
       etch(g, x - u * 0.34, y - u * 0.3, 'U1', Math.max(5, u * 0.2), pulse);
       etch(g, x + u * 0.55, y + h + u * 0.36, '2643-B', Math.max(4.5, u * 0.14), 0, 'left');
 
@@ -1009,7 +1023,7 @@
     base.width = work.width = CW; base.height = work.height = WH;
     var bctx = base.getContext('2d'), wctx = work.getContext('2d');
     var comps = [], nets = [], crossed = {};
-    var u = Math.min(CW, VH) / 11.4;
+    var u = Math.min(CW, VH) / 12.6;
 
     /* film grain, baked once */
     var grain = document.createElement('canvas');
@@ -1043,7 +1057,7 @@
       {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65},
       {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05}
     ];
-    var margin = u * 0.62, it, a2, b2, i;
+    var margin = u * 0.9, it, a2, b2, i;
     for (it = 0; it < 160; it++){
       var moved = false;
       for (i = 0; i < plan.length; i++){
@@ -1241,7 +1255,7 @@
         for (var gx = 10; gx < CW; gx += 22)
           g.fillRect(gx, gy, 1.2, 1.2);
       var vr = lcg(4242);
-      for (i = 0; i < 300; i++){
+      for (i = 0; i < 150; i++){
         g.beginPath(); g.arc(vr() * CW, vr() * WH, 0.7 + vr() * 0.8, 0, 6.29);
         g.fillStyle = 'rgba(90,150,200,' + (0.08 + vr() * 0.1).toFixed(3) + ')'; g.fill();
       }
@@ -1271,7 +1285,7 @@
       });
       /* flux ghosts — the residue of assembly */
       var fr = lcg(9911);
-      for (i = 0; i < 8; i++){
+      for (i = 0; i < 4; i++){
         var fx2 = fr() * CW, fy2 = fr() * WH, frr = u * (1.2 + fr() * 2.2);
         var fgr = g.createRadialGradient(fx2, fy2, 1, fx2, fy2, frr);
         var warm = fr() > 0.45;
@@ -1303,7 +1317,7 @@
       caps.forEach(function(cp){ polyCap(g, cp.x, cp.y, cp.r, 0); });
       var s = 987654321;
       function rnd(){ s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }
-      for (var p2 = 0; p2 < 54; p2++){
+      for (var p2 = 0; p2 < 26; p2++){
         var px3 = u * 0.6 + rnd() * (CW - u * 1.2), py3 = u * 0.6 + rnd() * (WH - u * 1.9);
         var clear = comps.every(function(c){
           return Math.abs(px3 - c.x) > c.w / 2 + u * 0.5 || Math.abs(py3 - c.y) > c.h / 2 + u * 0.5;
@@ -1332,7 +1346,7 @@
       g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillStyle = INK + '0.26)';
       var dg2 = lcg(2718);
-      for (i = 0; i < 16; i++){
+      for (i = 0; i < 7; i++){
         var dx3 = u * 0.8 + dg2() * (CW - u * 1.6), dy3 = u * 0.8 + dg2() * (WH - u * 2);
         var okd = comps.every(function(c){
           return Math.abs(dx3 - c.x) > c.w / 2 + u * 0.45 || Math.abs(dy3 - c.y) > c.h / 2 + u * 0.45; });
@@ -1824,9 +1838,14 @@
       sideDrift: 0.16, yClamp: 0.22,
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
-    if (MOB){                    /* the phone: fewer pixels, same soul */
+    C.dwell = 4200; C.dwellVar = 4200;
+    if (MOB){                    /* the phone: heavy, as if under pressure */
       C.idleAfter = 300;         /* no cursor — it lives on its own at once */
       C.reach = 0.34;
+      C.lerp1 = 0.011; C.lerp2 = 0.018;        /* deep viscosity            */
+      C.scrollLerp1 = 0.045; C.scrollLerp2 = 0.035;
+      C.displacementSpeed = 0.12;               /* the surface barely stirs  */
+      C.dwell = 7000; C.dwellVar = 6000;        /* it stays, and considers   */
     }
     var cv = document.createElement('canvas');
     cv.setAttribute('aria-hidden', 'true');
@@ -1995,11 +2014,14 @@
       if (wRecent.length > 8) wRecent.shift();
       return pick;
     }
-    function aimAt(pick){
+    /* ONE attention. Whoever sets the target also sets how long it is held,
+       so the idle wander can never yank the orb off what a scroll just locked. */
+    function aimAt(pick, holdMs){
       if (!pick) return;
       wLast = pick;
       mouse.x = Math.max(-0.83, Math.min(0.83, (pick.x / W - 0.5) / 0.6));
       mouse.y = Math.max(-0.83, Math.min(0.83, (0.5 - (pick.y - worldTop()) / H) / 0.6));
+      wanderT = performance.now() + (holdMs || C.dwell + Math.random() * C.dwellVar);
     }
     var lastScrollPick = 0;
     addEventListener('scroll', function(){
@@ -2007,10 +2029,11 @@
       lerp1 = C.scrollLerp1; lerp2 = C.scrollLerp2;
       var nw = Date.now();
       /* re-choose only when the held one has left the frame, or after a beat */
-      var stale = !wLast || nw - lastScrollPick > 2200;
-      if (!stale && wLast){
+      /* keep what we are looking at until it truly leaves the frame */
+      var stale = !wLast;
+      if (!stale){
         var sy2 = (wLast.y - worldTop()) / H;
-        stale = sy2 < 0.08 || sy2 > 0.92;
+        stale = sy2 < 0.06 || sy2 > 0.94;
       }
       if (stale){ aimAt(chooseNear(true)); lastScrollPick = nw; }
       else aimAt(wLast);   /* hold the lock while the world pans under it */
@@ -2097,12 +2120,12 @@
              board — edge components were never reached, only approached. */
           mouse.x = Math.max(-0.83, Math.min(0.83, (pick.x / W - 0.5) / 0.6));
           mouse.y = Math.max(-0.83, Math.min(0.83, (0.5 - (pick.y - worldTop()) / H) / 0.6));
-          wanderT = now + 3000 + Math.random() * 5000;
+          wanderT = now + C.dwell + Math.random() * C.dwellVar;
           if (Math.random() < 0.14){   /* sometimes it just drifts, looking */
             wLast = null;
             mouse.x = (Math.random() - 0.5) * 1.2;
             mouse.y = (Math.random() - 0.5) * 1.2;
-            wanderT = now + 1600 + Math.random() * 1600;
+            wanderT = now + C.dwell * 0.5 + Math.random() * C.dwellVar * 0.4;
           }
         } else if (wLast){
           /* the breathing hold — locked, but alive */
@@ -2115,7 +2138,7 @@
       var f2 = 1 - Math.pow(1 - lerp2, dt * 60);
       if (focus2){
         var dLock = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
-        f1 = Math.min(1, f1 * (1 + 3.0 * Math.max(0, 1 - dLock * 6)));
+        f1 = Math.min(1, f1 * (1 + (MOB ? 1.6 : 3.0) * Math.max(0, 1 - dLock * 6)));
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
