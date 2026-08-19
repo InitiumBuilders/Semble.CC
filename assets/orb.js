@@ -525,8 +525,9 @@
       /* the release: the body blooms, and a halo throws light onto the board */
       var DR = (typeof DRAMA === 'number') ? DRAMA : 1;
       g.save();
-      var hal = g.createRadialGradient(c.x, c.y, Math.min(w, h) * 0.3,
-                                       c.x, c.y, Math.max(w, h) * (1.15 + 0.5 * DR));
+      var halR = Math.max(w, h) * (1.15 + 0.5 * DR);
+      if (!isFinite(halR) || halR <= 0) halR = Math.max(w, h) * 1.2;
+      var hal = g.createRadialGradient(c.x, c.y, Math.min(w, h) * 0.3, c.x, c.y, halR);
       hal.addColorStop(0, acc(c) + (0.20 * surge * DR).toFixed(3) + ')');
       hal.addColorStop(1, acc(c) + '0)');
       g.fillStyle = hal;
@@ -688,7 +689,8 @@
       pkg(g, x, y, w, h, pulse, 2.5, seed, A);
       pin1(g, x + u * 0.14, y + u * 0.14, Math.max(0.35, pulse));
       if (e > 0.02){
-        var br = Math.min(1, e * 1.2) * Math.min(w, h) * 0.55;
+        var br = Math.max(1, Math.min(1, e * 1.2) * Math.min(w, h) * 0.55);
+        if (!isFinite(br)) br = Math.min(w, h) * 0.3;
         var bg = g.createRadialGradient(x + u * 0.14, y + u * 0.14, 1, x + u * 0.14, y + u * 0.14, br);
         bg.addColorStop(0, 'rgba(150,240,255,' + (0.55 * pulse).toFixed(3) + ')');
         bg.addColorStop(1, 'rgba(150,240,255,0)');
@@ -1425,7 +1427,9 @@
           if (Math.hypot(c.x - o.x, c.y - o.y) < o.r * 1.1){ avg += c.e; nn++; }
         });
         avg = nn ? avg / nn : 0;
-        var fg = wctx.createRadialGradient(o.x, o.y, 2, o.x, o.y, o.r * 0.62);
+        var beamR = o.r * 0.62;
+        if (!isFinite(beamR) || beamR <= 2) beamR = 3;
+        var fg = wctx.createRadialGradient(o.x, o.y, 2, o.x, o.y, beamR);
         fg.addColorStop(0, 'rgba(110,220,255,' + (0.05 + 0.09 * avg).toFixed(3) + ')');
         fg.addColorStop(1, 'rgba(110,220,255,0)');
         wctx.fillStyle = fg;
@@ -1461,10 +1465,14 @@
       });
       /* the MOTUS core ignites from thresholds, never from watering */
       var nCross = Object.keys(crossed).length;
-      mcc.e += (Math.min(1, nCross / 4) - mcc.e) * 0.06;
+      var arrival = (typeof window !== 'undefined' && window.__sembleFinale > 0.93)
+        ? (window.__sembleFinale - 0.93) / 0.07 : 0;
+      mcc.e += (Math.max(Math.min(1, nCross / 4), arrival) - mcc.e) * 0.06;
+      if (arrival > 0.85 && !mcc.surge && Math.sin(t * 0.9) > 0.98) mcc.surge = 1;
       comps.forEach(function(c){ if (c.e > 0.02) drawComp(wctx, c, c.e, t); });
       /* the finale: at journey's end the board itself answers */
-      if (typeof window !== 'undefined' && window.__sembleFinale > 0.9){
+      if (typeof window !== 'undefined' && isFinite(window.__sembleFinale)
+          && window.__sembleFinale > 0.9 && isFinite(top) && VH > 0){
         var fin = (Math.sin(t * 1.1) * 0.5 + 0.5) * (window.__sembleFinale - 0.9) / 0.1;
         wctx.save();
         wctx.globalCompositeOperation = 'lighter';
@@ -2004,6 +2012,49 @@
        only "halfway". Scrolling now does exactly what idling does: choose ONE
        component near the new viewport centre, by the same weighted memory, and
        lock to its centre. Desktop and mobile run this identical path. */
+    /* ═══ THE WORLD KNOWS WHAT YOU ARE READING ═══
+       Every section of the page names something that exists in silicon below.
+       Whatever you are reading, the orb goes and waters that component. */
+    var THEME = [
+      [/\bsteps?\b/i,                     ['ram']],
+      [/\btrax\b/i,                       ['gpu']],
+      [/\bsesh\b|\bsession\b/i,           ['xtal']],
+      [/\binit\b|\bbegin/i,               ['rom']],
+      [/motus|\bcredit/i,                 ['choke', 'mcc']],
+      [/\bcrossing\b|\bthreshold/i,       ['brg']],
+      [/\bcompute|\bscu\b|\bagent/i,      ['scu', 'scc']],
+      [/\bcommons\b|\broom\b/i,           ['commons']],
+      [/\bmodels?\b/i,                    ['models']],
+      [/\bseats?\b|\bpeople\b|\bcommit/i, ['seats']],
+      [/\bloop\b|\bflywheel\b/i,          ['loop']],
+      [/\bguide\b|six words/i,            ['guide']],
+      [/\bsemble\b|\bcores?\b/i,          ['cpu']]
+    ];
+    var themeKinds = null;
+    /* the HEADING is the topic — body text names everything and means nothing.
+       First rule that matches wins, so a block has one subject, not a grab-bag. */
+    var readables = [].slice.call(
+      document.querySelectorAll('section, .act, .step, .tier, .pane')).map(function(el){
+        var hd = el.querySelector('h1,h2,h3,h4,.kick');
+        var txt = ((hd && hd.textContent) || '').slice(0, 90);
+        if (!txt) return null;
+        for (var i = 0; i < THEME.length; i++)
+          if (THEME[i][0].test(txt)) return {el: el, kinds: THEME[i][1]};
+        return null;
+      }).filter(Boolean);
+    function readTheme(){
+      if (!readables.length){ themeKinds = null; return; }
+      var best = null, bd = 1e9;
+      for (var i = 0; i < readables.length; i++){
+        var r = readables[i].el.getBoundingClientRect();
+        if (r.height < 40 || r.bottom < 0 || r.top > H) continue;
+        var d = Math.abs(r.top + r.height / 2 - H / 2);
+        /* a small block that is on screen beats the big section containing it */
+        d *= 1 + Math.min(1.4, r.height / H) * 0.9;
+        if (d < bd){ bd = d; best = readables[i]; }
+      }
+      themeKinds = (best && bd < H * 0.9) ? best.kinds : null;
+    }
     function chooseNear(centreBias){
       if (!board) return null;
       var topW = worldTop();
@@ -2018,6 +2069,7 @@
       var tw = 0, wts = pool.map(function(c){
         var key = c.kind + Math.round(c.x);
         var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h) * (KW[c.kind] || 1);
+        if (themeKinds && themeKinds.indexOf(c.kind) >= 0) wt *= 5.5;
         var sy = (c.y - topW) / H;
         wt *= Math.exp(-Math.pow((sy - 0.5) / (centreBias ? 0.26 : 0.42), 2));
         wt /= (1 + 0.55 * (wVisits[key] || 0));
@@ -2050,9 +2102,12 @@
       scrolling = true; scrollT = Date.now();
       lerp1 = C.scrollLerp1; lerp2 = C.scrollLerp2;
       var nw = Date.now();
-      /* re-choose only when the held one has left the frame, or after a beat */
-      /* keep what we are looking at until it truly leaves the frame */
+      readTheme();
+      /* hold the lock until it leaves frame — or until the reader has moved on
+         to a section about something else entirely */
       var stale = !wLast;
+      if (!stale && themeKinds && themeKinds.indexOf(wLast.kind) < 0
+          && nw - lastScrollPick > 1400) stale = true;
       if (!stale){
         var sy2 = (wLast.y - worldTop()) / H;
         stale = sy2 < 0.06 || sy2 > 0.94;
@@ -2081,6 +2136,7 @@
         var e0 = c.e;
         if (d < o.r * 1.05) c.e = Math.min(1, c.e + (1 - c.e) * (c === focus ? 1.5 : 0.9) * dt);
         else c.e = Math.max(0, c.e - c.e * 0.28 * dt);
+        if (!isFinite(c.e)) c.e = 0;
         if (Math.abs(c.e - e0) > 0.001) changed = true;
       }
       return changed;
@@ -2097,6 +2153,7 @@
       /* the wanderer: idle → visit a system, water it, move on */
       if (!scrolling && now - lastMouseT > C.idleAfter){
         if (now > wanderT){
+          readTheme();
           var topW = worldTop();
           /* THE ZIG-ZAG BUG: a hard viewport filter left only ~3 candidates,
              so the orb could only alternate. Visibility is now a WEIGHT, not
@@ -2113,6 +2170,7 @@
             var key = c.kind + Math.round(c.x);
             var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h);
             wt *= KW[c.kind] || 1;
+            if (themeKinds && themeKinds.indexOf(c.kind) >= 0) wt *= 5.5;
             /* reachability: how near the viewport centre it would sit */
             var sy2 = (c.y - topW) / H;
             wt *= Math.exp(-Math.pow((sy2 - 0.5) / 0.42, 2));
@@ -2220,9 +2278,12 @@
     if (RM){ opacity = 1; draw(t0 + 32); }
     else {
       var running = true, raf = 0;
+      var warned = false;
       var loop = function(now){
         if (!running){ raf = 0; return; }
-        draw(now);
+        /* a single bad frame must never freeze the orb forever */
+        try { draw(now); }
+        catch (err){ if (!warned){ warned = true; console.warn('orb: frame skipped', err); } }
         raf = requestAnimationFrame(loop);
       };
       document.addEventListener('visibilitychange', function(){
@@ -2242,6 +2303,7 @@
                 target: wLast ? {kind: wLast.kind, x: Math.round(wLast.x),
                                  y: Math.round(wLast.y - worldTop())} : null,
                 aim: {x: +mouse.x.toFixed(3), y: +mouse.y.toFixed(3)},
+                reading: themeKinds ? themeKinds.slice() : null,
                 top: Math.round(worldTop()), worldMax: worldMax};
       },
       board: function(){ board.render(1, null, worldTop()); return board.work.toDataURL('image/png'); },
