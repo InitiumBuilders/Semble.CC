@@ -90,6 +90,12 @@ body.made-on .made{display:block}
   </div>
 </section>
 
+<script>
+/* THE LOOP'S STORE. Semble has no store of its own yet, so the Sesh records
+   live in the MotusMoves store — same ecosystem, same hands. When Semble gets
+   its own, this one line moves them home. */
+window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
+</script>
 <script src="/assets/semble.js"></script>
 <script src="/assets/orb.js"></script>
 <script>
@@ -107,7 +113,7 @@ body.made-on .made{display:block}
     err.style.display = 'none';
     var go = document.getElementById('goBtn');
     go.disabled = true; go.textContent = 'Opening…';
-    fetch('/api/sesh', {
+    fetch(window.SEMBLE_API, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({

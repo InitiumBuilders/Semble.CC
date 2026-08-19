@@ -98,6 +98,12 @@ body.certain .jform{display:none}
   <a class="btn" href="/new">Init one</a>
 </section>
 
+<script>
+/* THE LOOP'S STORE. Semble has no store of its own yet, so the Sesh records
+   live in the MotusMoves store — same ecosystem, same hands. When Semble gets
+   its own, this one line moves them home. */
+window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
+</script>
 <script src="/assets/semble.js"></script>
 <script src="/assets/orb.js"></script>
 <script>
@@ -159,8 +165,8 @@ body.certain .jform{display:none}
     }
   }
   function load(){
-    fetch('/api/sesh?id=' + id).then(function(r){ return r.json(); })
-      .then(function(j){ j.id ? render(j) : show('missing'); })
+    fetch(window.SEMBLE_API + '?id=' + id).then(function(r){ return r.json(); })
+      .then(function(j){ (j && j.ok && j.state) ? render(j.state) : show('missing'); })
       .catch(function(){ show('missing'); });
   }
   load();
@@ -171,14 +177,14 @@ body.certain .jform{display:none}
     var err = document.getElementById('err'); err.style.display = 'none';
     var b = document.getElementById('jbtn');
     b.disabled = true; b.textContent = 'Committing…';
-    fetch('/api/sesh', {
+    fetch(window.SEMBLE_API, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ action: 'commit', id: id,
         name: document.getElementById('jname').value })
     }).then(function(r){ return r.json(); }).then(function(j){
-      if (!j.id) throw new Error(j.error || 'could not commit');
-      render(j);
+      if (!j || !j.ok || !j.state) throw new Error((j && j.error) || 'could not commit');
+      render(j.state);
       b.disabled = false; b.textContent = 'Committed';
     }).catch(function(ex){
       err.textContent = 'Could not commit: ' + ex.message;
