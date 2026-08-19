@@ -153,6 +153,7 @@
     scu: '96,232,210',  scc: '104,216,235', brg: '130,200,255',
     mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
     choke: '255,192,112', phy: '92,225,255', loop: '124,214,255',
+    motus: '236,204,138', agents: '150,205,255', ccm: '104,216,235',
     guide: '255,216,150', seats: '92,225,255',
     models: '104,216,235', commons: '96,232,210'
   };
@@ -1012,6 +1013,85 @@
       g.fill();
       etch(g, c.x, c.y + lr + u * 0.3, 'THE LOOP', Math.max(5, u * 0.18), pulse, null, A2k(c));
 
+    } else if (c.kind === 'motus'){
+      /* A LIVE MOTUSMODEL — one real model from the community, as silicon.
+         Its charge is its conviction; its die-cells are its runs. */
+      breakout(g, x, y, w, h, Math.max(3.2, u * 0.15), u * 0.1);
+      drop(g, x, y, w, h, 3);
+      substrate(g, x, y, w, h, pulse);
+      pkg(g, x, y, w, h, pulse, 3, seed, A2k(c));
+      pin1(g, x + u * 0.12, y + u * 0.12, pulse);
+      /* the die: one cell per run, filling with the model's own life */
+      var mrun = Math.max(1, Math.min(12, c.runs || 1));
+      var mlit = Math.ceil(mrun * Math.min(1, e * 1.1));
+      var mw = w * 0.74, mh = h * 0.34;
+      var mx0 = c.x - mw / 2, my0 = c.y - mh / 2 - u * 0.08;
+      die(g, mx0, my0, mw, mh, pulse * 0.4, false, seed, A2k(c));
+      for (i = 0; i < mrun; i++){
+        var cwd = mw / mrun;
+        var on3 = i < mlit && e > 0.03;
+        var cp3 = on3 ? (0.5 + 0.5 * Math.sin(t * 2.2 + c.phase + i * 0.8)) * pulse : 0;
+        die(g, mx0 + i * cwd + 1, my0 + 1.5, Math.max(1, cwd - 2), mh - 3,
+            cp3, on3, seed + i, A2k(c));
+      }
+      /* the mark the community knows it by */
+      if (c.glyph){
+        g.font = '600 ' + Math.round(u * 0.4) + 'px ui-monospace, Consolas, monospace';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillStyle = A2k(c) + (0.5 + 0.5 * pulse).toFixed(3) + ')';
+        g.fillText(c.glyph, c.x, my0 - u * 0.28);
+      }
+      etch(g, c.x, y + h + u * 0.2, (c.label || 'MODEL').toUpperCase().slice(0, 16),
+           Math.max(5, u * 0.17), pulse, null, A2k(c));
+      if (c.by) etch(g, c.x, y + h + u * 0.42, 'BY ' + c.by.toUpperCase().slice(0, 14),
+                     Math.max(4.2, u * 0.13), 0);
+
+    } else if (c.kind === 'agents'){
+      /* MOTUS AGENTS — presence-gated intelligence, waiting on a person */
+      breakout(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11);
+      drop(g, x, y, w, h, 3);
+      qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11, pulse, A2k(c));
+      pkg(g, x, y, w, h, pulse, 3, seed, A2k(c));
+      var arn = 5, arr2 = Math.min(w, h) * 0.3;
+      for (i = 0; i < arn; i++){
+        var aa2 = -Math.PI / 2 + i * (6.283 / arn);
+        var ax3 = c.x + Math.cos(aa2) * arr2, ay3 = c.y + Math.sin(aa2) * arr2;
+        var ae = Math.max(0, Math.min(1, e * arn * 1.15 - i));
+        var at2 = ae > 0 && e > 0.03
+          ? ae * (0.55 + 0.45 * Math.sin(t * 2.6 + c.phase + i * 1.1)) : 0;
+        g.beginPath(); g.moveTo(c.x, c.y); g.lineTo(ax3, ay3);
+        g.strokeStyle = A2k(c) + (0.14 + 0.5 * at2).toFixed(3) + ')';
+        g.lineWidth = 1; g.stroke();
+        g.beginPath(); g.arc(ax3, ay3, 2.6, 0, 6.29);
+        g.fillStyle = A2k(c) + (0.3 + 0.6 * at2).toFixed(3) + ')';
+        if (at2 > 0.3){ g.save(); g.shadowColor = A2k(c) + '0.9)'; g.shadowBlur = 8 * at2;
+          g.fill(); g.restore(); } else g.fill();
+      }
+      g.beginPath(); g.arc(c.x, c.y, 3.2, 0, 6.29);
+      g.fillStyle = 'rgba(230,246,255,' + (0.35 + 0.6 * pulse).toFixed(3) + ')';
+      g.fill();
+      etch(g, c.x, y + h + u * 0.22, 'MOTUS AGENTS', Math.max(5, u * 0.17), pulse, null, A2k(c));
+
+    } else if (c.kind === 'ccm'){
+      /* THE CC MODELS — four shapes a room can take */
+      drop(g, x, y, w, h, 2.5);
+      pkg(g, x, y, w, h, pulse, 2.5, seed, A2k(c));
+      var shp = c.shape || 0, sr = Math.min(w, h) * 0.26;
+      g.strokeStyle = A2k(c) + (0.35 + 0.6 * pulse).toFixed(3) + ')';
+      g.lineWidth = 1.4;
+      g.beginPath();
+      if (shp === 0){ g.arc(c.x, c.y, sr, 0, 6.29); }
+      else if (shp === 1){ hexPath(g, c.x, c.y, sr); }
+      else if (shp === 2){ g.rect(c.x - sr * 0.8, c.y - sr * 0.8, sr * 1.6, sr * 1.6); }
+      else { g.moveTo(c.x, c.y - sr); g.lineTo(c.x + sr * 0.88, c.y + sr * 0.6);
+             g.lineTo(c.x - sr * 0.88, c.y + sr * 0.6); g.closePath(); }
+      if (e > 0.03){
+        g.save(); g.shadowColor = A2k(c) + (0.85 * pulse).toFixed(3) + ')';
+        g.shadowBlur = 12 * pulse; g.stroke(); g.restore();
+      } else g.stroke();
+      etch(g, c.x, y + h + u * 0.2, (c.label || 'CC').toUpperCase(),
+           Math.max(4.4, u * 0.14), pulse, null, A2k(c));
+
     } else if (c.kind === 'phy'){
       drop(g, x, y, w, h, 2.5);
       qfpLeads(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11, pulse, A);
@@ -1076,7 +1156,15 @@
       {id: 'seats', x: CW * 0.14, y: WH * 0.55, hw: u * 1.0, hh: u * 0.5},
       {id: 'models', x: CW * 0.24, y: WH * 0.665, hw: u * 0.85, hh: u * 0.7},
       {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65},
-      {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05}
+      {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05},
+      {id: 'agents',  x: CW * 0.74, y: WH * 0.885, hw: u * 0.85, hh: u * 0.85},
+      {id: 'ccm0', x: CW * 0.13, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
+      {id: 'ccm1', x: CW * 0.28, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
+      {id: 'ccm2', x: CW * 0.43, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
+      {id: 'ccm3', x: CW * 0.58, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
+      {id: 'motus0', x: CW * 0.20, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62},
+      {id: 'motus1', x: CW * 0.50, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62},
+      {id: 'motus2', x: CW * 0.80, y: WH * 0.955, hw: u * 1.0, hh: u * 0.62}
     ];
     var margin = u * 0.9, it, a2, b2, i;
     for (it = 0; it < 160; it++){
@@ -1168,6 +1256,17 @@
     var models = comp('models', P.models.x, P.models.y, u * 1.65, u * 1.35);
     var commons = comp('commons', P.commons.x, P.commons.y, u * 1.85, u * 1.25);
     var loop = comp('loop', P.loop.x, P.loop.y, u * 2.0, u * 2.0);
+    /* ═══ THE MOTUS TIER ═══ the ecosystem this sits inside */
+    var agents = comp('agents', P.agents.x, P.agents.y, u * 1.6, u * 1.6);
+    var CCM = ['Coordination', 'Community', 'Commons', 'Core'];
+    var ccms = [];
+    for (i = 0; i < 4; i++)
+      ccms.push(comp('ccm', P['ccm' + i].x, P['ccm' + i].y, u * 0.92, u * 0.92,
+                     {label: CCM[i], shape: i}));
+    var motusChips = [];
+    for (i = 0; i < 3; i++)
+      motusChips.push(comp('motus', P['motus' + i].x, P['motus' + i].y, u * 1.9, u * 1.15,
+                           {label: 'MotusModel', runs: 3, glyph: '\u2726'}));
 
     for (i = 0; i < 4; i++)
       net(chokes[i], cpu, [[chokes[i].x, chokes[i].y + u * 0.4],
@@ -1205,6 +1304,15 @@
     net(commons, phy, route(commons.x + commons.w / 2, commons.y, phy.x - phy.w / 2, phy.y + u * 0.2), 1);
     net(loop, cpu, route(loop.x - loop.w / 2, loop.y, cpu.x + cpu.w / 2, cpu.y + u * 0.2), 1);
     net(loop, scu, route(loop.x + loop.w / 2, loop.y, scu.x - scu.w / 2, scu.y - u * 0.3), 1);
+    /* the ecosystem is wired to the compute that runs it */
+    net(agents, scu, route(agents.x, agents.y - agents.h / 2, scu.x + u * 0.5, scu.y + scu.h / 2), 1.2);
+    net(agents, mcc, route(agents.x + agents.w / 2, agents.y, mcc.x, mcc.y + mcc.h / 2), 1);
+    for (i = 0; i < 4; i++)
+      net(ccms[i], commons, route(ccms[i].x, ccms[i].y - ccms[i].h / 2,
+                                  commons.x - u * 0.6 + i * u * 0.4, commons.y + commons.h / 2), 1);
+    for (i = 0; i < 3; i++)
+      net(motusChips[i], agents, route(motusChips[i].x, motusChips[i].y - motusChips[i].h / 2,
+                                       agents.x - u * 0.5 + i * u * 0.5, agents.y + agents.h / 2), 1);
     var fingersX = CW * 0.5, fingersW = u * 4;
     for (i = 0; i < 4; i++)
       net(phy, null, route(phy.x - u * 0.4 + i * u * 0.26, phy.y + phy.h / 2,
@@ -1235,7 +1343,8 @@
       }
     }
 
-    (function paintBase(){
+    function worldRepaint(){ paintBase(); }
+    function paintBase(){
       var g = bctx;
       var bgr = g.createLinearGradient(0, 0, 0, WH);
       bgr.addColorStop(0, '#050b14'); bgr.addColorStop(1, '#040810');
@@ -1413,6 +1522,14 @@
       etch(g, chokes[3].x + u * 1.15, chokes[0].y, '!MOTUS PWR', Math.max(6, u * 0.2), 0, 'left');
       etch(g, rams[0].x, rams[0].y - u * 0.85, 'STEPS', Math.max(6, u * 0.2), 0);
       etch(g, sccs[1].x, sccs[0].y - u * 1.32, 'SEMBLE COMPUTE CORES', Math.max(5.5, u * 0.18), 0);
+      etch(g, ccms[0].x - u * 0.75, ccms[0].y - u * 0.85, 'CC MODELS', Math.max(5.5, u * 0.18), 0, 'left');
+      etch(g, motusChips[0].x - u * 1.1, motusChips[0].y - u * 0.95, 'LIVE MOTUSMODELS \u00b7 MOTUS.MARKET',
+           Math.max(5.5, u * 0.18), 0, 'left');
+      g.setLineDash([4, 4]);
+      g.strokeStyle = INK + '0.12)';
+      rr(g, u * 0.8, motusChips[0].y - u * 1.15, CW - u * 1.6, u * 2.05, 6);
+      g.stroke();
+      g.setLineDash([]);
       comps.forEach(function(c){ drawComp(g, c, 0, 0); });
       /* one light across the whole board — uniformity is what reads digital */
       var lightG = g.createLinearGradient(0, 0, CW, WH);
@@ -1427,7 +1544,8 @@
         for (var gx2 = 0; gx2 < CW; gx2 += 256)
           g.drawImage(grain, gx2, gy2);
       g.globalAlpha = 1;
-    })();
+    }
+    paintBase();
 
     function render(t, o, top, focus, mv){
       top = top || 0;
@@ -1667,7 +1785,21 @@
       meters(wctx, Math.min(1, sum / 5), Math.min(1, nCross / 6), top);
     }
 
+    /* the community posts a model; the board grows it */
+    function setModels(list){
+      if (!list || !list.length) return;
+      for (var i = 0; i < motusChips.length; i++){
+        var m = list[i % list.length];
+        motusChips[i].label = (m.name || 'Model');
+        motusChips[i].runs = Math.max(1, Math.min(12, m.runs || 1));
+        motusChips[i].glyph = m.emoji || '\u2726';
+        motusChips[i].by = (m.author && m.author.name) || m.by || '';
+        motusChips[i].live = !!m.isLive;
+      }
+      worldRepaint();
+    }
     return {work: work, comps: comps, render: render, u: u, WH: WH, BQ: BQ,
+            setModels: setModels,
             mcc: function(){ return Object.keys(crossed).length; }};
   }
 
@@ -2043,7 +2175,7 @@
     var qImg = new URLSearchParams(location.search).get('img');
     if (qImg) setImage(qImg);
 
-    var W, H, board, VH, WORLD_K = MOB ? 2.6 : 2.2, worldMax = 0, ky = 1, baseSize = 0.3;
+    var W, H, board, VH, WORLD_K = MOB ? 3.1 : 2.7, worldMax = 0, ky = 1, baseSize = 0.3;
     /* this visit's growth personality — no two loads bloom alike */
     var GR = {
       a: 0.22 + Math.random() * 0.12,      /* how small it starts        */
@@ -2075,8 +2207,38 @@
       E.uploadWorld(board.work);
     }
     fit();
+    /* ═══ THE LIVING ECOSYSTEM ═══ the models the community has posted, live
+       from motusmoves.us. New ones appear on the board without a deploy. */
+    (function pullModels(){
+      var seen = '';
+      function pull(){
+        fetch('https://www.motusmoves.us/api/models', {cache: 'no-store'})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            var list = (j && j.models) || [];
+            if (!list.length || !board || !board.setModels) return;
+            list.sort(function(a, b){ return (b.lastRunAt || 0) - (a.lastRunAt || 0); });
+            var sig = list.slice(0, 3).map(function(m){
+              return m.id + ':' + (m.runs || 0); }).join('|');
+            if (sig === seen) return;
+            seen = sig;
+            board.setModels(list);
+            worldDirty = true;
+          })
+          .catch(function(){ /* offline: the board keeps its own names */ });
+      }
+      pull();
+      setInterval(pull, 90000);
+      window.SembleOrb && (window.SembleOrb.refreshModels = pull);
+    })();
     var rsT;
-    addEventListener('resize', function(){ clearTimeout(rsT); rsT = setTimeout(fit, 180); }, {passive: true});
+    addEventListener('resize', function(){
+      clearTimeout(rsT);
+      rsT = setTimeout(function(){
+        fit();
+        if (window.SembleOrb && SembleOrb.refreshModels) SembleOrb.refreshModels();
+      }, 180);
+    }, {passive: true});
 
     var HOME = {x: 0, y: -0.05};
     var mouse = {x: HOME.x, y: HOME.y}, m1 = {x: HOME.x, y: HOME.y}, m2 = {x: HOME.x, y: HOME.y};
@@ -2118,7 +2280,9 @@
       [/\bcrossing\b|\bthreshold/i,       ['brg']],
       [/\bcompute|\bscu\b|\bagent/i,      ['scu', 'scc']],
       [/\bcommons\b|\broom\b/i,           ['commons']],
-      [/\bmodels?\b/i,                    ['models']],
+      [/\bmodels?\b/i,                    ['models', 'motus', 'ccm']],
+      [/\bagents?\b|\bintelligence\b/i,   ['agents']],
+      [/\bmarket\b|\bmotusmoves\b/i,      ['motus']],
       [/\bseats?\b|\bpeople\b|\bcommit/i, ['seats']],
       [/\bloop\b|\bflywheel\b/i,          ['loop']],
       [/\bguide\b|six words/i,            ['guide']],
@@ -2422,6 +2586,8 @@
                 target: wLast ? {kind: wLast.kind, x: Math.round(wLast.x),
                                  y: Math.round(wLast.y - worldTop())} : null,
                 aim: {x: +mouse.x.toFixed(3), y: +mouse.y.toFixed(3)},
+                models: board.comps.filter(function(c){ return c.kind === 'motus'; })
+                          .map(function(c){ return c.label + (c.by ? ' / ' + c.by : ''); }),
                 movement: {phase: mvPhase, beat: +((performance.now() - mvT) / 1000).toFixed(2),
                            sequence: 'APPROACH·LOCK·SCAN·FEED·SURGE·CASCADE·REST'},
                 reading: themeKinds ? themeKinds.slice() : null,
