@@ -1813,7 +1813,8 @@
 
   /* ════════ FULL MODE — the page orb ════════ */
   function initFull(){
-    if (!matchMedia('(min-width: 1000px)').matches) return null;
+    var MOB = !matchMedia('(min-width: 1000px)').matches;
+    if (MOB && document.querySelector('.tabs')) return null;  /* the app has its orblet */
     var C = {
       displacementSpeed: 0.18,   /* steadier surface               */
       sizeDefault: 0.275,
@@ -1823,6 +1824,10 @@
       sideDrift: 0.16, yClamp: 0.22,
       idleAfter: 2600            /* ms without a mouse → dock home */
     };
+    if (MOB){                    /* the phone: fewer pixels, same soul */
+      C.idleAfter = 300;         /* no cursor — it lives on its own at once */
+      C.reach = 0.34;
+    }
     var cv = document.createElement('canvas');
     cv.setAttribute('aria-hidden', 'true');
     cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none';
@@ -1838,11 +1843,41 @@
       bgx = bgc.getContext('2d');
     }
 
-    [].forEach.call(document.querySelectorAll('.wrap, .hero, nav.nav, footer, .app, .tabs, .cc'), function(el){
-      var cs = getComputedStyle(el);
-      if (cs.position === 'static') el.style.position = 'relative';
-      if (cs.zIndex === 'auto') el.style.zIndex = '1';
-    });
+    /* the glass lives BEHIND the words — always, on every page, forever */
+    var LIFT = '.wrap, .hero, nav.nav, footer, .app, .tabs, .cc, section, main, ' +
+               'article, header, .comp, .initform, .sesh, .act, .pane, .hud, .made';
+    function lift(){
+      [].forEach.call(document.querySelectorAll(LIFT), function(el){
+        var cs = getComputedStyle(el);
+        if (cs.position === 'static') el.style.position = 'relative';
+        if (cs.zIndex === 'auto' || cs.zIndex === '0') el.style.zIndex = '1';
+      });
+    }
+    lift();
+    /* THE WORDS ALWAYS WIN. The glass is depth behind them, never noise
+       through them — so every reading surface gets a real backing while
+       the orb is alive, and on a phone the orb itself sits back. */
+    document.body.classList.add('orb-on');
+    (function(){
+      var st = document.createElement('style');
+      st.textContent =
+        'body.orb-on .step,body.orb-on .pane,body.orb-on .card,body.orb-on .tier,' +
+        'body.orb-on .f,body.orb-on .meta,body.orb-on .seat,body.orb-on .cc,' +
+        'body.orb-on .stg,body.orb-on .colo,body.orb-on .sig{' +
+        'background-color:rgba(7,11,19,.88)!important;' +
+        'box-shadow:0 0 0 1px rgba(140,180,215,.10)}' +
+        '@media(max-width:999px){' +
+        'body.orb-on p,body.orb-on h1,body.orb-on h2,body.orb-on h3,body.orb-on h4,' +
+        'body.orb-on .kick,body.orb-on li{' +
+        'text-shadow:0 1px 10px rgba(3,6,12,.95),0 0 26px rgba(3,6,12,.85)}}';
+      document.head.appendChild(st);
+    })();
+    /* pages that build their DOM after us must be lifted too */
+    if (window.MutationObserver){
+      var mo = new MutationObserver(function(){ lift(); });
+      mo.observe(document.body, {childList: true, subtree: true});
+      setTimeout(function(){ mo.disconnect(); }, 8000);
+    }
 
     var imgOpacity = 0, imgTarget = 0;
     function setImage(src){
@@ -1870,7 +1905,7 @@
     var qImg = new URLSearchParams(location.search).get('img');
     if (qImg) setImage(qImg);
 
-    var W, H, board, VH, WORLD_K = 2.2, worldMax = 0, ky = 1, baseSize = 0.3;
+    var W, H, board, VH, WORLD_K = MOB ? 2.6 : 2.2, worldMax = 0, ky = 1, baseSize = 0.3;
     /* this visit's growth personality — no two loads bloom alike */
     var GR = {
       a: 0.22 + Math.random() * 0.12,      /* how small it starts        */
@@ -1881,12 +1916,13 @@
     };
     var energy = 0, lastSF = 0;
     function fit(){
-      var DPR = Math.min(devicePixelRatio || 1, 1.5);
+      var DPR = Math.min(devicePixelRatio || 1, MOB ? 1.15 : 1.5);
       W = innerWidth; H = innerHeight;
       cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
       gl.viewport(0, 0, cv.width, cv.height);
       gl.uniform4f(U.uResolution, cv.width, cv.height, W >= H ? W / H : 1, W >= H ? 1 : H / W);
-      baseSize = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault * 1.24;
+      baseSize = Math.min(Math.max(W, 800), 2000) / Math.max(W, 1000) * C.sizeDefault
+                 * (MOB ? 1.55 : 1.24);
       if (bgc){ bgc.width = W; bgc.height = H; }
       VH = H;
       var WHW = Math.round(VH * WORLD_K);
@@ -1905,6 +1941,15 @@
     var lerp1 = C.lerp1, lerp2 = C.lerp2, scrolling = false, scrollT = 0;
     var lastMouseT = -1e9, wanderT = 0, wLast = null, wRecent = [], wVisits = {};
 
+    if (MOB){
+      addEventListener('touchstart', function(e){
+        var tch = e.touches && e.touches[0]; if (!tch) return;
+        mouse.x = Math.max(-0.55, Math.min(0.55, (tch.clientX / W - 0.5) * C.reach * 2));
+        mouse.y = Math.max(-0.55, Math.min(0.55, (-tch.clientY / H + 0.5) * C.reach * 2));
+        wLast = null;
+        wanderT = performance.now() + 2600;   /* it looks where you touched */
+      }, {passive: true});
+    }
     addEventListener('mousemove', function(e){
       if (scrolling) return;
       lastMouseT = performance.now(); wanderT = 0;
@@ -1969,21 +2014,34 @@
       if (!scrolling && now - lastMouseT > C.idleAfter){
         if (now > wanderT){
           var topW = worldTop();
+          /* THE ZIG-ZAG BUG: a hard viewport filter left only ~3 candidates,
+             so the orb could only alternate. Visibility is now a WEIGHT, not
+             a gate — the whole board competes, near things simply weigh more. */
           var cands = board.comps.filter(function(c){
-            if (c.kind === 'choke' || c.noWater || c === wLast) return false;
-            var sy2 = c.y - topW;
-            return sy2 > H * 0.12 && sy2 < H * 0.88; });
+            return c.kind !== 'choke' && !c.noWater
+              && wRecent.slice(-2).indexOf(c.kind + Math.round(c.x)) < 0;
+          });
           if (!cands.length) cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater; });
+          var KW = {scu: 1.7, scc: 1.55, loop: 1.5, cpu: 1.25, gpu: 1.2,
+                    models: 1.15, mcc: 0, guide: 1.1};
           var tw = 0, wts = cands.map(function(c){
             var key = c.kind + Math.round(c.x);
             var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h);
-            var KW = {scu: 1.6, scc: 1.5, loop: 1.45, cpu: 1.2, gpu: 1.15};
             wt *= KW[c.kind] || 1;
-            wt *= 0.7 + Math.random() * 0.65;   /* no two tours alike */
-            wt /= (1 + 0.7 * (wVisits[key] || 0));
-            if (wRecent.indexOf(key) >= 0) wt *= 0.12;
-            tw += wt; return wt; });
+            /* reachability: how near the viewport centre it would sit */
+            var sy2 = (c.y - topW) / H;
+            wt *= Math.exp(-Math.pow((sy2 - 0.5) / 0.42, 2));
+            /* a long memory, and a hard aversion to anything recent */
+            wt /= (1 + 0.55 * (wVisits[key] || 0));
+            var ri = wRecent.indexOf(key);
+            if (ri >= 0) wt *= 0.04 + 0.12 * (ri / Math.max(1, wRecent.length));
+            /* distance: it should travel, not twitch in place */
+            var dpx = Math.hypot(c.x - (0.5 + m1.x * 0.6) * W,
+                                 (c.y - topW) - (0.5 - m1.y * 0.6) * H);
+            wt *= 0.35 + Math.min(1.6, dpx / (W * 0.30));
+            wt *= 0.55 + Math.random() * 1.1;   /* no two tours alike */
+            tw += wt; return Math.max(0, wt); });
           var pick = cands[0], rw = Math.random() * tw;
           for (var wi = 0; wi < cands.length; wi++){
             rw -= wts[wi]; if (rw <= 0){ pick = cands[wi]; break; } }
@@ -1991,9 +2049,12 @@
           var pkey = pick.kind + Math.round(pick.x);
           wVisits[pkey] = (wVisits[pkey] || 0) + 1;
           wRecent.push(pkey);
-          if (wRecent.length > 4) wRecent.shift();
-          mouse.x = Math.max(-0.55, Math.min(0.55, (pick.x / W - 0.5) / 0.6));
-          mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - (pick.y - worldTop()) / H) / 0.6));
+          if (wRecent.length > 8) wRecent.shift();
+          /* land somewhere ON it, not always dead centre */
+          var jx = (Math.random() - 0.5) * pick.w * 0.34;
+          var jy = (Math.random() - 0.5) * pick.h * 0.34;
+          mouse.x = Math.max(-0.55, Math.min(0.55, ((pick.x + jx) / W - 0.5) / 0.6));
+          mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - (pick.y + jy - worldTop()) / H) / 0.6));
           wanderT = now + 3000 + Math.random() * 5000;
           if (Math.random() < 0.14){   /* sometimes it just drifts, looking */
             wLast = null;
@@ -2016,7 +2077,7 @@
       }
       m1.x += (mouse.x - m1.x) * f1; m1.y += (mouse.y - m1.y) * f1;
       m2.x += (m1.x - m2.x) * f2;   m2.y += (m1.y - m2.y) * f2;
-      opacity += (1 - opacity) * (1 - Math.pow(0.965, dt * 60));
+      opacity += ((MOB ? 0.60 : 1) - opacity) * (1 - Math.pow(0.965, dt * 60));
       imgOpacity += (imgTarget - imgOpacity) * (1 - Math.pow(0.95, dt * 60));
 
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
