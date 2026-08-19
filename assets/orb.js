@@ -1429,7 +1429,7 @@
       g.globalAlpha = 1;
     })();
 
-    function render(t, o, top, focus){
+    function render(t, o, top, focus, mv){
       top = top || 0;
       wctx.setTransform(1, 0, 0, 1, 0, 0);
       wctx.drawImage(base, 0, 0);
@@ -1497,21 +1497,62 @@
         wctx.fillRect(0, top, CW, VH);
         wctx.restore();
       }
-      /* the chips sing — notes rise while the energy runs */
+      /* ═══ THE VOICE ═══ every charged component sings; the studied one
+         sings louder, and when the surge lands they sound a CHORD together. */
+      var GLYPH = ['♪', '♫', '♬', '♩', '♯'];
+      function note(x, y, size, alpha, colour, glyph, tilt){
+        if (alpha < 0.03) return;
+        wctx.save();
+        wctx.translate(x, y);
+        wctx.rotate(tilt || 0);
+        wctx.font = '600 ' + Math.round(size) + 'px ui-monospace, Consolas, monospace';
+        wctx.textAlign = 'center';
+        wctx.shadowColor = colour + Math.min(1, alpha * 1.5).toFixed(3) + ')';
+        wctx.shadowBlur = size * 0.55;
+        wctx.fillStyle = colour + alpha.toFixed(3) + ')';
+        wctx.fillText(glyph, 0, 0);
+        wctx.restore();
+      }
       comps.forEach(function(c){
-        if (c.e < 0.55) return;
-        for (var nk = 0; nk < 2; nk++){
-          var cyc = ((t * 0.5) + c.phase * 0.3 + nk * 0.7) % 1.4;
-          var na = Math.sin(Math.PI * cyc / 1.4) * 0.45 * c.e;
-          if (na < 0.04) continue;
-          wctx.font = '600 ' + Math.round(u * 0.44) + 'px ui-monospace, Consolas, monospace';
-          wctx.textAlign = 'center';
-          wctx.fillStyle = acc(c) + na.toFixed(3) + ')';
-          wctx.fillText(nk ? '♫' : '♪',
-            Math.round(c.x + Math.sin(cyc * 3.1 + c.phase) * u * 0.6 + (nk ? u * 0.5 : -u * 0.5)),
-            Math.round(c.y - c.h / 2 - u * 0.25 - cyc * u * 1.5));
+        if (c.e < 0.4) return;
+        var loud = (mv && mv.focus === c) ? 1.55 : 0.85;
+        var voices = (mv && mv.focus === c) ? 3 : 2;
+        for (var nk = 0; nk < voices; nk++){
+          var cyc = ((t * 0.42) + c.phase * 0.3 + nk * 0.55) % 1.6;
+          var na = Math.sin(Math.PI * cyc / 1.6) * 0.62 * c.e * loud;
+          var gl = GLYPH[(nk + Math.floor(c.phase * 3)) % GLYPH.length];
+          note(c.x + Math.sin(cyc * 2.6 + c.phase + nk) * u * 0.8 + (nk - 1) * u * 0.62,
+               c.y - c.h / 2 - u * 0.3 - cyc * u * 2.0,
+               u * (0.52 + 0.22 * Math.sin(cyc * 3.0 + nk)) * loud,
+               na, acc(c), gl, Math.sin(cyc * 2.0 + nk) * 0.24);
         }
       });
+      /* THE CHORD — the surge is heard, not only seen */
+      if (mv && mv.phase === 'SURGE' && mv.focus){
+        var ck = Math.min(1, mv.k / 0.95);
+        var cf = mv.focus;
+        for (var ci = 0; ci < 7; ci++){
+          var ang = -Math.PI / 2 + (ci - 3) * 0.36;
+          var rad = u * (0.7 + ck * 3.4);
+          note(cf.x + Math.cos(ang) * rad * (0.7 + 0.5 * (ci % 2)),
+               cf.y + Math.sin(ang) * rad,
+               u * (0.75 + 0.3 * Math.sin(ci)) * (1 - ck * 0.25),
+               (1 - ck) * 0.9,
+               acc(cf), GLYPH[ci % GLYPH.length], (ci - 3) * 0.16);
+        }
+        /* the resonance — a ring that rings */
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        for (var rr2 = 0; rr2 < 3; rr2++){
+          var rk = ck - rr2 * 0.18;
+          if (rk <= 0) continue;
+          hexPath(wctx, cf.x, cf.y, Math.max(cf.w, cf.h) * (0.45 + rk * 1.5));
+          wctx.strokeStyle = acc(cf) + ((1 - rk) * 0.4).toFixed(3) + ')';
+          wctx.lineWidth = 1.6 * (1 - rk);
+          wctx.stroke();
+        }
+        wctx.restore();
+      }
       /* surges decay; the beam re-arms */
       if (typeof render.__lt !== 'number') render.__lt = 0;
       var dt2 = Math.max(0, Math.min(0.12, t - render.__lt));
@@ -1570,6 +1611,38 @@
           wctx.lineWidth = 1.6;
           wctx.stroke();
         }
+      }
+      /* ═══ SCAN ═══ a line of light sweeps the component being read */
+      if (mv && mv.phase === 'SCAN' && mv.focus){
+        var sc = mv.focus, sk = (mv.k * 0.85) % 1;
+        var sy3 = sc.y - sc.h / 2 + sc.h * sk;
+        wctx.save();
+        wctx.globalCompositeOperation = 'lighter';
+        var sg = wctx.createLinearGradient(sc.x - sc.w / 2, sy3, sc.x + sc.w / 2, sy3);
+        sg.addColorStop(0, acc(sc) + '0)');
+        sg.addColorStop(0.5, acc(sc) + '0.55)');
+        sg.addColorStop(1, acc(sc) + '0)');
+        wctx.fillStyle = sg;
+        wctx.fillRect(sc.x - sc.w / 2, sy3 - u * 0.06, sc.w, u * 0.12);
+        wctx.restore();
+      }
+      /* ═══ CASCADE ═══ after the surge, the charge runs out to its neighbours */
+      if (mv && mv.phase === 'CASCADE' && mv.focus){
+        var ck2 = Math.min(1, mv.k / 1.5), src = mv.focus;
+        nets.forEach(function(n){
+          if (n.a !== src && n.b !== src) return;
+          var fwd = n.a === src;
+          var pt2 = along(n, fwd ? ck2 : 1 - ck2);
+          wctx.save();
+          wctx.shadowColor = acc(src) + '0.9)';
+          wctx.shadowBlur = 14 * (1 - ck2);
+          wctx.beginPath(); wctx.arc(pt2.x, pt2.y, 3.2 * (1 - ck2 * 0.6), 0, 6.29);
+          wctx.fillStyle = 'rgba(235,252,255,' + (0.9 * (1 - ck2)).toFixed(3) + ')';
+          wctx.fill();
+          wctx.restore();
+          var other = fwd ? n.b : n.a;
+          if (other && ck2 > 0.75) other.e = Math.max(other.e, 0.35 * (1 - ck2) * 4);
+        });
       }
       /* the scanner's reticle — a slow hex ring around the studied one */
       if (focus){
@@ -2009,6 +2082,7 @@
     var mouse = {x: HOME.x, y: HOME.y}, m1 = {x: HOME.x, y: HOME.y}, m2 = {x: HOME.x, y: HOME.y};
     var lerp1 = C.lerp1, lerp2 = C.lerp2, scrolling = false, scrollT = 0;
     var lastMouseT = -1e9, wanderT = 0, wLast = null, wRecent = [], wVisits = {};
+    var mvPhase = 'REST', mvT = 0, mvFocus = null;
 
     if (MOB){
       addEventListener('touchstart', function(e){
@@ -2170,6 +2244,20 @@
         scrolling = false; lerp1 = C.lerp1; lerp2 = C.lerp2;
       }
       var focus2 = (!scrolling && now - lastMouseT > C.idleAfter) ? wLast : null;
+      /* ═══ THE MOVEMENT ═══ named beats, performed on whatever it is reading */
+      if (focus2 !== mvFocus){ mvFocus = focus2; mvPhase = 'APPROACH'; mvT = now; }
+      if (focus2){
+        var dNow = Math.hypot(mouse.x - m1.x, mouse.y - m1.y);
+        var held = now - mvT;
+        if (mvPhase === 'APPROACH' && dNow < 0.03){ mvPhase = 'LOCK'; mvT = now; }
+        else if (mvPhase === 'LOCK'    && held > 560){ mvPhase = 'SCAN';    mvT = now; }
+        else if (mvPhase === 'SCAN'    && held > (MOB ? 3400 : 2600)){ mvPhase = 'FEED'; mvT = now; }
+        else if (mvPhase === 'FEED'    && held > (MOB ? 3800 : 3000)){
+          mvPhase = 'SURGE'; mvT = now; focus2.surge = 1; }
+        else if (mvPhase === 'SURGE'   && held > 950){ mvPhase = 'CASCADE'; mvT = now; }
+        else if (mvPhase === 'CASCADE' && held > 1550){ mvPhase = 'REST';   mvT = now; }
+      } else mvPhase = 'REST';
+      var MV = {phase: mvPhase, k: (now - mvT) / 1000, focus: focus2};
       /* the wanderer: idle → visit a system, water it, move on */
       if (!scrolling && now - lastMouseT > C.idleAfter){
         if (now > wanderT){
@@ -2287,7 +2375,7 @@
       if ((changed || worldDirty || Math.abs(top2 - lastTop) > 0.75) && due){
         lastPaint = now;
         var ob = orbPx();
-        board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2);
+        board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2, MV);
         frameN++;
         if ((frameN & 1) === 0 || !worldDirty) E.uploadWorld(board.work);
         lastTop = top2;
@@ -2334,6 +2422,8 @@
                 target: wLast ? {kind: wLast.kind, x: Math.round(wLast.x),
                                  y: Math.round(wLast.y - worldTop())} : null,
                 aim: {x: +mouse.x.toFixed(3), y: +mouse.y.toFixed(3)},
+                movement: {phase: mvPhase, beat: +((performance.now() - mvT) / 1000).toFixed(2),
+                           sequence: 'APPROACH·LOCK·SCAN·FEED·SURGE·CASCADE·REST'},
                 reading: themeKinds ? themeKinds.slice() : null,
                 top: Math.round(worldTop()), worldMax: worldMax};
       },
