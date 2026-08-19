@@ -154,6 +154,7 @@
     mcc: '236,204,138', xtal: '224,234,244', rom: '255,216,150',
     choke: '255,192,112', phy: '92,225,255', loop: '124,214,255',
     motus: '236,204,138', agents: '150,205,255', ccm: '104,216,235',
+    npu: '168,160,255',
     guide: '255,216,150', seats: '92,225,255',
     models: '104,216,235', commons: '96,232,210'
   };
@@ -1046,6 +1047,60 @@
       if (c.by) etch(g, c.x, y + h + u * 0.42, 'BY ' + c.by.toUpperCase().slice(0, 14),
                      Math.max(4.2, u * 0.13), 0);
 
+    } else if (c.kind === 'npu'){
+      /* THE NEURAL ENGINE — four layers of neurons under one lid.
+         Watered, activation propagates layer to layer, left to right. */
+      breakout(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.12);
+      drop(g, x, y, w, h, 4);
+      substrate(g, x, y, w, h, pulse);
+      bga(g, x, y, w, h, pulse);
+      qfpLeads(g, x, y, w, h, Math.max(4, u * 0.16), u * 0.12, pulse, A2k(c));
+      pkg(g, x, y, w, h, pulse, 4, seed, A2k(c));
+      pin1(g, x + u * 0.16, y + u * 0.16, pulse);
+      var LAY = 4, PER = 4;
+      var nw2 = w * 0.72, nh2 = h * 0.52;
+      var nx0 = c.x - nw2 / 2, ny0 = c.y - nh2 / 2 - u * 0.05;
+      die(g, nx0 - u * 0.1, ny0 - u * 0.1, nw2 + u * 0.2, nh2 + u * 0.2,
+          pulse * 0.35, false, seed, A2k(c));
+      /* the wave of activation travelling the layers */
+      var wave = e > 0.03 ? ((t * 0.55 + c.phase) % 1) * (LAY + 1) : -1;
+      var pos = [];
+      for (var L = 0; L < LAY; L++){
+        pos[L] = [];
+        for (var nq = 0; nq < PER; nq++){
+          pos[L][nq] = {x: nx0 + nw2 * (L + 0.5) / LAY,
+                        y: ny0 + nh2 * (nq + 0.5) / PER};
+        }
+      }
+      /* synapses first, so neurons sit on top */
+      for (L = 0; L < LAY - 1; L++){
+        var act = Math.max(0, 1 - Math.abs(wave - L - 0.5) * 1.5) * e;
+        for (var a3 = 0; a3 < PER; a3++)
+          for (var b3 = 0; b3 < PER; b3++){
+            if ((a3 + b3 + L) % 2) continue;   /* a sparse, readable mesh */
+            g.beginPath();
+            g.moveTo(pos[L][a3].x, pos[L][a3].y);
+            g.lineTo(pos[L + 1][b3].x, pos[L + 1][b3].y);
+            g.strokeStyle = A2k(c) + (0.06 + 0.5 * act).toFixed(3) + ')';
+            g.lineWidth = 0.7;
+            g.stroke();
+          }
+      }
+      for (L = 0; L < LAY; L++){
+        var lact = Math.max(0, 1 - Math.abs(wave - L) * 1.4) * e;
+        for (nq = 0; nq < PER; nq++){
+          var pn = pos[L][nq];
+          g.beginPath(); g.arc(pn.x, pn.y, u * (0.075 + 0.05 * lact), 0, 6.29);
+          g.fillStyle = A2k(c) + (0.22 + 0.7 * lact).toFixed(3) + ')';
+          if (lact > 0.25){
+            g.save(); g.shadowColor = A2k(c) + '0.95)'; g.shadowBlur = 10 * lact;
+            g.fill(); g.restore();
+          } else g.fill();
+        }
+      }
+      etch(g, c.x, y + h - u * 0.26, 'NEURAL ENGINE', Math.max(6, u * 0.21), pulse, null, A2k(c));
+      etch(g, x - u * 0.3, y - u * 0.26, 'N1', Math.max(5, u * 0.18), pulse);
+
     } else if (c.kind === 'agents'){
       /* MOTUS AGENTS — presence-gated intelligence, waiting on a person */
       breakout(g, x, y, w, h, Math.max(3.5, u * 0.16), u * 0.11);
@@ -1157,6 +1212,7 @@
       {id: 'models', x: CW * 0.24, y: WH * 0.665, hw: u * 0.85, hh: u * 0.7},
       {id: 'commons', x: CW * 0.63, y: WH * 0.755, hw: u * 0.95, hh: u * 0.65},
       {id: 'loop', x: CW * 0.47, y: WH * 0.30, hw: u * 1.05, hh: u * 1.05},
+      {id: 'npu', x: CW * 0.72, y: WH * 0.475, hw: u * 1.45, hh: u * 1.2},
       {id: 'agents',  x: CW * 0.74, y: WH * 0.885, hw: u * 0.85, hh: u * 0.85},
       {id: 'ccm0', x: CW * 0.13, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
       {id: 'ccm1', x: CW * 0.28, y: WH * 0.885, hw: u * 0.5, hh: u * 0.5},
@@ -1257,6 +1313,7 @@
     var commons = comp('commons', P.commons.x, P.commons.y, u * 1.85, u * 1.25);
     var loop = comp('loop', P.loop.x, P.loop.y, u * 2.0, u * 2.0);
     /* ═══ THE MOTUS TIER ═══ the ecosystem this sits inside */
+    var npu = comp('npu', P.npu.x, P.npu.y, u * 2.7, u * 2.25);
     var agents = comp('agents', P.agents.x, P.agents.y, u * 1.6, u * 1.6);
     var CCM = ['Coordination', 'Community', 'Commons', 'Core'];
     var ccms = [];
@@ -1305,6 +1362,12 @@
     net(loop, cpu, route(loop.x - loop.w / 2, loop.y, cpu.x + cpu.w / 2, cpu.y + u * 0.2), 1);
     net(loop, scu, route(loop.x + loop.w / 2, loop.y, scu.x - scu.w / 2, scu.y - u * 0.3), 1);
     /* the ecosystem is wired to the compute that runs it */
+    /* the neural engine sits between the fabric and the agents that use it */
+    for (i = 0; i < 3; i++)
+      net(scu, npu, route(scu.x + scu.w / 2, scu.y - u * 0.4 + i * u * 0.4,
+                          npu.x - npu.w / 2, npu.y - u * 0.4 + i * u * 0.4), 1.2);
+    net(npu, mcc, route(npu.x, npu.y + npu.h / 2, mcc.x + u * 0.3, mcc.y - mcc.h / 2), 1.2);
+    net(npu, agents, route(npu.x + u * 0.4, npu.y + npu.h / 2, agents.x, agents.y - agents.h / 2), 1);
     net(agents, scu, route(agents.x, agents.y - agents.h / 2, scu.x + u * 0.5, scu.y + scu.h / 2), 1.2);
     net(agents, mcc, route(agents.x + agents.w / 2, agents.y, mcc.x, mcc.y + mcc.h / 2), 1);
     for (i = 0; i < 4; i++)
@@ -1519,6 +1582,18 @@
       rr(g, sccs[0].x - u * 0.95, sccs[0].y - u * 1.05, (sccs[2].x - sccs[0].x) + u * 1.9, u * 2.35, 6);
       g.stroke();
       g.setLineDash([]);
+      /* the four tiers, named down the left margin */
+      [['I \u00b7 CONTROL', 0.13], ['II \u00b7 COMPUTE', 0.42],
+       ['III \u00b7 THRESHOLD', 0.64], ['IV \u00b7 ECOSYSTEM', 0.90]].forEach(function(tt){
+        g.save();
+        g.translate(u * 0.52, WH * tt[1]);
+        g.rotate(-Math.PI / 2);
+        g.font = '600 ' + Math.max(6, u * 0.2) + 'px ui-monospace, Consolas, monospace';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillStyle = INK + '0.30)';
+        g.fillText(tt[0], 0, 0);
+        g.restore();
+      });
       etch(g, chokes[3].x + u * 1.15, chokes[0].y, '!MOTUS PWR', Math.max(6, u * 0.2), 0, 'left');
       etch(g, rams[0].x, rams[0].y - u * 0.85, 'STEPS', Math.max(6, u * 0.2), 0);
       etch(g, sccs[1].x, sccs[0].y - u * 1.32, 'SEMBLE COMPUTE CORES', Math.max(5.5, u * 0.18), 0);
@@ -1568,6 +1643,7 @@
       }
       drawFlow(wctx, t);
       drawMoves(wctx, t);
+      drawPanel(wctx, t, top);
       nets.forEach(function(n, ni){
         var ea = n.a ? n.a.e : 0, eb = n.b ? n.b.e : 0;
         var e = Math.max(ea, eb);
@@ -1859,6 +1935,64 @@
        as named packets along the board's main artery. */
     var moves = [];
     function setMoves(list){ moves = (list || []).slice(0, 6); }
+    /* ═══ THE SYSTEMS PANEL ═══ what is running, what is ready, what is not.
+       The board stops being scenery and starts being an instrument. */
+    var status = {store: 'PENDING', models: 0, moves: 0, mcc: 0, pool: 0};
+    function setStatus(o){ for (var k in o) status[k] = o[k]; }
+    function drawPanel(g, t, top){
+      var pw = u * 6.4, ph = u * 3.5;
+      var px6 = CW - pw - u * 0.8, py6 = top + u * 0.8;
+      g.save();
+      g.fillStyle = 'rgba(5,9,16,0.82)';
+      rr(g, px6, py6, pw, ph, 8); g.fill();
+      g.strokeStyle = 'rgba(140,190,225,0.20)';
+      g.lineWidth = 1;
+      rr(g, px6 + 0.5, py6 + 0.5, pw - 1, ph - 1, 8); g.stroke();
+      var fs = Math.max(6.5, u * 0.2);
+      g.font = '600 ' + fs + 'px ui-monospace, Consolas, monospace';
+      g.textBaseline = 'middle';
+      g.textAlign = 'left';
+      g.fillStyle = 'rgba(150,215,245,0.55)';
+      g.fillText('SEMBLE \u00b7 SYSTEM STATE', px6 + u * 0.34, py6 + u * 0.42);
+      var rows = [
+        ['SESH LOOP', status.store === 'LIVE' ? 'LIVE' : 'READY \u00b7 STORE PENDING',
+         status.store === 'LIVE'],
+        ['CC ROOMS', 'LIVE \u00b7 P2P', true],
+        ['COMPUTE RAIL', 'SCU \u00b7 SCC \u00b7 MCC', true],
+        ['MCC IGNITIONS', String(status.mcc), status.mcc > 0],
+        ['LIVE MOTUSMODELS', String(status.models), status.models > 0],
+        ['MOVES IN MOTION', String(status.moves), status.moves > 0]
+      ];
+      for (var r3 = 0; r3 < rows.length; r3++){
+        var ry3 = py6 + u * 0.95 + r3 * u * 0.44;
+        var done = rows[r3][2];
+        /* the mark: complete, or still waiting */
+        g.strokeStyle = done ? LIT + '0.85)' : 'rgba(150,170,190,0.45)';
+        g.lineWidth = 1.2;
+        if (done){
+          g.beginPath();
+          g.moveTo(px6 + u * 0.36, ry3);
+          g.lineTo(px6 + u * 0.48, ry3 + u * 0.12);
+          g.lineTo(px6 + u * 0.7, ry3 - u * 0.14);
+          g.stroke();
+        } else {
+          g.beginPath(); g.arc(px6 + u * 0.52, ry3, u * 0.1, 0, 6.29); g.stroke();
+        }
+        g.fillStyle = 'rgba(198,224,244,0.78)';
+        g.fillText(rows[r3][0], px6 + u * 0.92, ry3);
+        g.textAlign = 'right';
+        g.fillStyle = done ? LIT + '0.9)' : 'rgba(170,190,210,0.6)';
+        g.fillText(rows[r3][1], px6 + pw - u * 0.34, ry3);
+        g.textAlign = 'left';
+      }
+      /* the pool bar — the compute the community has pledged */
+      var bx5 = px6 + u * 0.36, bw5 = pw - u * 0.72, by5 = py6 + ph - u * 0.5;
+      g.fillStyle = 'rgba(60,100,140,0.28)';
+      rr(g, bx5, by5, bw5, u * 0.16, 3); g.fill();
+      g.fillStyle = LIT + '0.75)';
+      rr(g, bx5, by5, bw5 * Math.max(0.02, Math.min(1, status.pool)), u * 0.16, 3); g.fill();
+      g.restore();
+    }
     function drawMoves(g, t){
       if (!moves.length) return;
       var path = [[phy.x, phy.y], [cpu.x, cpu.y]];
@@ -1925,7 +2059,7 @@
       return fresh;   /* the newcomer, if there is one */
     }
     return {work: work, comps: comps, render: render, u: u, WH: WH, BQ: BQ,
-            setModels: setModels, setMoves: setMoves,
+            setModels: setModels, setMoves: setMoves, setStatus: setStatus,
             moveCount: function(){ return moves.length; },
             mcc: function(){ return Object.keys(crossed).length; }};
   }
@@ -2369,6 +2503,26 @@
             }
           }).catch(function(){});
       }
+      /* the panel tells the truth about the system, live */
+      function tellStatus(){
+        if (!board || !board.setStatus) return;
+        var mdl = board.comps.filter(function(c){ return c.kind === 'motus'; });
+        board.setStatus({
+          models: mdl.filter(function(c){ return c.label && c.label !== 'MotusModel'; }).length,
+          moves: board.moveCount(),
+          mcc: board.mcc(),
+          pool: (window.__semblePool && window.__semblePool.scc) || 0
+        });
+        worldDirty = true;
+      }
+      /* is the store connected yet? the loop's readiness is real, not claimed */
+      fetch('/api/pledge').then(function(r){ return r.json(); })
+        .then(function(j){
+          if (board && board.setStatus)
+            board.setStatus({store: j && typeof j.total === 'number' ? 'LIVE' : 'PENDING'});
+          tellStatus();
+        }).catch(function(){ tellStatus(); });
+      setInterval(tellStatus, 4000);
       pull(); pullMoves();
       setInterval(pull, 90000);
       setInterval(pullMoves, 60000);
@@ -2425,7 +2579,8 @@
       [/\bcompute|\bscu\b|\bagent/i,      ['scu', 'scc']],
       [/\bcommons\b|\broom\b/i,           ['commons']],
       [/\bmodels?\b/i,                    ['models', 'motus', 'ccm']],
-      [/\bagents?\b|\bintelligence\b/i,   ['agents']],
+      [/\bagents?\b|\bintelligence\b/i,   ['agents', 'npu']],
+      [/\bneural\b|\bthink|\blearn/i,     ['npu']],
       [/\bmarket\b|\bmotusmoves\b/i,      ['motus']],
       [/\bseats?\b|\bpeople\b|\bcommit/i, ['seats']],
       [/\bloop\b|\bflywheel\b/i,          ['loop']],
@@ -2466,7 +2621,7 @@
       });
       if (!pool.length) pool = board.comps.filter(function(c){
         return c.kind !== 'choke' && !c.noWater; });
-      var KW = {motus: 2.2, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
+      var KW = {motus: 2.2, npu: 2.1, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
                 cpu: 1.35, gpu: 1.25, models: 1.2, ccm: 1.15, guide: 1.1};
       var tw = 0, wts = pool.map(function(c){
         var key = c.kind + Math.round(c.x);
@@ -2588,7 +2743,7 @@
           });
           if (!cands.length) cands = board.comps.filter(function(c){
             return c.kind !== 'choke' && !c.noWater; });
-          var KW = {motus: 2.2, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
+          var KW = {motus: 2.2, npu: 2.1, scu: 2.0, scc: 1.9, agents: 1.7, loop: 1.5,
                     cpu: 1.35, gpu: 1.25, models: 1.2, ccm: 1.15, mcc: 0, guide: 1.1};
           var tw = 0, wts = cands.map(function(c){
             var key = c.kind + Math.round(c.x);
