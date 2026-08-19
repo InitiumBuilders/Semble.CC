@@ -1798,7 +1798,7 @@
 
     function orbPx(){
       return {x: (0.5 + m1.x * 0.6) * W, y: (0.5 - m1.y * 0.6) * H,
-              r: Math.min(W, H) * (0.15 + 0.17 * sFrac)};
+              r: Math.min(W, H) * (0.085 + 0.235 * sFrac)};
     }
     /* scroll couples the window to the world: the board pans beneath the page */
     var sFrac = 0;
@@ -1842,6 +1842,9 @@
           var tw = 0, wts = cands.map(function(c){
             var key = c.kind + Math.round(c.x);
             var wt = (1.15 - c.e) * Math.sqrt(c.w * c.h);
+            var KW = {scu: 1.6, scc: 1.5, loop: 1.45, cpu: 1.2, gpu: 1.15};
+            wt *= KW[c.kind] || 1;
+            wt *= 0.7 + Math.random() * 0.65;   /* no two tours alike */
             wt /= (1 + 0.7 * (wVisits[key] || 0));
             if (wRecent.indexOf(key) >= 0) wt *= 0.12;
             tw += wt; return wt; });
@@ -1856,6 +1859,17 @@
           mouse.x = Math.max(-0.55, Math.min(0.55, (pick.x / W - 0.5) / 0.6));
           mouse.y = Math.max(-0.55, Math.min(0.55, (0.5 - (pick.y - worldTop()) / H) / 0.6));
           wanderT = now + 3000 + Math.random() * 5000;
+          if (Math.random() < 0.14){   /* sometimes it just drifts, looking */
+            wLast = null;
+            mouse.x = (Math.random() - 0.5) * 0.9;
+            mouse.y = (Math.random() - 0.5) * 0.9;
+            wanderT = now + 1600 + Math.random() * 1600;
+          }
+        } else if (wLast){
+          /* the breathing hold — locked, but alive */
+          /* clamped: a frozen clock must never let the breath run away */
+          mouse.x = Math.max(-0.55, Math.min(0.55, mouse.x + Math.sin(now * 0.00047) * 0.00022));
+          mouse.y = Math.max(-0.55, Math.min(0.55, mouse.y + Math.cos(now * 0.00039) * 0.00019));
         }
       }
       var f1 = 1 - Math.pow(1 - lerp1, dt * 60);
@@ -1872,7 +1886,7 @@
       sFrac += (scrollFrac() - sFrac) * (1 - Math.pow(0.88, dt * 60));
       var top2 = worldTop();
       gl.uniform4f(U.uWorld, 1, ky, 0, (1 - ky) * (1 - (worldMax ? top2 / worldMax : 0)));
-      gl.uniform1f(U.uSize, baseSize * (0.55 + 0.85 * sFrac));
+      gl.uniform1f(U.uSize, baseSize * (0.27 + 1.13 * sFrac));
       if (water(dt, focus2) || worldDirty || Math.abs(top2 - lastTop) > 0.75){
         var ob = orbPx();
         board.render((now - t0) / 1000, {x: ob.x, y: top2 + ob.y, r: ob.r}, top2, focus2);
@@ -2003,6 +2017,19 @@
   }
 
   var full = initFull();
+  /* a window widened past the desktop gate deserves the orb too */
+  if (!full){
+    var mq = matchMedia('(min-width: 1000px)');
+    var wake = function(){
+      if (!mq.matches || full) return;
+      full = initFull();
+      if (full){
+        SembleOrb.setImage = full.setImage; SembleOrb.clearImage = full.clearImage;
+        SembleOrb.state = full.state; SembleOrb.board = full.board; SembleOrb.shot = full.shot;
+      }
+    };
+    mq.addEventListener ? mq.addEventListener('change', wake) : addEventListener('resize', wake);
+  }
   window.SembleOrb = {
     setImage: full ? full.setImage : function(){},
     clearImage: full ? full.clearImage : function(){},
