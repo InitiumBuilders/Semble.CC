@@ -215,3 +215,135 @@ footer,footer.wrap{padding-top:66px;padding-bottom:86px;
 .stg > *:nth-child(5){animation-delay:220ms}
 .stg > *:nth-child(6){animation-delay:275ms}
 .stg > *:nth-child(n+7){animation-delay:330ms}
+
+
+/* ══════════════════════════════════════════════════════════════
+   THE ALIEN LAYER · applies to every page that loads this sheet
+   Machined glass · earned light · one warm point · zero flat panels
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── THE SURFACE ──
+   Every panel in the system, upgraded in one place. The rim is a masked
+   gradient so it is bright where the light is and dark where it is not —
+   that asymmetry is the whole tell of an expensive surface. */
+.pane, .card, .tier, .step, .stg > .card, .comp .tier, .sesh .meta,
+.initform .f input, .jform input, .pform input, .f input{
+  position:relative;
+}
+.pane, .card, .tier, .step{
+  background:
+    linear-gradient(180deg, rgba(150,190,240,.075), rgba(150,190,240,.028) 42%, rgba(8,12,22,.22)),
+    rgba(9,13,23,.58) !important;
+  border:1px solid transparent !important;
+  border-radius:var(--r-pane) !important;
+  background-clip:padding-box !important;
+  box-shadow:
+    inset 0 1px 0 rgba(190,225,255,.22),
+    inset 0 -1px 0 rgba(0,0,0,.5),
+    0 22px 48px -28px rgba(0,0,0,.9) !important;
+  backdrop-filter:blur(14px) saturate(165%) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(165%) !important;
+}
+/* the rim: drawn as a gradient ring that only the top-left truly catches */
+.pane::before, .card::before, .tier::before, .step::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+  background:linear-gradient(150deg,
+    rgba(146,226,255,.55), rgba(120,150,210,.10) 38%,
+    rgba(120,150,210,.06) 62%, rgba(236,204,150,.24));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  pointer-events:none;z-index:0;
+}
+.pane > *, .card > *, .tier > *, .step > *{position:relative;z-index:1}
+
+/* ── THE CONTROLS ── glass pills with an electric edge ── */
+.btn{
+  position:relative;border-radius:var(--r-pill);
+  background:linear-gradient(180deg, rgba(92,225,255,.16), rgba(0,168,216,.10)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(210,245,255,.4),
+    inset 0 -1px 0 rgba(0,0,0,.35),
+    0 10px 28px -14px rgba(92,225,255,.55) !important;
+  transition:transform .28s var(--spring), box-shadow .3s var(--ease), filter .3s var(--ease);
+}
+.btn::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
+  background:linear-gradient(120deg, rgba(146,226,255,.9), rgba(146,226,255,.12) 45%,
+             rgba(236,204,150,.5));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  pointer-events:none;
+}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn--ghost{background:rgba(146,190,240,.045) !important;
+  box-shadow:inset 0 1px 0 rgba(190,225,255,.16), 0 10px 26px -18px rgba(0,0,0,.9) !important}
+.btn--gold{background:linear-gradient(180deg, rgba(255,207,138,.24), rgba(200,150,70,.14)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,235,200,.45),
+             0 10px 30px -14px rgba(255,207,138,.6) !important}
+.btn--gold::after{background:linear-gradient(120deg, rgba(255,224,170,.95),
+  rgba(255,224,170,.15) 50%, rgba(146,226,255,.4))}
+
+/* ── FIELDS ── lit from beneath, not boxed ── */
+input[type=text], input[type=number], input[type=datetime-local], input:not([type]){
+  border-radius:var(--r-ctl) !important;
+  background:linear-gradient(180deg, rgba(6,10,18,.8), rgba(10,16,28,.72)) !important;
+  border:1px solid rgba(146,190,240,.16) !important;
+  box-shadow:inset 0 1px 0 rgba(180,220,255,.10), inset 0 -12px 22px -18px rgba(92,225,255,.5) !important;
+  transition:border-color .25s var(--ease), box-shadow .25s var(--ease)}
+input:focus{
+  border-color:rgba(92,225,255,.55) !important;
+  box-shadow:inset 0 1px 0 rgba(200,240,255,.18),
+             inset 0 -14px 26px -16px rgba(92,225,255,.75),
+             0 0 0 3px rgba(92,225,255,.10) !important;
+  outline:none}
+
+/* ── THE NAV ── a floating instrument, not a bar ── */
+nav.nav{backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  background:linear-gradient(180deg, rgba(7,11,20,.82), rgba(7,11,20,.55)) !important;
+  border-bottom:1px solid transparent;
+  box-shadow:0 1px 0 rgba(146,226,255,.13), 0 18px 40px -34px rgba(0,0,0,1)}
+.nav__links a{position:relative;transition:color .25s var(--ease)}
+.nav__links a::after{content:'';position:absolute;left:50%;bottom:-6px;translate:-50% 0;
+  width:0;height:1px;background:linear-gradient(90deg,transparent,var(--signal),transparent);
+  transition:width .35s var(--ease)}
+.nav__links a:hover::after, .nav__links a.on::after{width:112%}
+.nav__links a.on{color:var(--signal)}
+
+/* ── TYPE ── a real hierarchy: the statement, then the quiet ── */
+h1{letter-spacing:-.022em;line-height:1.02}
+h2{letter-spacing:-.016em}
+.kick{color:var(--signal);opacity:.92;
+  text-shadow:0 0 22px rgba(92,225,255,.35)}
+h1, h2, .word{text-shadow:0 0 34px rgba(92,225,255,.12)}
+
+/* ── CHIPS + SEGMENTS ── */
+.chip, .seg button{border-radius:var(--r-pill) !important;
+  background:rgba(146,190,240,.06) !important;
+  box-shadow:inset 0 1px 0 rgba(190,225,255,.14) !important}
+.seg button.on, .chip--gold{
+  background:linear-gradient(180deg, rgba(92,225,255,.18), rgba(0,168,216,.10)) !important;
+  box-shadow:inset 0 1px 0 rgba(210,245,255,.34),
+             0 8px 22px -14px rgba(92,225,255,.7) !important;
+  color:#eafaff}
+
+/* ── the grain sits over everything so no gradient ever bands ── */
+.grain{opacity:.5}
+
+/* ── scrollbar, because every surface is designed ── */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:rgba(8,12,20,.6);border-radius:999px}
+*::-webkit-scrollbar-thumb{border-radius:999px;
+  background:linear-gradient(180deg, rgba(92,225,255,.5), rgba(0,168,216,.35));
+  border:2px solid rgba(8,12,20,.8)}
+*::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg, rgba(146,235,255,.7), rgba(0,168,216,.5))}
+
+/* ── focus that glows instead of boxing ── */
+:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(92,225,255,.55),
+  0 0 26px rgba(92,225,255,.35) !important}
+
+@media (prefers-reduced-motion: reduce){
+  .btn{transition:none}
+  .nav__links a::after{transition:none}
+}
