@@ -18,6 +18,7 @@
   --gold:#ffcf8a;        /* the one point of light */
   --good:#7ae6b8;
   --r-pill:999px; --r-ctl:16px; --r-pane:24px; --r-hero:32px;
+  --mono:"IBM Plex Mono",monospace; /* a hand-rolled mono stack renders a different face on every OS */
   --ease:cubic-bezier(.22,1,.36,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
   --nav-h:64px;

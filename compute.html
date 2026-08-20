@@ -49,7 +49,7 @@
   background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
 .livecta{margin-top:34px;text-align:center}
 /* ── THE LADDER, said in one line under the meters ── */
-.ladderline{margin:-6px 0 4px;font:400 14px/1.6 ui-monospace,Consolas,monospace;
+.ladderline{margin:-6px 0 4px;font:400 14px/1.6 var(--mono);
   color:rgba(178,224,255,.82);letter-spacing:.02em}
 .ladderline b{color:#dff4ff;font-weight:650}
 
@@ -65,12 +65,25 @@
   box-shadow:inset 0 1px 0 rgba(190,230,255,.07)}
 .builders .who{font:600 14px/1.3 inherit;color:#e6f4ff;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.builders .amt{font:600 12px/1.3 ui-monospace,Consolas,monospace;
+.builders .amt{font:600 12px/1.3 var(--mono);
   color:rgba(150,215,250,.9);white-space:nowrap}
 
 /* a core forming is the moment worth marking — gold, and only then */
 .thanks.ignited{border-color:rgba(226,200,143,.6);color:#f4e3ba;
   box-shadow:0 0 0 1px rgba(226,200,143,.18),0 18px 60px -22px rgba(226,200,143,.5)}
+/* ── your own pledge, and the way back out of it ── */
+.yours{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;margin:18px 0 0;padding:14px 17px;border-radius:15px;
+  background:linear-gradient(180deg,rgba(20,36,56,.6),rgba(9,18,31,.6));
+  border:1px solid rgba(120,190,240,.2);
+  font:500 14.5px/1.5 Inter,sans-serif;color:#dceeff}
+.retract{appearance:none;cursor:pointer;white-space:nowrap;
+  font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:#cfe6f7;background:rgba(120,160,200,.12);
+  border:1px solid rgba(150,190,225,.32);border-radius:11px;padding:10px 15px;
+  transition:color .22s,background .22s,border-color .22s}
+.retract:hover{color:#fff;background:rgba(150,195,235,.2);border-color:rgba(180,215,245,.5)}
+.retract.armed{color:#ffd9c8;background:rgba(196,104,72,.2);border-color:rgba(224,140,104,.55)}
 </style>
 </head>
 <body>
@@ -135,6 +148,10 @@
     When the pool crosses its threshold, the gold ignites, live.</p>
     <div class="thanks" id="thanks">Counted. You're in the pool.</div>
     <div class="err" id="perr"></div>
+    <div class="yours" id="yours" hidden>
+      <span id="yoursText"></span>
+      <button type="button" class="retract" id="retractBtn">Retract</button>
+    </div>
   </form>
 
   <div class="livecta">
@@ -212,6 +229,71 @@
      retry must never count the same pledge twice */
   var pendingKey = null;
 
+  /* THE KEY IS THE AUTHORITY. The server hands it back on a successful pledge
+     and never needs an account to honour it, so the browser keeps it and the
+     page can offer the way out. */
+  var MINE = 'semble.pledge.v1';
+  function readMine(){
+    try { return JSON.parse(localStorage.getItem(MINE) || 'null'); }
+    catch (e){ return null; }
+  }
+  function writeMine(v){
+    try { v ? localStorage.setItem(MINE, JSON.stringify(v)) : localStorage.removeItem(MINE); }
+    catch (e){}
+  }
+  function paintMine(){
+    var mine = readMine(), box = $('yours');
+    if (!mine){ box.hidden = true; return; }
+    box.hidden = false;
+    $('yoursText').textContent = 'You pledged ' + fmt(mine.scus) + ' SCU as ' + mine.name + '.';
+    var b = $('retractBtn');
+    b.textContent = 'Retract'; b.classList.remove('armed'); b.disabled = false;
+  }
+
+  var armed = false, armTimer = null;
+  $('retractBtn').addEventListener('click', function(){
+    var b = $('retractBtn'), mine = readMine();
+    if (!mine) return paintMine();
+    if (!armed){
+      armed = true;
+      b.textContent = 'Sure? Retract';
+      b.classList.add('armed');
+      clearTimeout(armTimer);
+      armTimer = setTimeout(function(){
+        armed = false; b.textContent = 'Retract'; b.classList.remove('armed');
+      }, 4000);
+      return;
+    }
+    clearTimeout(armTimer); armed = false;
+    b.disabled = true; b.textContent = 'Retracting\u2026';
+    fetch(RAIL, {
+      method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({action: 'retract', key: mine.key})
+    }).then(function(r){ return r.json().then(function(j){ return {s: r.status, j: j}; }); })
+      .then(function(o){
+        if (o.j && o.j.ok){
+          writeMine(null); paintMine(); paint(o.j);
+          var th = $('thanks');
+          th.textContent = 'Retracted. ' + fmt(o.j.retracted) + ' SCU came back out of the rail.';
+          th.classList.remove('ignited'); th.style.display = 'block';
+          return;
+        }
+        if (o.s === 404){          /* it is not there — stop offering to remove it */
+          writeMine(null); paintMine();
+          $('perr').textContent = 'That pledge is no longer on the rail.';
+          $('perr').style.display = 'block';
+          return;
+        }
+        throw new Error((o.j && o.j.error) || 'could not retract');
+      })
+      .catch(function(ex){
+        $('perr').textContent = 'Not retracted: ' + ex.message;
+        $('perr').style.display = 'block';
+        paintMine();
+      });
+  });
+  paintMine();
+
   $('pf').addEventListener('submit', function(e){
     e.preventDefault();
     var err = $('perr'); err.style.display = 'none';
@@ -233,6 +315,10 @@
     }).then(function(r){ return r.json(); }).then(function(j){
       if (!j || !j.ok) throw new Error((j && j.error) || 'not counted');
       paint(j);
+      /* 'already' still means it is on the rail and it is theirs */
+      if (j.you && j.you.key)
+        writeMine({key: j.you.key, name: j.you.name, scus: j.you.scus, at: Date.now()});
+      paintMine();
       pendingKey = null;
       var th = $('thanks');
       if (j.ignited && j.ignited.length){
