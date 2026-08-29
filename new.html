@@ -20,23 +20,25 @@
 .initform .sub{color:var(--ink);opacity:.85;margin:0 0 26px}
 .f{margin:0 0 16px}
 .f label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px;color:var(--ink)}
-.f input{width:100%;padding:13px 14px;border-radius:16px;border:1px solid rgba(140,180,215,.22);
+.f input{width:100%;padding:13px 14px;border-radius:var(--r-ctl);border:1px solid rgba(140,180,215,.22);
   background:rgba(10,16,26,.72);color:var(--ink);font:500 16px Inter,sans-serif;outline:none}
 .f input:focus{border-color:rgba(92,225,255,.55);box-shadow:0 0 0 3px rgba(92,225,255,.12)}
 .models{display:flex;gap:8px;flex-wrap:wrap}
-.models button{padding:9px 14px;border-radius:14px;border:1px solid rgba(140,180,215,.22);
+.models button{padding:9px 14px;border-radius:var(--r-ctl);border:1px solid rgba(140,180,215,.22);
   background:rgba(10,16,26,.6);color:var(--ink);font:600 13px Inter,sans-serif}
 .models button.on{border-color:rgba(92,225,255,.6);background:rgba(92,225,255,.1);color:#dff6ff}
 .trow{display:flex;align-items:center;gap:14px}
 .trow input{max-width:110px;text-align:center}
 .trow .hint{font-size:13px;opacity:.7}
 .go{margin-top:22px}
-.err{display:none;margin:14px 0 0;padding:12px 14px;border-radius:14px;
+.err{display:none;margin:14px 0 0;padding:12px 14px;border-radius:var(--r-ctl);
   background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
 .made{display:none;text-align:center}
 .made h2{font-family:Sora,sans-serif;font-size:clamp(24px,6vw,34px);margin:0 0 10px}
-.made .lnk{font-family:"IBM Plex Mono",monospace;font-size:14px;padding:13px 14px;border-radius:16px;
-  background:rgba(10,16,26,.72);border:1px solid rgba(92,225,255,.35);word-break:break-all;margin:0 0 14px}
+.made .lnk{font-family:"IBM Plex Mono",monospace;font-size:14px;padding:13px 14px;border-radius:var(--r-ctl);
+  background:linear-gradient(180deg, rgba(6,10,18,.8), rgba(10,16,28,.72));
+  box-shadow:inset 0 1px 0 rgba(180,220,255,.10), inset 0 -12px 22px -18px rgba(92,225,255,.5);
+  border:1px solid rgba(92,225,255,.35);word-break:break-all;margin:0 0 14px}
 body.made-on .initform form{display:none}
 body.made-on .made{display:block}
 </style>
@@ -95,6 +97,19 @@ body.made-on .made{display:block}
    live in the MotusMoves store — same ecosystem, same hands. When Semble gets
    its own, this one line moves them home. */
 window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
+/* the front door hands the first move over: what they typed arrives here, and
+   the cursor lands on the next thing that still needs answering */
+(function(){
+  try {
+    var w = new URLSearchParams(location.search).get('what');
+    if (!w) return;
+    var f = document.getElementById('what');
+    if (!f) return;
+    f.value = w.slice(0, 90);
+    var nx = document.getElementById('where');
+    if (nx) setTimeout(function(){ nx.focus(); }, 60);
+  } catch (e){}
+})();
 </script>
 <script src="/assets/semble.js"></script>
 <script src="/assets/orb.js"></script>

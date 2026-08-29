@@ -51,8 +51,8 @@
 .ring{position:relative;aspect-ratio:1;width:100%;max-width:320px;margin:0 auto}
 .ring svg{width:100%;height:100%;overflow:visible}
 .trk{fill:none;stroke:rgba(150,180,240,.15);stroke-width:2.5}
-.dot{fill:var(--signal);opacity:0;transform-box:fill-box;transform-origin:center}
-.dot.on{opacity:1;animation:land .6s var(--spring) both}
+.dot{fill:none;stroke:rgba(150,180,240,.45);stroke-width:2;transform-box:fill-box;transform-origin:center}
+.dot.on{fill:var(--signal);stroke:none;opacity:1;animation:land .6s var(--spring) both}
 @keyframes land{0%{transform:scale(0)}62%{transform:scale(1.5)}100%{transform:scale(1)}}
 .arc{fill:none;stroke:var(--signal);stroke-width:2.5;stroke-linecap:round;
   filter:drop-shadow(0 0 10px rgba(92,225,255,.55));transition:stroke-dashoffset .55s var(--ease)}
@@ -92,6 +92,29 @@
 .node p{margin:0;font-size:.95rem}
 .node.here{border-color:rgba(92,225,255,.42);box-shadow:0 0 44px -18px rgba(92,225,255,.7)}
 .arw{text-align:center;color:var(--signal);opacity:.4}
+/* ── THE FIRST MOVE ── the front door of an app for builders who move is a
+   move. One field, one button, on the live rails. ── */
+/* width:100% matters — .fm is a flex ITEM in the hero, so without it the form
+   shrinks to its content and max-width never binds, wrapping the button */
+.fm{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin:26px auto 0;width:100%;max-width:540px}
+.fm input{flex:1 1 300px;min-width:0;min-height:52px;padding:0 18px;
+  font:500 16px/1.4 Inter,sans-serif;color:var(--ink);
+  background:rgba(10,18,30,.62);border:1px solid rgba(140,190,235,.26);
+  border-radius:16px;outline:none;
+  box-shadow:inset 0 1px 0 rgba(190,230,255,.07),inset 0 -8px 22px -14px rgba(92,225,255,.5);
+  transition:border-color .25s,box-shadow .25s}
+.fm input::placeholder{color:rgba(198,211,232,.62)}
+.fm input:focus{border-color:rgba(92,225,255,.55);
+  box-shadow:inset 0 1px 0 rgba(190,230,255,.1),0 0 0 3px rgba(92,225,255,.13),
+             inset 0 -10px 26px -14px rgba(92,225,255,.8)}
+.fm .btn{min-height:52px;padding-inline:30px}
+.fmnote{margin:13px 0 0;font:500 14.5px/1.55 Inter,sans-serif;
+  color:rgba(198,211,232,.78);text-align:center}
+.fmalt{margin:9px 0 0;text-align:center;font:500 14.5px/1.5 Inter,sans-serif}
+.fmalt a{color:var(--signal);text-decoration:none;border-bottom:1px solid transparent}
+.fmalt a:hover{border-bottom-color:currentColor}
+.fmalt s{color:rgba(198,211,232,.4);text-decoration:none;margin:0 7px}
 </style>
 </head>
 <body>
@@ -101,7 +124,7 @@
   <a class="brand" href="/">
     <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
   <div class="nav__links">
-    <a href="/" class="on">Home</a><a href="/init">Init</a><a href="/features">Features</a>
+    <a href="/" class="on">Home</a><a href="/init">Init</a>
     <a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
   </div>
 </div></nav>
@@ -114,10 +137,13 @@
   <h1>Semble</h1>
   <p class="sub">Convene With Confidence.</p>
   <p class="one">The app to <b>physically build in public.</b></p>
-  <div class="cta">
-    <a class="btn" href="/app">Open the app</a>
-    <a class="btn btn--ghost" href="/init">The word: Init</a>
-  </div>
+  <form class="fm" id="fm" autocomplete="off">
+    <input id="fmWhat" maxlength="90" placeholder="What are we gathering around?"
+           aria-label="What are we gathering around?" required/>
+    <button class="btn" type="submit">Init</button>
+  </form>
+  <p class="fmnote">Opens a Sesh. Nothing is scheduled until enough people commit.</p>
+  <p class="fmalt"><a href="/app">Open the app</a> <s>·</s> <a href="/init">The word: Init</a></p>
 </header>
 
 <section class="wrap">
@@ -129,75 +155,24 @@
 </section>
 
 <section class="wrap">
-  <p class="kick rv">The building blocks</p>
-  <h2 class="rv">Five words, and you know the whole system.</h2>
+  <p class="kick rv">The loop</p>
+  <h2 class="rv">Six steps, and none of them are posting.</h2>
   <p class="lede rv">Everything in Semble is made of these. Nothing else needs learning.</p>
-  <div class="lex">
-    <div class="lx lx--lead rv">
-      <div class="lx__w"><b>Semble</b><span>What you bring</span></div>
-      <p>One active piece of work, shared in the open. Not a bio, not a portfolio — the thing you are actually making right now.</p>
-    </div>
-    <div class="lx rv">
-      <div class="lx__w"><b>Semble Session</b><span>A Sesh</span></div>
-      <p>One gathering, in one real place, at one real time. It is not scheduled until enough people commit — then it is certain.</p>
-      <p style="margin-top:11px"><a class="open" href="/init" style="min-height:0">You open one with <b class="sig">Init</b> &rarr;</a></p>
-    </div>
-    <div class="lx rv">
-      <div class="lx__w"><b>Semble Steps</b><span>The unit of movement</span></div>
-      <p>The small, named, checkable things you actually do: commit, post what you are bringing, read who you will meet, pack it, sign at the door. Steps are how a Sesh gets prepared for, and how it gets kept.</p>
-    </div>
-    <div class="lx rv">
-      <div class="lx__w"><b>Trax</b><span>Your record</span></div>
-      <p>The line your Steps make. Every Sesh you attended, every Step you took, every !MOTUS in and out — dated, signed by the people who were there, and checkable by anyone.</p>
-    </div>
-    <div class="lx rv">
-      <div class="lx__w"><b>!MOTUS</b><span>The credit</span></div>
-      <p>What a room gives you for what you brought. A fixed pool per Sesh, allocated by the people who were present. It buys the compute you build with.</p>
-    </div>
-  </div>
-</section>
-
-<section class="wrap">
-  <p class="kick rv">The threshold</p>
-  <h2 class="rv">A Sesh happens when enough people commit.</h2>
-  <div class="thr">
-    <div class="ring rv" id="ring">
-      <svg viewBox="0 0 200 200">
-        <circle class="trk" cx="100" cy="100" r="78"/>
-        <circle class="arc" id="arc" cx="100" cy="100" r="78"
-                stroke-dasharray="490" stroke-dashoffset="490" transform="rotate(-90 100 100)"/>
-        <g id="dots"></g>
-        <circle class="seal" cx="100" cy="100" r="88"/>
-      </svg>
-      <div class="mid"><b id="cnt">0</b><span id="lab">of 6 committed</span></div>
-      <div class="ringx" aria-hidden="true"><svg class="cross cross--gold" id="ringcross" viewBox="0 0 100 100"><circle class="cxh" cx="50" cy="50" r="26"/><path class="cx cx--a" d="M70 16C40 20 36 40 50 50"/><path class="cx cx--b" d="M30 84C60 80 64 60 50 50"/><circle class="cxc" cx="50" cy="50" r="4.6"/></svg></div>
-    </div>
-    <div class="rv">
-      <p><b>Init</b> a build session, a workshop, a walk. Nothing is scheduled until enough people commit — and committing means putting down a small stake that <b>comes straight back when you walk in.</b></p>
-      <p>If it never fills, everyone who committed gets back <b class="au">more than they put down</b>, funded by the convener's bond. Committing early costs you nothing, and pays if it falls through.</p>
-      <button class="btn" id="go" type="button">Commit to this Sesh</button>
-      <p class="cap" id="cap">Free events run 40–60% no-show. Paid ones run 8–15%. The stake captures that difference without charging anyone.</p>
-    </div>
-  </div>
-</section>
-
-<section class="wrap">
-  <p class="kick rv">Six Steps</p>
-  <h2 class="rv">And none of them are posting.</h2>
   <div class="grid2 pathsteps">
-    <div class="step rv"><span class="n">Step 01 · Keep</span><h4>One active Semble</h4>
-      <p>The thing you are making right now, shared in the open. One live piece of work.</p></div>
-    <div class="step rv"><span class="n">Step 02 · Init</span><h4>A Semble Session</h4>
-      <p>Open one: what you convene on, where, when, and how many people it needs. Anywhere real — a library, a park, a workshop.</p></div>
+    <div class="step rv"><span class="n">Step 01 · Keep</span><h4>Your <b class="sig">Semble</b></h4>
+      <p>One active piece of work, shared in the open. Not a bio, not a portfolio — the thing you are actually making right now.</p></div>
+    <div class="step rv"><span class="n">Step 02 · Init</span><h4>A <b class="sig">Semble Session</b></h4>
+      <p>One gathering, in one real place, at one real time. Open one: what you convene on, where, when, and how many people it needs. Anywhere real — a library, a park, a workshop.</p></div>
     <div class="step rv"><span class="n">Step 03 · Commit</span><h4>A stake, not an RSVP</h4>
-      <p>Returned in full when you arrive. Returned with a bonus if the Sesh never fills.</p></div>
+      <p>Nothing is scheduled until enough people commit, and committing means putting down a small stake that <b>comes straight back when you walk in.</b> If it never fills, everyone who committed gets back <b class="au">more than they put down</b>, funded by the convener's bond.</p></div>
     <div class="step rv"><span class="n">Step 04 · Gather</span><h4>Phones down</h4>
       <p>Nothing records by default. Anyone present can mark a moment, and only marked moments are kept.</p></div>
-    <div class="step rv"><span class="n">Step 05 · Sign</span><h4>Attendance, signed by the room</h4>
-      <p>Everyone taps the Sesh anchor and co-signs for each other. No location is captured.</p></div>
-    <div class="step rv"><span class="n">Step 06 · Credit</span><h4>To what you brought</h4>
-      <p>A fixed pool, allocated by the people who were there. That credit anchors the compute you build with.</p></div>
+    <div class="step rv"><span class="n">Step 05 · Sign</span><h4>Your <b class="sig">Trax</b>, signed by the room</h4>
+      <p>Everyone taps the Sesh anchor and co-signs for each other. The line your <b>Steps</b> make: every Sesh you attended, dated, signed by the people who were there, and checkable by anyone. No location is captured.</p></div>
+    <div class="step rv"><span class="n">Step 06 · Credit</span><h4><b class="sig">!MOTUS</b>, to what you brought</h4>
+      <p>A fixed pool per Sesh, allocated by the people who were present. That credit anchors the compute you build with.</p></div>
   </div>
+  <p class="rv" style="margin-top:26px"><a class="open" href="/features">Every feature, in full &rarr;</a></p>
 </section>
 
 <section class="wrap">
@@ -237,6 +212,25 @@
 <script src="/assets/semble.js"></script>
 <script src="/assets/orb.js"></script>
 <script>
+(function(){
+  /* THE FIRST MOVE — one field, handed straight to the real Init. The board
+     answers the first keystroke: the system you are looking at is the system
+     you just moved. */
+  var fm = document.getElementById('fm'), fw = document.getElementById('fmWhat');
+  if (fm && fw){
+    var woke = false;
+    fw.addEventListener('input', function(){
+      if (woke || !fw.value.trim()) return;
+      woke = true;
+      try { window.SembleOrb && SembleOrb.aimKind && SembleOrb.aimKind('rom'); } catch(e){}
+    });
+    fm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var v = fw.value.trim();
+      location.href = '/new' + (v ? '?what=' + encodeURIComponent(v) : '');
+    });
+  }
+})();
 (function(){
   window.SEMBLE.whileVisible(document.getElementById('heroM'));
 

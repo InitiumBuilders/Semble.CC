@@ -3634,6 +3634,18 @@
     return {
       setImage: setImage,
       clearImage: function(){ imgTarget = 0; },
+      /* THE ANSWER — something outside the orb asks it to look at a part.
+         Used by the front door: the first keystroke lights INIT, so the
+         system you are looking at is the system you just moved. */
+      aimKind: function(kind){
+        if (!board) return null;
+        var hit = null;
+        for (var i = 0; i < board.comps.length; i++)
+          if (board.comps[i].kind === kind){ hit = board.comps[i]; break; }
+        if (!hit) return null;
+        aimAt(hit, 9000);
+        return hit.kind;
+      },
       state: function(){
         /* the board may not exist yet — a zero viewport defers it (see fit) */
         if (!board) return {chips: 0, lit: 0, waitingForViewport: true,
@@ -3793,6 +3805,9 @@
     shot: full ? full.shot : function(){ return null; },
     perf: full ? full.perf : function(){ return null; },
     summonTest: full ? full.summonTest : function(){ return null; },
+    /* the public surface is an EXPLICIT key list — a method added to the inner
+       object is invisible here until it is named. */
+    aimKind: full ? full.aimKind : function(){ return null; },
     mini: initMini
   };
 })();
