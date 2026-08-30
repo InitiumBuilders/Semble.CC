@@ -51,7 +51,7 @@ body.made-on .made{display:block}
     <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
   <div class="nav__links">
     <a href="/">Home</a><a href="/init">Init</a>
-    <a href="/features">Features</a><a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
+    <a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
   </div>
 </div></nav>
 
@@ -143,6 +143,9 @@ window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
     }).then(function(r){ return r.json(); }).then(function(j){
       if (!j.id){ throw new Error(j.error || 'could not open'); }
       try { localStorage.setItem('semble.edit.' + j.id, j.editKey); } catch (_e) {}
+      /* the thread: you opened this, so you will find it again */
+      window.SEMBLE && SEMBLE.remember &&
+        SEMBLE.remember({id: j.id, what: document.getElementById('what').value, role: 'opened'});
       var url = location.origin + '/s?i=' + j.id;
       document.getElementById('lnk').textContent = url;
       document.getElementById('view').href = url;

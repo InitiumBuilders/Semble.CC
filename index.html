@@ -115,6 +115,25 @@
 .fmalt a{color:var(--signal);text-decoration:none;border-bottom:1px solid transparent}
 .fmalt a:hover{border-bottom-color:currentColor}
 .fmalt s{color:rgba(198,211,232,.4);text-decoration:none;margin:0 7px}
+/* ── THE THREAD ── what you opened, what you are in. Shown only when there is
+   something to show: an empty state saying you have nothing is noise. ── */
+.thread{margin:34px auto 0;width:100%;max-width:540px;text-align:left}
+.thread .kick{margin:0 0 10px;text-align:center}
+.thread ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.thread li{margin:0}
+.thread a{display:flex;align-items:center;gap:12px;min-height:52px;
+  padding:11px 16px;border-radius:16px;text-decoration:none;
+  background:linear-gradient(180deg,rgba(20,36,56,.5),rgba(9,18,31,.5));
+  border:1px solid rgba(120,190,240,.16);
+  box-shadow:inset 0 1px 0 rgba(190,230,255,.06);
+  transition:border-color .25s,background .25s}
+.thread a:hover{border-color:rgba(92,225,255,.42);
+  background:linear-gradient(180deg,rgba(26,46,70,.6),rgba(12,23,38,.6))}
+.thread .w{flex:1 1 auto;min-width:0;color:var(--ink);
+  font:500 15px/1.4 Inter,sans-serif;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread .r{flex:0 0 auto;font:600 11.5px/1 "IBM Plex Mono",monospace;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--signal);opacity:.9}
 </style>
 </head>
 <body>
@@ -144,6 +163,10 @@
   </form>
   <p class="fmnote">Opens a Sesh. Nothing is scheduled until enough people commit.</p>
   <p class="fmalt"><a href="/app">Open the app</a> <s>·</s> <a href="/init">The word: Init</a></p>
+  <div class="thread" id="thread" hidden>
+    <p class="kick">Yours</p>
+    <ul id="threadList"></ul>
+  </div>
 </header>
 
 <section class="wrap">
@@ -164,7 +187,7 @@
     <div class="step rv"><span class="n">Step 02 · Init</span><h4>A <b class="sig">Semble Session</b></h4>
       <p>One gathering, in one real place, at one real time. Open one: what you convene on, where, when, and how many people it needs. Anywhere real — a library, a park, a workshop.</p></div>
     <div class="step rv"><span class="n">Step 03 · Commit</span><h4>A stake, not an RSVP</h4>
-      <p>Nothing is scheduled until enough people commit, and committing means putting down a small stake that <b>comes straight back when you walk in.</b> If it never fills, everyone who committed gets back <b class="au">more than they put down</b>, funded by the convener's bond.</p></div>
+      <p>Nothing is scheduled until enough people commit, and committing means putting down a small stake that <b class="au">comes straight back when you walk in.</b> If it never fills, everyone who committed gets back <b class="au">more than they put down</b>, funded by the convener's bond.</p></div>
     <div class="step rv"><span class="n">Step 04 · Gather</span><h4>Phones down</h4>
       <p>Nothing records by default. Anyone present can mark a moment, and only marked moments are kept.</p></div>
     <div class="step rv"><span class="n">Step 05 · Sign</span><h4>Your <b class="sig">Trax</b>, signed by the room</h4>
@@ -213,6 +236,28 @@
 <script src="/assets/orb.js"></script>
 <script>
 (function(){
+  /* THE THREAD — the link is still the identity; this just means you never
+     lose it. Rendered only when it has something in it. */
+  (function(){
+    if (!window.SEMBLE || !SEMBLE.thread) return;
+    var list = SEMBLE.thread();
+    if (!list.length) return;
+    var box = document.getElementById('thread'), ul = document.getElementById('threadList');
+    if (!box || !ul) return;
+    list.slice(0, 4).forEach(function(x){
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = '/s?i=' + encodeURIComponent(x.id);
+      var w = document.createElement('span'); w.className = 'w';
+      w.textContent = x.what;                       /* textContent, never innerHTML */
+      var r = document.createElement('span'); r.className = 'r';
+      r.textContent = x.role === 'opened' ? 'You opened' : 'You are in';
+      a.appendChild(w); a.appendChild(r);
+      li.appendChild(a); ul.appendChild(li);
+    });
+    box.hidden = false;
+  })();
+
   /* THE FIRST MOVE — one field, handed straight to the real Init. The board
      answers the first keystroke: the system you are looking at is the system
      you just moved. */

@@ -37,15 +37,15 @@
 .pform .f{margin:0 0 14px}
 .pform label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;
   letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px}
-.pform input{width:100%;padding:13px 14px;border-radius:16px;border:1px solid rgba(140,180,215,.22);
+.pform input{width:100%;padding:13px 14px;border-radius:var(--r-ctl);border:1px solid rgba(140,180,215,.22);
   background:rgba(10,16,26,.72);color:var(--ink);font:500 16px Inter,sans-serif;outline:none}
 .pform input:focus{border-color:rgba(92,225,255,.55)}
 .prow{display:flex;gap:10px}
 .prow .f{flex:1}
 .note{font-size:12.5px;opacity:.6;margin:10px 0 0;line-height:1.6}
-.thanks{display:none;padding:16px;border-radius:16px;border:1px solid rgba(92,225,255,.35);
+.thanks{display:none;padding:16px;border-radius:var(--r-ctl);border:1px solid rgba(92,225,255,.35);
   background:rgba(92,225,255,.07);margin:14px 0 0;font-size:14.5px}
-.err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:14px;
+.err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:var(--r-ctl);
   background:rgba(255,120,120,.08);border:1px solid rgba(255,140,140,.25);font-size:14px}
 .livecta{margin-top:34px;text-align:center}
 /* ── THE LADDER, said in one line under the meters ── */
@@ -77,10 +77,12 @@
   background:linear-gradient(180deg,rgba(20,36,56,.6),rgba(9,18,31,.6));
   border:1px solid rgba(120,190,240,.2);
   font:500 14.5px/1.5 Inter,sans-serif;color:#dceeff}
+/* .yours is toggled by paintMine() via the hidden attribute; display:flex above outranks it */
+.yours[hidden]{display:none}
 .retract{appearance:none;cursor:pointer;white-space:nowrap;
   font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
   text-transform:uppercase;color:#cfe6f7;background:rgba(120,160,200,.12);
-  border:1px solid rgba(150,190,225,.32);border-radius:11px;padding:10px 15px;
+  border:1px solid rgba(150,190,225,.32);border-radius:var(--r-pill);padding:10px 15px;
   transition:color .22s,background .22s,border-color .22s}
 .retract:hover{color:#fff;background:rgba(150,195,235,.2);border-color:rgba(180,215,245,.5)}
 .retract.armed{color:#ffd9c8;background:rgba(196,104,72,.2);border-color:rgba(224,140,104,.55)}
@@ -94,7 +96,7 @@
     <img class="mk" src="/assets/mark-96.png" alt="" width="30" height="30"/><b>Semble</b></a>
   <div class="nav__links">
     <a href="/">Home</a><a href="/init">Init</a>
-    <a href="/features">Features</a><a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
+    <a href="/app">App</a><a href="/compute">Compute</a><a href="/spec">Spec</a>
   </div>
 </div></nav>
 

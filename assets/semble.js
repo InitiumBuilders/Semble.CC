@@ -78,6 +78,38 @@
     if(typeof done === 'function') done();
   }
 
+  /* ── THE THREAD ──────────────────────────────────────────────────────
+     Every Sesh you open or commit to, remembered on this device. The link is
+     still the identity — this just stops you losing it. Nothing leaves the
+     browser and nothing here is authority: the edit key is stored separately
+     and this list only ever points at public Sesh pages. */
+  var THREAD = 'semble.thread.v1';
+  window.SEMBLE.thread = function(){
+    try {
+      var v = JSON.parse(localStorage.getItem(THREAD) || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e){ return []; }
+  };
+  window.SEMBLE.remember = function(entry){
+    if (!entry || !entry.id) return;
+    try {
+      var list = window.SEMBLE.thread().filter(function(x){ return x.id !== entry.id; });
+      list.unshift({
+        id: String(entry.id).slice(0, 48),
+        what: String(entry.what || 'A Sesh').slice(0, 90),
+        role: entry.role === 'opened' ? 'opened' : 'committed',
+        at: Date.now()
+      });
+      localStorage.setItem(THREAD, JSON.stringify(list.slice(0, 12)));
+    } catch (e){}
+  };
+  window.SEMBLE.forget = function(id){
+    try {
+      localStorage.setItem(THREAD, JSON.stringify(
+        window.SEMBLE.thread().filter(function(x){ return x.id !== id; })));
+    } catch (e){}
+  };
+
   window.SEMBLE.cross = function(el, done){
     if(!el || el.classList.contains('on')) return;
     arm(el);
