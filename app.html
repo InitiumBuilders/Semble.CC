@@ -1503,6 +1503,7 @@ var SA=(function(){
         .then(function(j){
           var st2 = j && j.state;
           if (!st2){ st.textContent = 'gone'; return; }
+          if (st2.cancelled){ st.textContent = 'called off'; return; }
           st.textContent = st2.certain
             ? 'certain \u00b7 ' + st2.commits.length + ' on it'
             : st2.commits.length + ' of ' + st2.threshold + ' \u00b7 ' + st2.seatsLeft + ' to go';

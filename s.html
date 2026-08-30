@@ -41,6 +41,31 @@
 .onit p{opacity:.85;margin:0 0 18px}
 body.certain .onit{display:block}
 body.certain .jform{display:none}
+/* called off: the record stays so the people who committed learn what
+   happened. Nothing about it should still look joinable. */
+body.calledoff .jform, body.calledoff .onit, body.calledoff .seats{display:none}
+.offnote{display:none;margin:20px 0 0;padding:17px 19px;border-radius:var(--r-sm);
+  border:1px dashed rgba(140,190,235,.34);background:rgba(9,14,23,.55);max-width:52ch}
+body.calledoff .offnote{display:block}
+/* CALLED OFF is the most important fact on the page — it does not get to
+   inherit the dim treatment that suits a running seat count. And a room that
+   is over must never still be handing out invitations. */
+body.calledoff .state{opacity:1;color:var(--ink);font-weight:700}
+body.calledoff .share{display:none}
+/* the opener's own control. Same shape and same disarm as /compute's Retract:
+   two destructive buttons that behave differently is how a person destroys
+   something by reflex. */
+.yours{display:none;margin:26px 0 0;padding:16px 18px;border-radius:var(--r-sm);
+  border:1px solid rgba(140,190,235,.18);background:rgba(9,14,23,.5);max-width:52ch}
+body.mine:not(.calledoff) .yours{display:block}
+.yours p{margin:0 0 12px;font-size:14.5px;color:var(--ink)}
+.callit{appearance:none;cursor:pointer;white-space:nowrap;
+  font:600 13px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:#cfe6f7;background:rgba(120,160,200,.12);
+  border:1px solid rgba(150,190,225,.32);border-radius:var(--r-pill);padding:10px 15px;
+  transition:color .22s,background .22s,border-color .22s}
+.callit:hover{color:#fff;background:rgba(150,195,235,.2);border-color:rgba(180,215,245,.5)}
+.callit.armed{color:#ffd9c8;background:rgba(196,104,72,.2);border-color:rgba(224,140,104,.55)}
 .state{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;
   text-transform:uppercase;opacity:.65;margin:0 0 18px}
 .err{display:none;margin:12px 0 0;padding:12px 14px;border-radius:var(--r-ctl);
@@ -71,6 +96,9 @@ body.certain .jform{display:none}
   <p class="state" id="state"></p>
   <div class="seats" id="seats"></div>
   <p class="names" id="names"></p>
+  <p class="offnote" id="offnote">The person who opened this called it off. Everyone
+    who had committed keeps their record of it &mdash; nothing you did here is lost.</p>
+
 
   <form class="jform" id="join">
     <input id="jname" maxlength="40" placeholder="Your name" required/>
@@ -92,12 +120,16 @@ body.certain .jform{display:none}
   </div>
 
   <button class="btn btn--ghost share" id="share" type="button">Share the link</button>
+  <div class="yours" id="yours">
+    <p id="yoursText">You opened this room.</p>
+    <button type="button" class="callit" id="callitBtn">Call it off</button>
+  </div>
   <div class="err" id="err"></div>
 </section>
 
 <section class="sesh" id="missing" style="display:none">
-  <h1>No such Sesh.</h1>
-  <p class="sub">The link may be wrong, or the store is not connected yet.</p>
+  <h1 id="missT">No such Sesh.</h1>
+  <p class="sub" id="missS">The link may be wrong, or the store is not connected yet.</p>
   <a class="btn" href="/new">Init one</a>
 </section>
 
@@ -144,6 +176,13 @@ window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
       : d.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     document.getElementById('modelLine').textContent = st.model + ' · opened by ' + st.host;
     var n = st.commits.length, left = Math.max(0, st.threshold - n);
+    /* the called-off state outranks every other reading of the numbers */
+    document.body.classList.toggle('calledoff', !!st.cancelled);
+    document.body.classList.toggle('mine', !!myKey());
+    wireCallIt();
+    if (st.cancelled){
+      document.getElementById('state').textContent = 'CALLED OFF';
+    } else
     document.getElementById('state').textContent = st.certain
       ? 'CERTAIN · ' + n + ' ON IT'
       : n + ' OF ' + st.threshold + ' · ' + left + ' TO GO';
@@ -157,7 +196,7 @@ window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
     }
     document.getElementById('names').textContent =
       st.commits.map(function(c){ return c.name; }).join(' · ');
-    if (st.certain){
+    if (st.certain && !st.cancelled){
       document.body.classList.add('certain');
       document.getElementById('ccBtn').href =
         '/cc?room=sesh-' + st.id + '&cc=' + encodeURIComponent(st.what);
@@ -167,6 +206,58 @@ window.SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
       wasCertain = true;
     }
   }
+  /* the key was written here the moment this Sesh was opened, so the page can
+     tell whether you are the opener with no account and nothing new to trust */
+  function myKey(){
+    try { return localStorage.getItem('semble.edit.' + id) || ''; } catch (e){ return ''; }
+  }
+
+  var armed = false, armTimer = null;
+  function wireCallIt(){
+    var b = document.getElementById('callitBtn');
+    if (!b || b.dataset.wired) return;
+    b.dataset.wired = '1';
+    b.addEventListener('click', function(){
+      var key = myKey();
+      if (!key) return;
+      if (!armed){
+        armed = true;
+        b.textContent = 'Sure? Call it off';
+        b.classList.add('armed');
+        clearTimeout(armTimer);
+        armTimer = setTimeout(function(){
+          armed = false; b.textContent = 'Call it off'; b.classList.remove('armed');
+        }, 4000);
+        return;
+      }
+      clearTimeout(armTimer); armed = false;
+      b.disabled = true; b.textContent = 'Calling it off…';
+      fetch(window.SEMBLE_API, {
+        method: 'POST', headers: {'content-type': 'application/json'},
+        body: JSON.stringify({action: 'close', id: id, editKey: key})
+      }).then(function(r){ return r.json(); }).then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.error) || 'could not close it');
+        /* removed outright = nobody but you was on it, so there is nothing to
+           show. Cancelled = a record stays, and the page should become it. */
+        if (j.removed){
+          try { localStorage.removeItem('semble.edit.' + id); } catch (e){}
+          /* the missing screen is written for a stranger with a bad link. You
+             are not that person — you just closed this yourself. */
+          document.getElementById('missT').textContent = 'Called off.';
+          document.getElementById('missS').textContent =
+            'Nobody but you had committed, so the room is gone. The link will not open for anyone.';
+          show('missing');
+          return;
+        }
+        render(j.state);
+      }).catch(function(ex){
+        b.disabled = false; b.textContent = 'Call it off';
+        var e = document.getElementById('err');
+        if (e){ e.textContent = 'Not called off: ' + ex.message; e.style.display = 'block'; }
+      });
+    });
+  }
+
   function load(){
     fetch(window.SEMBLE_API + '?id=' + id).then(function(r){ return r.json(); })
       .then(function(j){ (j && j.ok && j.state) ? render(j.state) : show('missing'); })
