@@ -414,8 +414,8 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
         <p class="hint">A Model is a proven shape for a Sesh. Fork one and the origin is credited automatically.</p>
       </div>
       <div class="fld"><label>Where</label>
-        <input type="text" placeholder="A library, a park, a studio — anywhere real"/></div>
-      <div class="fld"><label>When</label><input type="text" placeholder="Thursday, 7pm"/></div>
+        <input type="text" id="pW" placeholder="A library, a park, a studio — anywhere real"/></div>
+      <div class="fld"><label>When</label><input type="text" id="pWhen" placeholder="Thursday, 7pm"/></div>
       <div class="fld"><label>Seats</label>
         <div class="stepr">
           <button type="button" data-d="-1" aria-label="Fewer seats">&#8722;</button>
@@ -902,6 +902,7 @@ var SA=(function(){
     if (past.length) html += past.map(seshCard).join('');
 
     $('s-sesh').innerHTML = html;
+    loadNextSesh();
     if (mine) countdown();
   }
 
@@ -1392,13 +1393,88 @@ var SA=(function(){
     $('pBond').innerHTML = 'Your bond: <b>$' + (iS*2) + '</b>. If it never fills, everyone who took a seat gets <b class="au">$'
       + (iS+2) + '</b> back, funded by you. Large enough to bind, small enough not to gate.';
   }
+  var SEMBLE_API = 'https://www.motusmoves.us/api/semble-sesh';
+
+  /* YOURS, LIVE — the rooms you actually opened or committed to, read from the
+     store. It sits ABOVE everything else on this screen and is labelled, so a
+     real room is never mistaken for an illustration. */
+  function loadNextSesh(){
+    var host = $('s-sesh');
+    if (!host || !window.SEMBLE || !SEMBLE.thread) return;
+    var old = $('yoursReal');
+    if (old) old.remove();
+    var mine = SEMBLE.thread().slice(0, 3);
+    if (!mine.length) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'card d3';
+    wrap.id = 'yoursReal';
+    var k = document.createElement('p');
+    k.className = 'card__k';
+    k.textContent = 'Yours \u00b7 live';
+    wrap.appendChild(k);
+    host.insertBefore(wrap, host.firstChild);
+
+    mine.forEach(function(m){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:12px;justify-content:space-between;' +
+        'align-items:center;padding:10px 0;border-top:1px solid rgba(140,190,235,.12)';
+      var a = document.createElement('a');
+      a.href = '/s?i=' + encodeURIComponent(m.id);
+      a.style.cssText = 'color:var(--ink);text-decoration:none;font-weight:600;' +
+        'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      a.textContent = m.what;                    /* textContent, never innerHTML */
+      var st = document.createElement('span');
+      st.style.cssText = 'flex:0 0 auto;font:600 11.5px/1 ui-monospace,monospace;' +
+        'letter-spacing:.14em;text-transform:uppercase;color:var(--signal)';
+      st.textContent = 'reading\u2026';
+      row.appendChild(a); row.appendChild(st);
+      wrap.appendChild(row);
+      fetch(SEMBLE_API + '?id=' + encodeURIComponent(m.id), {cache: 'no-store'})
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          var st2 = j && j.state;
+          if (!st2){ st.textContent = 'gone'; return; }
+          st.textContent = st2.certain
+            ? 'certain \u00b7 ' + st2.commits.length + ' on it'
+            : st2.commits.length + ' of ' + st2.threshold + ' \u00b7 ' + st2.seatsLeft + ' to go';
+        })
+        .catch(function(){ st.textContent = '\u2014'; });
+    });
+  }
+
+  /* the app opens Seshes on the SAME rails as the front door. A button that
+     reports success for work it did not do is the worst thing in a product
+     whose whole claim is realness. */
   function postInit(){
     if (!S.hasSemble){ toast('Keep a Semble first — a room needs to know what you are bringing.'); go('me'); return; }
     var t = ($('pT').value || '').trim();
-    toast((t ? '"' + t.slice(0,40) + '" is open.' : 'Opened.') + ' ' + iN + ' seats at $' + iS
-      + '. Your $' + (iS*2) + ' bond funds the refund bonus if it never fills.');
-    S.trax.unshift({d:'Today', t:'Init a Semble Session', p:iN + ' seats at $' + iS + '. On the public list.', s:'Recorded in your Trax'});
-    S.stepsTaken++; save();
+    var w = (($('pW') || {}).value || '').trim();
+    var wh = (($('pWhen') || {}).value || '').trim();
+    if (!t || !w || !wh){ toast('It needs what, where and when — a Sesh is a real place at a real time.'); return; }
+    var mb = $('pModel').querySelector('button.on');
+    var model = mb ? mb.textContent.trim() : 'Build Session';
+    var btn = $('postBtn');
+    btn.disabled = true; btn.textContent = 'Opening\u2026';
+    fetch(SEMBLE_API, {
+      method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({action: 'create', what: t, where: w, when: wh,
+                            model: model, threshold: iN, name: (S.name || 'You')})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (!j || !j.id) throw new Error((j && j.error) || 'could not open');
+      try { localStorage.setItem('semble.edit.' + j.id, j.editKey); } catch (_e){}
+      window.SEMBLE && SEMBLE.remember && SEMBLE.remember({id: j.id, what: t, role: 'opened'});
+      var url = location.origin + '/s?i=' + j.id;
+      toast('"' + t.slice(0, 40) + '" is open. ' + iN + ' seats. Share the link.');
+      S.trax.unshift({d: 'Today', t: 'Init a Semble Session',
+                      p: iN + ' seats \u00b7 ' + w, s: url});
+      S.stepsTaken++; save();
+      btn.disabled = false; btn.textContent = 'Init it';
+      loadNextSesh();
+    }).catch(function(ex){
+      toast('Not opened: ' + ex.message);
+      btn.disabled = false; btn.textContent = 'Init it';
+    });
   }
   [].forEach.call(document.querySelectorAll('.stepr button'), function(b){
     b.addEventListener('click', function(){
@@ -1512,20 +1588,29 @@ var SA=(function(){
 
   /* ─────── THE COMPUTE RAIL, LIVE ─────── */
   (function(){
-    var GOAL = 1000;
+    /* the ladder is the SERVER's arithmetic, never a second copy of it. This
+       card used to fetch a storeless endpoint and invent its own thresholds,
+       so the app, the page and the board each told a different story. */
+    var RAIL = 'https://www.motusmoves.us/api/semble-compute';
     var elS = $('cScu'), elB = $('cBar'), elC = $('cScc'), elM = $('cMcc');
     if (!elS) return;
-    function paint(total){
-      var frac = Math.min(1, total / GOAL);
-      elS.textContent = total.toLocaleString();
-      elB.style.width = (frac * 100).toFixed(1) + '%';
-      elC.textContent = Math.floor(total / 250) + ' of 4 linked';
-      elM.textContent = frac >= 1 ? 'IGNITED' : 'ignites at ' + GOAL.toLocaleString();
-      window.__semblePool = {scc: frac, mcc: frac >= 1 ? 1 : frac * 0.9};
+    function paint(j){
+      var L = j && j.ladder;
+      if (!L) return;
+      elS.textContent = L.scu.toLocaleString();
+      elB.style.width = (L.coreFill * 100).toFixed(1) + '%';
+      elC.textContent = L.scc + (L.scc === 1 ? ' core formed' : ' cores formed')
+                      + ' \u00b7 ' + L.toNextCore + ' to the next';
+      elM.textContent = L.mcc > 0 ? L.mcc + ' IGNITED'
+                                  : 'ignites at ' + L.coresPerMcc + ' cores';
+      window.__semblePool = {scc: L.coreFill, mcc: L.mccFill};
     }
-    fetch('/api/pledge').then(function(r){ return r.json(); })
-      .then(function(j){ paint(j.total || 0); })
-      .catch(function(){ paint(0); });
+    function load(){
+      fetch(RAIL, {cache: 'no-store'}).then(function(r){ return r.json(); })
+        .then(function(j){ if (j && j.ok) paint(j); }).catch(function(){});
+    }
+    load();
+    setInterval(function(){ if (!document.hidden) load(); }, 20000);
   })();
 
   /* ─────── THE MINI-ORB — the same glass, riding the tab bar ─────── */
