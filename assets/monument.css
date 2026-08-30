@@ -42,6 +42,10 @@ body{background:#05070d;font-size:17px}
 
 /* space is the design */
 .wrap{max-width:1400px;padding-inline:clamp(48px,9vw,126px)}
+/* .wrap ties .wrap--narrow on specificity and this file loads last, so the reading
+   measure lost silently on every desktop width. Restated, not changed: the monument's
+   side space comes from centring a 790px column, not from padding inside it. */
+.wrap--narrow{max-width:790px;padding-inline:22px}
 section{padding-top:108px;padding-bottom:108px}
 
 /* ── TYPE AS ARCHITECTURE ── */

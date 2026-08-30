@@ -23,6 +23,10 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
   border:1px solid rgba(255,207,138,.32);border-radius:var(--r-pill);
   padding:8px 13px;margin-bottom:14px}
+/* gold is the colour of a KEPT thing. A worked example has been kept by
+   nobody, so it does not get to wear gold - it wears the oldest convention
+   for provisional there is. */
+.pv--ex{color:var(--ink);border-style:dashed;border-color:rgba(140,190,235,.42)}
 /* the mode switch — day one is a designed state, not a fallback, so it is
    reachable in one tap and can never rot unseen */
 .modeseg{margin:14px 0 0}
@@ -382,7 +386,7 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 
 <div class="app">
   <div class="hd">
-    <span class="pv">Preview · saved on this device only</span>
+    <span class="pv" id="pvChip">Saved on this device only</span>
     <h1 id="hdT">Welcome To Semble Sessions.</h1>
     <p id="hdS">What Are Your Next Semble Sesh Steps?</p>
     <div class="seg modeseg" id="modeSeg">
@@ -479,8 +483,8 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 
     <div class="card d2">
       <p class="card__k">Your Trax</p>
-      <div class="phero"><span class="av av--lg">A</span>
-        <span class="phero__t"><b>August</b><span>Chicago · since June 2026</span></span></div>
+      <div class="phero"><span class="av av--lg" id="whoAv">Y</span>
+        <span class="phero__t"><b id="whoN">You</b><span id="whoW">No Steps yet</span></span></div>
       <p>Your Trax is the line your Steps make. No score, no rank, no leaderboard — dated, narrow claims about specific rooms that anyone can check.</p>
       <div class="stats">
         <div class="stat"><b id="tSteps">0</b><span>Steps taken</span></div>
@@ -580,7 +584,7 @@ var SA=(function(){
   var P = {
     august:  {n:'August',  c:'Chicago', t:'Motus.Market — the settlement layer',
               w:'Where action and agency transparently pay off. Shipping the presence proof and the record.',
-              l:'motus.market', since:'Jun 2026', steps:47, sesh:9, motus:85, you:true},
+              l:'motus.market', since:'Jun 2026', steps:47, sesh:9, motus:85},
     rae:     {n:'Rae',     c:'Logan Square', t:'A routing diagram for non-custodial swaps',
               w:'Drawing every path a swap can take, so the failure modes are visible before they happen.',
               l:'rae.works/routing', since:'Apr 2026', steps:63, sesh:14, motus:141},
@@ -670,6 +674,15 @@ var SA=(function(){
         {d:'02 Aug 2026', t:'Convened Show-Your-Practice, Pilsen', p:'Filled in 4 days. 5 of 5 attended.', s:'Signed by 5 attendees'},
         {d:'26 Jul 2026', t:'Model forked · Build Session to Ship-it Thursday', p:'Origin credited to the Build Session Model automatically.', s:'Lineage recorded'}
       ],
+      /* the worked example's Semble is a REAL one, at a link anyone can open -
+         the most honest illustration available. Day one has none, which is
+         the entire point of day one. */
+      semble: day1 ? null : {
+        who:'August', where:'Chicago · since June 2026', i:'A',
+        t:'Motus.Market — the settlement layer',
+        w:'Where action and agency transparently pay off. Currently shipping the presence proof and the record.',
+        l:'https://motus.market', serving:'MotusMoves', since:'Jun 2026'
+      },
       moments: [], stepsTaken: day1 ? 0 : 47, seshAttended: day1 ? 0 : 9,
       filter:'all', signed:false, allocated:false,
       alloc:{rae:0, dominic:0, nadia:0},
@@ -692,14 +705,19 @@ var SA=(function(){
       return d;
     } catch(e){ return null; }
   }
+  /* on day one you are nobody yet, and the list is six other people making
+     things. In the worked example the record is August's, so there he is you. */
+  function syncYou(){ P.august.you = MODE !== 'day1'; }
+
   function setMode(mode, keep){
     MODE = mode;
+    syncYou();
     if (!keep){ SESH = seedSesh(mode); S = seedState(mode); }
     save();
   }
   var boot = load();
-  if (boot){ MODE = boot.mode; S = boot.S; SESH = boot.SESH; }
-  else setMode('veteran');
+  if (boot){ MODE = boot.mode; S = boot.S; SESH = boot.SESH; syncYou(); }
+  else setMode('day1');   /* the truth is the default; the example is a choice */
 
   function sesh(id){ for(var i=0;i<SESH.length;i++) if(SESH[i].id===id) return SESH[i]; return null; }
   function isDay1(){ return MODE === 'day1'; }
@@ -785,6 +803,17 @@ var SA=(function(){
     try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }catch(e){ window.scrollTo(0,0); }
   }
   function setHead(a, b){ $('hdT').textContent = a; $('hdS').textContent = b; }
+
+  /* the chip never leaves the screen, so it is where the truth belongs: in the
+     worked example it says so, plainly, above everything the example claims. */
+  function setPv(){
+    var el = $('pvChip');
+    if (!el) return;
+    var ex = MODE !== 'day1';
+    el.textContent = ex ? 'Worked example · not a real record'
+                        : 'Saved on this device only';
+    el.classList.toggle('pv--ex', ex);
+  }
   function go(name){
     stack = [];
     var t = TITLES[name] || TITLES.sesh;
@@ -1033,15 +1062,26 @@ var SA=(function(){
 
   /* ═══════════ YOUR SEMBLE ═══════════ */
   function renderMe(){
-    var html = S.hasSemble
+    var M = S.semble || null;
+    /* only http(s) reaches an href. A link box on a public page is the
+       cheapest javascript: hole in any product. */
+    function safeHref(u){ return /^https?:\/\//i.test(u || '') ? u : ''; }
+    function pretty(u){ return String(u || '').replace(/^https?:\/\//i, '').replace(/\/+$/, ''); }
+
+    var html = (S.hasSemble && M)
       ? '<div class="card d3">'
         + '  <p class="card__k">Your active Semble</p>'
-        + '  <div class="phero"><span class="av av--lg">A</span>'
-        + '    <span class="phero__t"><b>August</b><span>Chicago &middot; since June 2026</span></span></div>'
-        + '  <h3>Motus.Market — the settlement layer</h3>'
-        + '  <p>Where action and agency transparently pay off. Currently shipping the presence proof and the record.</p>'
-        + '  <a class="open" href="https://motus.market" target="_blank" rel="noopener">motus.market &rarr;</a>'
-        + '  <div class="meta"><span>Serving &middot; <b>MotusMoves</b></span><span>Open since <b>Jun 2026</b></span></div>'
+        + '  <div class="phero"><span class="av av--lg">' + esc(M.i || 'Y') + '</span>'
+        + '    <span class="phero__t"><b>' + esc(M.who || 'You') + '</b><span>'
+        +        esc(M.where || 'Kept today') + '</span></span></div>'
+        + '  <h3>' + esc(M.t) + '</h3>'
+        + (M.w ? '  <p>' + esc(M.w) + '</p>' : '')
+        + (safeHref(M.l)
+            ? '  <a class="open" href="' + esc(safeHref(M.l)) + '" target="_blank" rel="noopener">'
+              + esc(pretty(M.l)) + ' &rarr;</a>'
+            : '  <p class="hint">' + esc(M.l) + '</p>')
+        + '  <div class="meta">' + (M.serving ? '<span>Serving &middot; <b>' + esc(M.serving) + '</b></span>' : '')
+        +      '<span>Open since <b>' + esc(M.since || 'today') + '</b></span></div>'
         + '</div>'
       : '<div class="card d3">'
         + '  <p class="card__k">No active Semble</p>'
@@ -1093,12 +1133,12 @@ var SA=(function(){
     html += '<div class="card d2">'
       + '  <p class="card__k">' + (S.hasSemble ? 'Change it' : 'Keep one') + '</p>'
       + '  <div class="fld"><label>Title</label><input type="text" id="meT"'
-      +      (S.hasSemble ? ' value="Motus.Market — the settlement layer"' : ' placeholder="What are you making?"') + '/></div>'
+      +      (M ? ' value="' + esc(M.t) + '"' : ' placeholder="What are you making?"') + '/></div>'
       + '  <div class="fld"><label>What you are building</label><textarea id="meW"'
-      +      (S.hasSemble ? '' : ' placeholder="One or two sentences. Plainly."') + '>'
-      +      (S.hasSemble ? 'Where action and agency transparently pay off.' : '') + '</textarea></div>'
+      +      (M ? '' : ' placeholder="One or two sentences. Plainly."') + '>'
+      +      (M ? esc(M.w || '') : '') + '</textarea></div>'
       + '  <div class="fld"><label>Where it lives in the open</label><input type="text" id="meL"'
-      +      (S.hasSemble ? ' value="https://motus.market"' : ' placeholder="A link anyone can open"') + '/>'
+      +      (M ? ' value="' + esc(M.l || '') + '"' : ' placeholder="A link anyone can open"') + '/>'
       + '    <p class="hint">Required. Public is the point.</p></div>'
       + '  <div class="row"><button class="btn" type="button" id="saveBtn">'
       +      (S.hasSemble ? 'Save' : 'Keep this Semble') + '</button></div>'
@@ -1145,6 +1185,18 @@ var SA=(function(){
     }).join('')
       : '<div class="te"><time>Not yet</time><b>Your line starts at your first Step.</b>'
         + '<p>Nothing here is written by us. Every entry is a dated claim about a specific room, signed by the people who were in it with you.</p></div>';
+    /* the record belongs to whoever is holding it. On day one that is a
+       person with nothing behind them yet, and saying so is the whole point. */
+    var day1 = isDay1();
+    $('whoAv').textContent = day1 ? 'Y' : 'A';
+    $('whoN').textContent  = day1 ? 'You' : 'August';
+    $('whoW').textContent  = day1 ? 'No Steps yet' : 'Chicago · since June 2026';
+
+    /* a meter reading zero answers no question a new person has; the guide
+       answers the only one they have. Order by who is looking. */
+    var host = $('s-trax'), g = host && host.querySelector('.guide'), c = $('computeCard');
+    if (host && g && c) host.insertBefore(day1 ? g : c, day1 ? c : g);
+
     paintLine();
   }
 
@@ -1279,10 +1331,26 @@ var SA=(function(){
   }
 
   function keepSemble(){
-    if (S.hasSemble){ toast('Updated. The previous one moved to your drive, nothing is lost.'); return; }
     var t = ($('meT') && $('meT').value || '').trim();
+    var w = ($('meW') && $('meW').value || '').trim();
     var l = ($('meL') && $('meL').value || '').trim();
     if (!t || !l){ toast('It needs a title and a public link. Those two are the whole requirement.'); return; }
+
+    /* it used to toast "Updated" and save nothing. A button that reports
+       success for work it did not do is the one thing this product cannot do. */
+    if (S.hasSemble){
+      S.semble = {who:(S.semble && S.semble.who) || 'You',
+                  where:(S.semble && S.semble.where) || 'Kept today',
+                  i:(S.semble && S.semble.i) || 'Y',
+                  t:t, w:w, l:l,
+                  serving:(S.semble && S.semble.serving) || '',
+                  since:(S.semble && S.semble.since) || 'today'};
+      save(); renderMe();
+      toast('Updated. The previous one moved to your drive, nothing is lost.');
+      return;
+    }
+
+    S.semble = {who:'You', where:'Kept today', i:'Y', t:t, w:w, l:l, serving:'', since:'today'};
     S.hasSemble = true; S.steps[0].done = true; S.stepsTaken++;
     S.trax.unshift({d:'Today', t:'Kept a Semble · ' + t.slice(0,48), p:'Shared in the open at ' + l.slice(0,40) + '.', s:'Recorded in your Trax', gold:true});
     save(); renderMe(); setHead('Your Semble', 'One active piece of work, shared in the open.');
@@ -1294,7 +1362,7 @@ var SA=(function(){
     setMode(mode, false);
     [].forEach.call($('modeSeg').querySelectorAll('button'), function(b){
       b.classList.toggle('on', b.dataset.m === mode); });
-    renderMe(); go('sesh');
+    setPv(); renderMe(); go('sesh');
     toast(mode === 'day1'
       ? 'Day one. No Semble, no Trax, no !MOTUS, nothing scheduled — exactly what a new person sees.'
       : 'Six weeks in. A Semble kept, nine Sessions attended, and a Trax with a shape.');
@@ -1515,7 +1583,7 @@ var SA=(function(){
   addEventListener('resize', paintLine, {passive:true});
   [].forEach.call($('modeSeg').querySelectorAll('button'), function(b){
     b.classList.toggle('on', b.dataset.m === MODE); });
-  renderMe(); renderSesh(); renderTrax(); restWatch();
+  setPv(); renderMe(); renderSesh(); renderTrax(); restWatch();
   go('trax');   /* the record leads: the app opens on the line, and the guide */
 
   /* ─────── THE DARK MATTER — the bar's body is a magnetised fluid ───────

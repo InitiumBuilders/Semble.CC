@@ -136,7 +136,7 @@ section > .wrap > .lead { margin-bottom: 26px; max-width: 62ch; }
 /* ── buttons ── */
 .btn {
   display: inline-flex; align-items: center; gap: 9px; justify-content: center;
-  padding: 15px 26px; border-radius: var(--r-xs); cursor: pointer;
+  padding: 15px 26px; border-radius: var(--r-sm); cursor: pointer;
   font-family: 'Sora'; font-weight: 700; font-size: 15.5px; text-decoration: none;
   color: var(--ink); border: 1px solid rgba(255,255,255,.13);
   background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));

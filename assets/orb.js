@@ -597,9 +597,11 @@
   }
 
   /* ═══ THE REAL MARKS ═══ each platform's own logo, from its own site.
-     All six serve `access-control-allow-origin: *`, so the canvas stays
-     untainted and WebGL can still upload it. If one fails, the drawn mark
-     stands in — the board never waits on the network. */
+     The four hosts listed below serve `access-control-allow-origin: *`
+     (verified 2026-08-30), so the canvas stays untainted and WebGL can still
+     upload it. If one fails, the drawn mark stands in — the board never waits
+     on the network. Verify a host actually serves the file before adding it:
+     a URL that 404s costs a request on every page load and never renders. */
   var MARKS = {};
   function loadMark(key, url, onready){
     if (MARKS[key] !== undefined) return;
@@ -1704,7 +1706,10 @@
        row two is what carries them. */
     var DOMAINS = [
       {label: 'MotusMoves.US',    mark: 'moves',    logo: 'https://www.motusmoves.us/assets/img/logo.png'},
-      {label: 'Motus.Events',     mark: 'events',   logo: 'https://www.motus.events/icon.png'},
+      /* no logo: motus.events serves no raster mark at any path — its only icon
+         is an inline data-URI favicon — so the authored 'events' glyph below is
+         the intended render, not a fallback. Re-add only against a real file. */
+      {label: 'Motus.Events',     mark: 'events'},
       {label: 'Motus.Market',     mark: 'market',   logo: 'https://www.motus.market/assets/logo.png'},
       {label: 'Motus.MOV',        mark: 'mov',      logo: 'https://www.motus.mov/assets/img/logo.png'},
       {label: 'Initium.Builders', mark: 'builders', logo: 'https://www.initium.builders/initium-logo.png'},
@@ -1720,7 +1725,7 @@
     /* fetch each mark; repaint the static layer once they land */
     (function(){
       var rp = 0;
-      function coalesce(){        /* five marks land; the board repaints once */
+      function coalesce(){        /* four marks land; the board repaints once */
         clearTimeout(rp);
         rp = setTimeout(function(){ worldRepaint(); }, 220);
       }
@@ -3096,7 +3101,9 @@
       st.textContent =
         'body.orb-on .step,body.orb-on .pane,body.orb-on .card,body.orb-on .tier,' +
         'body.orb-on .f,body.orb-on .meta,body.orb-on .seat,body.orb-on .cc,' +
-        'body.orb-on .stg,body.orb-on .colo,body.orb-on .sig{' +
+        /* .sig is ink, not a surface — it is `color:var(--signal)`, sibling to
+           .au and .gd. Backed here it painted a box around the product names. */
+        'body.orb-on .stg,body.orb-on .colo{' +
         'background-color:rgba(7,11,19,.72)!important;' +
         'box-shadow:0 0 0 1px rgba(140,180,215,.10)}' +
         '@media(max-width:999px){' +
