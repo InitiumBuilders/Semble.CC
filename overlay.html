@@ -29,6 +29,14 @@ body{background:#000;min-height:100vh;overflow:hidden;font-family:Sora,sans-seri
 .ign b{font-size:clamp(40px,7vw,84px);font-weight:800;color:#f4e3b2;
   text-shadow:0 0 60px rgba(226,200,143,.8)}
 body.ignited .ign{display:flex}
+/* the feed can be DOWN — and a down feed must never be able to paint a number.
+   .hud[data-feed="down"] replaces the tally with a state, so a broadcast can
+   only ever show a true count or an honest absence, never a confident zero. */
+.hud[data-feed="down"] .big{color:#f0c98a;font-size:20px;letter-spacing:.02em}
+.hud[data-feed="down"] .bar{opacity:.25}
+.hud[data-feed="down"] .bar i{width:0!important;box-shadow:none}
+.hud[data-feed="down"] .t{color:#f0c98a}
+.hud[data-feed="down"]{border-color:rgba(240,201,138,.45)}
 </style>
 </head>
 <body>
@@ -46,15 +54,32 @@ body.ignited .ign{display:flex}
 (function(){
   /* the mainboard is the broadcast graphic — orb.js in board mode paints it */
   var GOAL = 1000, was = false;
+  var hud = document.querySelector('.hud'), big = document.querySelector('.hud .big');
+  var TALLY = big.innerHTML;
+  /* /api/pledge answers 503 with a well-formed body carrying total:0 whenever the
+     blob store is unbound. r.json() parses it happily, so the old path painted that
+     zero as fact. On air that reads "nobody is here" — the exact opposite of unknown.
+     Guard on r.ok, and treat any non-ok or transport failure as DOWN, never as zero. */
+  function down(){
+    hud.setAttribute('data-feed', 'down');
+    big.textContent = 'LIVE FEED DOWN';
+    window.__semblePool = null;
+  }
   function load(){
-    fetch('/api/pledge').then(function(r){ return r.json(); }).then(function(j){
-      var total = j.total || 0, frac = Math.min(1, total / GOAL);
+    fetch('/api/pledge').then(function(r){
+      if (!r.ok) throw new Error('feed ' + r.status);
+      return r.json();
+    }).then(function(j){
+      if (typeof j.total !== 'number') throw new Error('feed shape');
+      var total = j.total, frac = Math.min(1, total / GOAL);
+      hud.removeAttribute('data-feed');
+      if (big.innerHTML !== TALLY) big.innerHTML = TALLY;
       document.getElementById('total').textContent = total;
       document.getElementById('pool').style.width = (frac * 100).toFixed(1) + '%';
       document.getElementById('gold').style.width = (frac * 100).toFixed(1) + '%';
       window.__semblePool = { scc: frac, mcc: frac >= 1 ? 1 : frac * 0.9 };
       if (frac >= 1 && !was){ document.body.classList.add('ignited'); was = true; }
-    }).catch(function(){});
+    }).catch(down);
   }
   load(); setInterval(load, 6000);
 })();

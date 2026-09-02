@@ -569,7 +569,9 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   <button class="tab" data-s="init" type="button">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Init</button>
   <button class="tab" data-s="me" type="button">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5.4 19.2a6.9 6.9 0 0 1 13.2 0"/></svg>Semble</button>
+    <!-- six cores around one open centre — the 24px reduction of orb.js's authored
+         SEMBLE symbol, in the seat's own grammar: open = a place, filled = present -->
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><circle cx="12" cy="4.1" r="1.55" fill="currentColor"/><circle cx="18.84" cy="8.05" r="1.55" fill="currentColor"/><circle cx="18.84" cy="15.95" r="1.55" fill="currentColor"/><circle cx="12" cy="19.9" r="1.55" fill="currentColor"/><circle cx="5.16" cy="15.95" r="1.55" fill="currentColor"/><circle cx="5.16" cy="8.05" r="1.55" fill="currentColor"/></svg>Semble</button>
   <button class="tab" data-s="sesh" type="button">
     <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.4"/><circle cx="15" cy="15" r="5.4"/></svg>Next Sesh</button>
 </nav>
@@ -1493,7 +1495,9 @@ var SA=(function(){
         'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
       a.textContent = m.what;                    /* textContent, never innerHTML */
       var st = document.createElement('span');
-      st.style.cssText = 'flex:0 0 auto;font:600 11.5px/1 ui-monospace,monospace;' +
+      /* var(--mono), not a generic keyword: ui-monospace resolves to a different
+         face on every OS, and this label sits beside .card__k, which is Plex. */
+      st.style.cssText = 'flex:0 0 auto;font:600 11.5px/1 var(--mono);' +
         'letter-spacing:.14em;text-transform:uppercase;color:var(--signal)';
       st.textContent = 'reading\u2026';
       row.appendChild(a); row.appendChild(st);
